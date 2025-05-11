@@ -1,0 +1,7 @@
+SODIMM,Designator,FPGA,Signal,Direction
+42,PR47C,P11,SD_DAT1,inout
+44,PR47D,P12,SD_DAT0,inout
+46,PR44D,N12,SD_DAT3,inout
+48,PR41A,P13,SD_DAT2,inout
+50,PR38A,N13,SD_CLK,output
+52,PR44C,M12,SD_CMD,output

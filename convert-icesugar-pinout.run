@@ -1,0 +1,64 @@
+import(traktor)
+
+run:loadScript("csv.run")
+
+function main()
+
+	local IGNORE =
+	{
+		"VCC",
+		"VCCIO0",
+		"VCCIO1",
+		"VCCIO2",
+		"VCCIO3",
+		"VCCIO4",
+		"VCCIO5",
+		"VCCIO6",
+		"VCCIO7",
+		"VCCIO8",
+		"VCCAUX",
+		"GND",
+		"DONE",
+		"PROGRAMN",
+		"INITN",
+		"CFG_0",
+		"CFG_1",
+		"CFG_2",
+		"TDO",
+		"TDI",
+		"TCK",
+		"TMS",
+	}
+
+	local csv = CSV.load("../docs/LFE5U-25F-5BG256-Pinout.csv")
+
+	local po = CSV()
+	po:addColumn("FPGA")
+	po:addColumn("Designator")
+
+	local cnt = 0
+
+	for i, r in ipairs(csv.rows) do
+
+		local pbf = csv:getValue(r, "Pin/Ball Function")
+		local chp = csv:getValue(r, "CABGA256")
+
+		if pbf ~= nil and chp ~= nil then
+
+			local ignore = false
+			for _, k in ipairs(IGNORE) do
+				if k == pbf then ignore = true; break; end
+			end
+
+			if not ignore then
+				local pr = po:addRow()
+				po:setValue(pr, "FPGA", chp)
+				po:setValue(pr, "Designator", pbf)
+			end
+		end
+
+	end
+
+	print(po:toString())
+
+end

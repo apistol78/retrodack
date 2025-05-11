@@ -1,0 +1,121 @@
+--[[
+ RetroDÄCK
+ Copyright (c) 2025 Anders Pistol.
+
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+]]
+
+import (traktor)
+
+run:loadScript("../klara-rv/sv2v.run")
+
+local PATH_SOC < const > = "rtl"
+local PATH_PERIFHERIALS < const > = "../klara-rv/rtl"
+
+local SOURCE < const > =
+{
+	PATH_SOC .. "/RetroDACK.sv",
+	PATH_SOC .. "/RetroDACK_BROM.sv",
+	PATH_PERIFHERIALS .. "/block/BRAM.sv",
+	PATH_PERIFHERIALS .. "/uart/UART.sv",
+	PATH_PERIFHERIALS .. "/uart/UART_RX.sv",
+	PATH_PERIFHERIALS .. "/uart/UART_TX.sv",
+	PATH_PERIFHERIALS .. "/fifo/FIFO.sv",
+	PATH_PERIFHERIALS .. "/cpu//CPU.sv",
+	PATH_PERIFHERIALS .. "/cpu//CPU_BusMux.sv",
+	PATH_PERIFHERIALS .. "/cpu//CPU_PLIC.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_ALU.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_BRAM.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_BRAM_1r1w.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_CSR.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_DCache_Comb.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_DCache_None.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_DCache_Reg.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_Decode.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_Defines.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_Divide.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_Execute.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_Fetch.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_Forward.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_ICache_Comb.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_ICache_None.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_ICache_Reg.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_Memory.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_Multiply.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_PreDecode.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_Registers.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_SkidBuffer.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_Types.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/CPU_Writeback.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/fpu/CPU_FPU.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/fpu/CPU_FPU_Add.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/fpu/CPU_FPU_Compare.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/fpu/CPU_FPU_Div.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/fpu/CPU_FPU_Float.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/fpu/CPU_FPU_Int.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/fpu/CPU_FPU_Mul.sv",
+	PATH_PERIFHERIALS .. "/cpu//private/fpu/CPU_FPU_MulAdd.sv"
+}
+
+function main()
+
+	-- Ensure we can launch yosys before all else.
+	if os:whereIs("yosys") == nil then
+		stderr:printLn("Unable to locate yosys; ensure it's accessible through PATH.")
+		return 1
+	end
+
+	-- Concatenate all source files.
+	local f = ""
+	for _, sv in ipairs(SOURCE) do
+		local v = sv2v(
+			sv,
+			{ ".", "./rtl", PATH_PERIFHERIALS .. "/cpu" },
+			{},
+			"build/rtl-v"
+		)
+		f = f .. " " .. v
+	end
+	stdout:printLn(f)
+
+	-- Create constraints.
+	run:run("./generate-constraints.run", "rtl/Constraints.lpf")
+	run:run("./generate-top-io.run", "rtl/RetroDACK_IO.sv")
+
+	-- Ensure old bit file is removed.
+	run:rm("build/RetroDACK.bit")
+	run:rm("build/RetroDACK.json")
+	run:rm("build/RetroDACK.log")
+
+	-- Synthesize
+	local xc = run:execute("yosys -l build/RetroDACK.log -p \"opt; share -aggressive; synth_ecp5 -abc9 -json build/RetroDACK.json\" " .. f)
+	if xc ~= 0 then
+		stderr:printLn("yosys failed; build aborted.")
+		return 1
+	end
+
+	-- Place and route.
+	local xc = run:execute("nextpnr-ecp5 --25k --package CABGA256 --speed 6 --timing-allow-fail --top RetroDACK --json build/RetroDACK.json --textcfg build/RetroDACK.config --lpf rtl/Constraints.lpf --report build/RetroDACK.report.json --freq 100")
+	if xc ~= 0 then
+		stderr:printLn("nextpnr-ecp5 failed; build aborted.")
+		return 1
+	end
+
+	-- Create bit file.
+	local xc = run:execute("ecppack --compress --svf build/RetroDACK.svf build/RetroDACK.config build/RetroDACK.bit")
+	if xc ~= 0 then
+		stderr:printLn("ecppack failed; build aborted.")
+		return 1
+	end
+
+	-- Program target.
+	local xc = run:execute("openFPGALoader -c cmsisdap --vid=0x1d50 --pid=0x602b ./build/RetroDACK.bit")
+	if xc ~= 0 then
+		stderr:printLn("openFPGALoader failed; build aborted.")
+		return 1
+	end
+
+	stdout:printLn("Build successful.")
+end

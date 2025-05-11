@@ -1,0 +1,55 @@
+--[[
+ RetroDÄCK
+ Copyright (c) 2025 Anders Pistol.
+
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+]]
+
+-- Packages
+PACKAGES =
+{
+	-- sv2v
+	{
+		type = "GET",
+		name = "sv2v",
+		url = "https://github.com/zachjs/sv2v/releases/download/v0.0.13/sv2v-Linux.zip",
+		os = "linux",
+		patch = function()
+			run:execute(UNZIP .. " -qq sv2v-Linux.zip")
+		end,
+		license = "BSD-3-Clause"
+	},	
+	{
+		type = "GET",
+		name = "sv2v",
+		url = "https://github.com/zachjs/sv2v/releases/download/v0.0.13/sv2v-Windows.zip",
+		os = "windows",
+		patch = function()
+			run:execute(UNZIP .. " -qq sv2v-Windows.zip")
+		end,
+		license = "BSD-3-Clause"
+	},
+	{
+		type = "GET",
+		name = "oss-cad-suite-build",
+		url = "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2025-04-30/oss-cad-suite-linux-x64-20250430.tgz",
+		os = "linux",
+		patch = function()
+			run:execute(TAR .. " -xzf oss-cad-suite-linux-x64-20250430.tgz")
+		end,
+		license = "ISC"
+	},
+	{
+		type = "GET",
+		name = "oss-cad-suite-build",
+		url = "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2025-04-30/oss-cad-suite-windows-x64-20250430.exe",
+		os = "windows",
+		patch = function()
+			run:execute("oss-cad-suite-windows-x64-20250430.exe")
+		end,
+		license = "ISC"
+	},
+}
+

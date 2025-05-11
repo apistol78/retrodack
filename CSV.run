@@ -1,0 +1,154 @@
+import(traktor)
+import(traktor.run)
+
+local function trimValue(s)
+	local tmp = s:gsub("^%s*(.-)%s*$", "%1")
+	if tmp == nil or tmp == "" then return "" end
+
+	local tmp2 = tmp:gsub("\"(.*)\"", "%1")
+	if tmp == nil or tmp == "" then return tmp end
+
+	return tmp2
+end
+
+CSV = class("CSV")
+
+function CSV:new()
+	self.columns = {}	-- Column name to index.
+	self.rows = {}		-- List of rows, each row is an array of values.
+	self.cidx = 0		-- Last column index.
+end
+
+function CSV.load(fileName)
+	local f = FileSystem.getInstance():open(Path(fileName), File.FmRead)
+	if f == nil then return nil end
+
+	local r = StringReader(f, Utf8Encoding())
+	local csv = CSV()
+
+	-- Read columns.
+	local ln = r:readLine()
+	for w in ln:gmatch("([^,]*)") do
+		w = trimValue(w)
+		if w ~= "" then
+			csv.columns[w] = csv.cidx + 1
+		end
+		csv.cidx = csv.cidx + 1
+	end
+
+	-- Read values.
+	while true do
+		local ln = r:readLine()
+		if ln == nil then break end
+		local row = {}
+		for w in ln:gmatch("([^,]*)") do
+			table.insert(row, trimValue(w))
+		end
+		table.insert(csv.rows, row)
+	end
+	f:close()
+
+	return csv	
+end
+
+function CSV:addRow()
+	local row = {}
+	table.insert(self.rows, row)
+	return row
+end
+
+function CSV:isEmpty()
+	return self.cidx <= 0
+end
+
+function CSV:setValue(row, column, value)
+	local idx < const > = self.columns[column]
+	if idx ~= nil then
+		while #row < idx do table.insert(row, 0) end
+		row[idx] = value
+		return true
+	else
+		return false
+	end
+end
+
+function CSV:getValue(row, column)
+	local idx < const > = self.columns[column]
+	if idx ~= nil then
+		return row[idx]
+	else
+		return nil
+	end
+end
+
+function CSV:addColumn(column)
+	if self.columns[column] == nil then
+		local idx < const > = self.cidx + 1
+		self.columns[column] = idx
+		for _, r in ipairs(self.rows) do
+			while #r < idx do table.insert(r, 0) end
+		end
+		self.cidx = self.cidx + 1			
+	end
+	return self.columns[column]
+end
+
+function CSV:mergeColumns(from)
+	for cn, _ in pairs(from.columns) do
+		self:addColumn(cn)
+	end	
+end
+
+-- Merge CSV document, merge each row.
+function CSV:merge(from)
+	self:mergeColumns(from)
+	for i, r in ipairs(from.rows) do
+		local row = self.rows[i]
+		if row == nil then
+			row = self:addRow()
+		end
+		for cn, ci in pairs(from.columns) do
+			self:setValue(row, cn, r[ci])
+		end
+	end	
+end
+
+-- Append CSV document, append rows.
+function CSV:append(from)
+	self:mergeColumns(from)
+	for _, r in ipairs(from.rows) do
+		local row = self:addRow()
+		for cn, ci in pairs(from.columns) do
+			self:setValue(row, cn, r[ci])
+		end
+	end	
+end
+
+function CSV:toString(filter)
+	local txt = ""
+	local first = true
+	for name, _ in pairs(self.columns) do
+		if not first then txt = txt .. "," end
+		txt = txt .. name
+		first = false
+	end
+	txt = txt .. "\n"
+	for _, row in ipairs(self.rows) do
+		local skip = false
+		if filter ~= nil then
+			skip = not filter(row)
+		end				
+		if not skip then
+			local first = true
+			for _, idx in pairs(self.columns) do
+				if not first then txt = txt .. "," end
+				if row[idx] ~= nil then
+					txt = txt .. row[idx]
+				end
+				first = false				
+			end
+			txt = txt .. "\n"
+		end
+	end
+	return txt	
+end

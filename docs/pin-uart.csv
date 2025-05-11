@@ -1,0 +1,3 @@
+SODIMM,Designator,FPGA,Signal,Direction
+109,PL23B,J2,UART_RX,input
+111,PL23C,K1,UART_TX,output

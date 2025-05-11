@@ -1,0 +1,30 @@
+import(traktor)
+
+run:loadScript("CSV.run")
+
+function main()
+
+	local FILES =
+	{
+		"pin-clock.csv",
+		"pin-lcd.csv",
+		"pin-uart.csv",
+		"pin-sd.csv",
+	}
+
+	local first = true
+
+	for _, f in ipairs(FILES) do
+		local csv = CSV.load("docs/" .. f)
+		for _, r in pairs(csv.rows) do
+			local name = csv:getValue(r, "Signal")
+			local direction = csv:getValue(r, "Direction")
+
+			if not first then stdout:printLn(",") end
+			stdout:print(direction .. " " .. name)
+			first = false
+		end
+	end
+
+	stdout:printLn("")
+end
