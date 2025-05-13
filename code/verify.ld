@@ -3,11 +3,11 @@ ENTRY( _start )
 
 MEMORY
 {
-  rom      (rx) : ORIGIN = 0x00000000, LENGTH = 0x00010000
-  ram      (rw) : ORIGIN = 0x10000000, LENGTH = 0x00010000
+  rom      (rx) : ORIGIN = 0x00000000, LENGTH = 0x00001000
+  ram      (rw) : ORIGIN = 0x10000000, LENGTH = 0x00001000
 }
 
-STACK_SIZE = 0x2000;
+STACK_SIZE = 0x100;
 
 SECTIONS
 {
@@ -62,14 +62,12 @@ SECTIONS
     _edata = .;
     edata = .;
 
-/*
     .stack (NOLOAD):
     {
         . = ALIGN(8);
         . = . + STACK_SIZE;
         . = ALIGN(8);
     } > ram
-*/
 
     /* End of uninitalized data segement */
     .heap (NOLOAD):

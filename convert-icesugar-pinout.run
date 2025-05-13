@@ -1,6 +1,6 @@
 import(traktor)
 
-run:loadScript("csv.run")
+run:loadScript("CSV.run")
 
 function main()
 
@@ -30,11 +30,13 @@ function main()
 		"TMS",
 	}
 
-	local csv = CSV.load("../docs/LFE5U-25F-5BG256-Pinout.csv")
+	local csv = CSV.load("docs/LFE5U-25F-5BG256-Pinout.csv")
+	local sodimm = CSV.load("docs/sodimm.csv")
 
 	local po = CSV()
 	po:addColumn("FPGA")
 	po:addColumn("Designator")
+	po:addColumn("SODIMM")
 
 	local cnt = 0
 
@@ -54,6 +56,12 @@ function main()
 				local pr = po:addRow()
 				po:setValue(pr, "FPGA", chp)
 				po:setValue(pr, "Designator", pbf)
+
+				local rr = sodimm:find("Designator", function(d) return d == pbf end)
+				if rr ~= nil then
+					po:setValue(pr, "SODIMM", sodimm:getValue(rr, "Pin"))
+				end
+
 			end
 		end
 

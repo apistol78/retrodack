@@ -81,6 +81,17 @@ function CSV:getValue(row, column)
 	end
 end
 
+function CSV:find(column, pred)
+	local idx < const > = self.columns[column]
+	if idx ~= nil then
+		for _, r in ipairs(self.rows) do
+			local value < const > = r[idx]
+			if pred(value) then return r end
+		end
+	end
+	return nil
+end
+
 function CSV:addColumn(column)
 	if self.columns[column] == nil then
 		local idx < const > = self.cidx + 1

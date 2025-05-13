@@ -8,14 +8,44 @@
 */
 
 `timescale 1ns/1ns
-`define FREQUENCY 25000000
 
 (* top *)
 module RetroDACK(
 	`include "RetroDACK_IO.sv"
 );
-	wire clock = CLOCK;
+	wire clock;
 	wire reset = 1'b0;
+
+
+	/*
+	// 125 MHz
+	`define FREQUENCY 125_000_000
+	PLL_ECP5 #(
+		.CLKI_DIV(1),
+		.CLKFB_DIV(5),
+		.CLKOP_DIV(5),
+		.CLKOP_CPHASE(0)
+	) pll(
+		.i_clk(CLOCK),
+		.o_clk1(clock),
+		.o_clk2(),
+		.o_clk_locked()
+	);
+	*/
+
+	// 100 MHz
+	`define FREQUENCY 100_000_000
+	PLL_ECP5 #(
+		.CLKI_DIV(1),
+		.CLKFB_DIV(4),
+		.CLKOP_DIV(6),
+		.CLKOP_CPHASE(0)
+	) pll(
+		.i_clk(CLOCK),
+		.o_clk1(clock),
+		.o_clk2(),
+		.o_clk_locked()
+	);
 
 
 	//====================================================
@@ -43,7 +73,7 @@ module RetroDACK(
 	wire ram_ready;
 
 	BRAM #(
-		.SIZE(32'h400)
+		.SIZE(32'h1000)
 	) ram(
 		.i_clock(clock),
 		.i_request(bus_request && ram_select),
@@ -65,8 +95,9 @@ module RetroDACK(
 	wire uart_ready;
 
 	UART #(
-		.PRESCALE(`FREQUENCY / (9600 * 8)),
-		.RX_FIFO_DEPTH(512)
+		.FREQUENCY(`FREQUENCY),
+		.BAUDRATE(115200),
+		.RX_FIFO_DEPTH(16)
 	) uart(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -122,7 +153,7 @@ module RetroDACK(
 	wire [31:0] bus_wdata;
 
 	CPU_BusMux #(
-		.REGISTERED(1)
+		.REGISTERED(0)
 	) bus(
 		.i_reset(reset),
 		.i_clock(clock),

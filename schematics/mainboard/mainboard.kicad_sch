@@ -17110,28 +17110,6 @@
 			)
 		)
 	)
-	(global_label "UART_TX"
-		(shape output)
-		(at 314.96 323.85 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "3d3caf1f-a59d-4048-8bac-9f39b582716a")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 304.1734 323.85 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-				(hide yes)
-			)
-		)
-	)
 	(global_label "SRAM_D1"
 		(shape bidirectional)
 		(at 266.7 303.53 180)
@@ -19367,28 +19345,6 @@
 		(uuid "d4072312-67d8-45e4-bb8f-391e6f4058de")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 255.4296 328.93 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-				(hide yes)
-			)
-		)
-	)
-	(global_label "UART_RX"
-		(shape input)
-		(at 314.96 321.31 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "d9dc1c3c-07b4-48fb-9307-a62ad365dfcd")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 303.871 321.31 0)
 			(effects
 				(font
 					(size 1.27 1.27)
