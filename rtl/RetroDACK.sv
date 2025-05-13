@@ -14,7 +14,27 @@ module RetroDACK(
 	`include "RetroDACK_IO.sv"
 );
 	wire clock;
+	wire clock_sdram;
 	wire reset = 1'b0;
+
+
+	assign LED_R = pin_value[0];
+	assign LED_G = pin_value[1];
+	assign LED_B = pin_value[2];
+
+	bit [2:0] pin_value = 1'b0;
+	wire pin_select;
+	bit pin_ready = 1'b0;
+
+	always @(posedge clock) begin
+		if (bus_request && pin_select) begin
+			pin_value <= bus_wdata[2:0];
+			pin_ready <= 1'b1;
+		end
+		else begin
+			pin_ready <= 1'b0;
+		end
+	end
 
 
 	/*
@@ -34,16 +54,19 @@ module RetroDACK(
 	*/
 
 	// 100 MHz
+	// 100 MHz (7000 ps phase shift)
 	`define FREQUENCY 100_000_000
 	PLL_ECP5 #(
 		.CLKI_DIV(1),
 		.CLKFB_DIV(4),
 		.CLKOP_DIV(6),
-		.CLKOP_CPHASE(0)
+		.CLKOP_CPHASE(0),
+		.CLKOS_DIV(6),
+		.CLKOS_CPHASE(5)
 	) pll(
 		.i_clk(CLOCK),
 		.o_clk1(clock),
-		.o_clk2(),
+		.o_clk2(clock_sdram),
 		.o_clk_locked()
 	);
 
@@ -86,6 +109,75 @@ module RetroDACK(
 	);
 
 
+	//=====================================
+    // SDRAM ($20000000)
+	wire sdram_select;
+	wire [31:0] sdram_address;
+	wire [31:0] sdram_wdata;
+	wire [31:0] sdram_rdata;
+	wire sdram_ready;
+
+	wire [1:0] it_sdram_dqm;
+	wire [1:0] it_sdram_ba;
+	wire [12:0] it_sdram_addr;
+	logic [15:0] it_sdram_data_r;
+	wire [15:0] it_sdram_data_w;
+	wire it_sdram_data_rw;
+
+	assign SDRAM_DQM0 = it_sdram_dqm[0];
+	assign SDRAM_DQM1 = it_sdram_dqm[1];
+	assign SDRAM_BA0 = it_sdram_ba[0];
+	assign SDRAM_BA1 = it_sdram_ba[1];
+	assign SDRAM_A0 = it_sdram_addr[0];
+	assign SDRAM_A1 = it_sdram_addr[1];
+	assign SDRAM_A2 = it_sdram_addr[2];
+	assign SDRAM_A3 = it_sdram_addr[3];
+	assign SDRAM_A4 = it_sdram_addr[4];
+	assign SDRAM_A5 = it_sdram_addr[5];
+	assign SDRAM_A6 = it_sdram_addr[6];
+	assign SDRAM_A7 = it_sdram_addr[7];
+	assign SDRAM_A8 = it_sdram_addr[8];
+	assign SDRAM_A9 = it_sdram_addr[9];
+	assign SDRAM_A10 = it_sdram_addr[10];
+	assign SDRAM_A11 = it_sdram_addr[11];
+	assign SDRAM_A12 = it_sdram_addr[12];
+
+	assign 
+		{ SDRAM_DQ0, SDRAM_DQ1, SDRAM_DQ2, SDRAM_DQ3, SDRAM_DQ4, SDRAM_DQ5, SDRAM_DQ6, SDRAM_DQ7, SDRAM_DQ8, SDRAM_DQ9, SDRAM_DQ10, SDRAM_DQ11, SDRAM_DQ12, SDRAM_DQ13, SDRAM_DQ14, SDRAM_DQ15 } =
+		it_sdram_data_rw ? it_sdram_data_w : 16'hz;
+
+	assign it_sdram_data_r = { SDRAM_DQ0, SDRAM_DQ1, SDRAM_DQ2, SDRAM_DQ3, SDRAM_DQ4, SDRAM_DQ5, SDRAM_DQ6, SDRAM_DQ7, SDRAM_DQ8, SDRAM_DQ9, SDRAM_DQ10, SDRAM_DQ11, SDRAM_DQ12, SDRAM_DQ13, SDRAM_DQ14, SDRAM_DQ15 };
+
+    SDRAM_controller #(
+        .FREQUENCY(`FREQUENCY),
+		.SDRAM_DATA_WIDTH(16)
+    ) sdram(
+	    .i_reset(reset),
+	    .i_clock(clock),
+		.i_clock_sdram(clock_sdram),
+
+	    .i_request(sdram_select && bus_request),
+	    .i_rw(bus_rw),
+	    .i_address(sdram_address),
+	    .i_wdata(sdram_wdata),
+	    .o_rdata(sdram_rdata),
+	    .o_ready(sdram_ready),
+
+	    .sdram_clk(SDRAM_CLK),
+	    .sdram_clk_en(SDRAM_CKE),
+	    .sdram_cas_n(SDRAM_CAS_n),
+	    .sdram_cs_n(SDRAM_CE_n),
+	    .sdram_ras_n(SDRAM_RAS_n),
+	    .sdram_we_n(SDRAM_WE_n),
+	    .sdram_dqm(it_sdram_dqm),
+	    .sdram_bs(it_sdram_ba),
+	    .sdram_addr(it_sdram_addr),
+		.sdram_rdata(it_sdram_data_r),
+		.sdram_wdata(it_sdram_data_w),
+		.sdram_data_rw(it_sdram_data_rw)
+    );
+
+
 	//====================================================
 	// UART
 	wire uart_select;
@@ -123,6 +215,10 @@ module RetroDACK(
 	assign ram_address = { 4'h0, bus_address[27:0] };
 	assign ram_wdata = bus_wdata;
 
+	assign sdram_select = bus_address[31:28] == 4'h2;
+	assign sdram_address = { 4'h0, bus_address[27:0] };
+	assign sdram_wdata = bus_wdata;
+
 	assign uart_select = bus_address[31:28] == 4'h3;
 	assign uart_address = { 4'h0, bus_address[27:0] };
 	assign uart_wdata = bus_wdata;
@@ -132,12 +228,14 @@ module RetroDACK(
 	assign bus_rdata =
 		rom_select		? rom_rdata		:
 		ram_select		? ram_rdata		:
+		sdram_select	? sdram_rdata	:
 		uart_select		? uart_rdata	:
 		32'h00000000;
 
 	assign bus_ready =
 		rom_select		? rom_ready		:
 		ram_select		? ram_ready		:
+		sdram_select	? sdram_ready	:
 		uart_select		? uart_ready	:
 		pin_select		? pin_ready		:
 		1'b0;

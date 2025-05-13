@@ -1,2 +1,5 @@
 SODIMM,Designator,FPGA,Signal,Direction,Frequency
 ,PL47C,P6,CLOCK,input,25
+,PT53A,A11,LED_G,output
+,PT49A,B11,LED_R,output
+,PT53B,A12,LED_B,output

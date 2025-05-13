@@ -25,6 +25,7 @@ local SOURCE < const > =
 	PATH_PERIFHERIALS .. "/fifo/FIFO.sv",
 	PATH_PERIFHERIALS .. "/clock/PLL_ECP5.sv",
 	PATH_PERIFHERIALS .. "/misc/ClockDivider.sv",
+	PATH_PERIFHERIALS .. "/sdram/SDRAM_controller.sv",
 	PATH_PERIFHERIALS .. "/cpu/CPU.sv",
 	PATH_PERIFHERIALS .. "/cpu/CPU_BusMux.sv",
 	PATH_PERIFHERIALS .. "/cpu/CPU_PLIC.sv",
