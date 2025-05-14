@@ -179,35 +179,7 @@ module RetroDACK(
 
 
 	//====================================================
-	// UART
-	wire uart_select;
-	wire [1:0] uart_address;
-	wire [31:0] uart_wdata;
-	wire [31:0] uart_rdata;
-	wire uart_ready;
-
-	UART #(
-		.FREQUENCY(`FREQUENCY),
-		.BAUDRATE(115200),
-		.RX_FIFO_DEPTH(16)
-	) uart(
-		.i_reset(reset),
-		.i_clock(clock),
-		.i_request(bus_request && uart_select),
-		.i_rw(bus_rw),
-		.i_address(uart_address),
-		.i_wdata(uart_wdata),
-		.o_rdata(uart_rdata),
-		.o_ready(uart_ready),
-		.o_interrupt(),
-		// ---
-		.UART_RX(UART_RX),
-		.UART_TX(UART_TX)
-	);
-
-
-	//====================================================
-	// Chip select
+	// CPU chip select
 	assign rom_select = bus_address[31:28] == 4'h0;
 	assign rom_address = { 4'h0, bus_address[27:0] };
 
@@ -219,9 +191,9 @@ module RetroDACK(
 	assign sdram_address = { 4'h0, bus_address[27:0] };
 	assign sdram_wdata = bus_wdata;
 
-	assign uart_select = bus_address[31:28] == 4'h3;
-	assign uart_address = { 4'h0, bus_address[27:0] };
-	assign uart_wdata = bus_wdata;
+	assign bridge_select = bus_address[31:28] == 4'h5;
+	assign bridge_address = { 4'h0, bus_address[27:0] };
+	assign bridge_wdata = bus_wdata;
 
 	assign pin_select = bus_address[31:28] == 4'h4;
 
@@ -229,14 +201,14 @@ module RetroDACK(
 		rom_select		? rom_rdata		:
 		ram_select		? ram_rdata		:
 		sdram_select	? sdram_rdata	:
-		uart_select		? uart_rdata	:
+		bridge_select	? bridge_rdata	:
 		32'h00000000;
 
 	assign bus_ready =
 		rom_select		? rom_ready		:
 		ram_select		? ram_ready		:
 		sdram_select	? sdram_ready	:
-		uart_select		? uart_ready	:
+		bridge_select	? bridge_ready	:
 		pin_select		? pin_ready		:
 		1'b0;
 
@@ -281,6 +253,8 @@ module RetroDACK(
 	// CPU
 	wire cpu_ibus_request;
 	wire cpu_ibus_ready;
+	wire cpu_timer_interrupt;
+	wire cpu_external_interrupt;
 	wire [31:0] cpu_ibus_address;
 	wire [31:0] cpu_ibus_rdata;
 	wire cpu_dbus_rw;
@@ -302,8 +276,8 @@ module RetroDACK(
 		.i_clock(clock),
 
 		// Control
-		.i_timer_interrupt(1'b0),
-		.i_external_interrupt(1'b0),
+		.i_timer_interrupt(cpu_timer_interrupt),
+		.i_external_interrupt(cpu_external_interrupt),
 
 		// Instruction bus
 		.o_ibus_request(cpu_ibus_request),
@@ -328,5 +302,156 @@ module RetroDACK(
 		.o_memory_busy(),
 		.o_fault(cpu_fault)
 	);
+
+
+	//===========================================================
+	//===========================================================
+	// Everything below is on "the bridge", ie far peripherials.
+	//===========================================================
+	//===========================================================
+
+
+	//====================================================
+	// UART
+	wire uart_select;
+	wire [1:0] uart_address;
+	wire [31:0] uart_wdata;
+	wire [31:0] uart_rdata;
+	wire uart_ready;
+
+	UART #(
+		.FREQUENCY(`FREQUENCY),
+		.BAUDRATE(115200),
+		.RX_FIFO_DEPTH(16)
+	) uart(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(bridge_far_request && uart_select),
+		.i_rw(bridge_far_rw),
+		.i_address(uart_address),
+		.i_wdata(uart_wdata),
+		.o_rdata(uart_rdata),
+		.o_ready(uart_ready),
+		.o_interrupt(),
+		// ---
+		.UART_RX(UART_RX),
+		.UART_TX(UART_TX)
+	);
+
+
+	//====================================================
+	// TIMER
+	wire timer_select;
+	wire [3:0] timer_address;
+	wire [31:0] timer_wdata;
+	wire [31:0] timer_rdata;
+	wire timer_ready;
+	Timer #(
+		.FREQUENCY(`FREQUENCY)
+	) timer(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(bridge_far_request && timer_select),
+		.i_rw(bridge_far_rw),
+		.i_address(timer_address),
+		.i_wdata(timer_wdata),
+		.o_rdata(timer_rdata),
+		.o_ready(timer_ready),
+		.o_interrupt(cpu_timer_interrupt)
+	);
+
+
+	//====================================================
+	// PLIC
+	wire plic_interrupt;
+	wire plic_select;
+	wire [23:0] plic_address;
+	wire [31:0] plic_wdata;
+	wire [31:0] plic_rdata;
+	wire plic_ready;
+
+	CPU_PLIC plic(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		.i_interrupt_0(0),
+		.i_interrupt_1(0),
+		.i_interrupt_2(0),
+		.i_interrupt_3(0),
+
+		.i_interrupt_enable(1'b1),
+		.o_interrupt(cpu_external_interrupt),
+
+		.i_request(bridge_far_request && plic_select),
+		.i_rw(bridge_far_rw),
+		.i_address(plic_address),
+		.i_wdata(plic_wdata),
+		.o_rdata(plic_rdata),
+		.o_ready(plic_ready)
+	);
+
+
+	//====================================================
+	// Bridge
+	wire bridge_select;
+	wire [27:0] bridge_address;
+	wire [31:0] bridge_wdata;
+	wire [31:0] bridge_rdata;
+	wire bridge_ready;
+
+	wire bridge_far_request;
+	wire bridge_far_rw;
+	wire [27:0] bridge_far_address;
+	wire [31:0] bridge_far_wdata;
+	wire [31:0] bridge_far_rdata;
+	wire bridge_far_ready;
+
+	Bridge #(
+		.REGISTERED(1)
+	) bridge(
+		.i_clock		(clock),
+		.i_reset		(reset),
+
+		// Near
+		.i_request		(bridge_select && bus_request),
+		.i_rw			(bus_rw),
+		.i_address		(bridge_address),
+		.i_wdata		(bridge_wdata),
+		.o_rdata		(bridge_rdata),
+		.o_ready		(bridge_ready),
+
+		// Far
+		.o_far_request	(bridge_far_request),
+		.o_far_rw		(bridge_far_rw),
+		.o_far_address	(bridge_far_address),
+		.o_far_wdata	(bridge_far_wdata),
+		.i_far_rdata	(bridge_far_rdata),
+		.i_far_ready	(bridge_far_ready)
+	);
+
+	assign uart_select = bridge_far_address[27:24] == 4'h1;
+	assign uart_address = bridge_far_address[3:2];
+	assign uart_wdata = bridge_far_wdata;
+
+	assign timer_select = bridge_far_address[27:24] == 4'h5;
+	assign timer_address = bridge_far_address[5:2];
+	assign timer_wdata = bridge_far_wdata;
+
+	assign plic_select = bridge_far_address[27:24] == 4'h8;
+	assign plic_address = bridge_far_address[23:0];
+	assign plic_wdata = bridge_far_wdata;
+
+	assign bridge_far_rdata =
+		uart_select	? uart_rdata	:
+		timer_select ? timer_rdata	:
+		plic_select ? plic_rdata	:
+		32'h00000000;
+	
+	assign bridge_far_ready =
+		uart_select	? uart_ready	:
+		timer_select ? timer_ready	:
+		plic_select ? plic_ready	:
+		1'b0;
+
 
 endmodule

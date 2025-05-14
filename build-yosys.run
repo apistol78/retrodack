@@ -19,13 +19,15 @@ local SOURCE < const > =
 	PATH_SOC .. "/RetroDACK.sv",
 	PATH_SOC .. "/RetroDACK_BROM.sv",
 	PATH_PERIFHERIALS .. "/block/BRAM.sv",
+	PATH_PERIFHERIALS .. "/clock/PLL_ECP5.sv",
+	PATH_PERIFHERIALS .. "/fifo/FIFO.sv",
+	PATH_PERIFHERIALS .. "/misc/Bridge.sv",
+	PATH_PERIFHERIALS .. "/misc/ClockDivider.sv",
+	PATH_PERIFHERIALS .. "/misc/Timer.sv",
+	PATH_PERIFHERIALS .. "/sdram/SDRAM_controller.sv",
 	PATH_PERIFHERIALS .. "/uart/UART.sv",
 	PATH_PERIFHERIALS .. "/uart/UART_RX.sv",
 	PATH_PERIFHERIALS .. "/uart/UART_TX.sv",
-	PATH_PERIFHERIALS .. "/fifo/FIFO.sv",
-	PATH_PERIFHERIALS .. "/clock/PLL_ECP5.sv",
-	PATH_PERIFHERIALS .. "/misc/ClockDivider.sv",
-	PATH_PERIFHERIALS .. "/sdram/SDRAM_controller.sv",
 	PATH_PERIFHERIALS .. "/cpu/CPU.sv",
 	PATH_PERIFHERIALS .. "/cpu/CPU_BusMux.sv",
 	PATH_PERIFHERIALS .. "/cpu/CPU_PLIC.sv",
@@ -62,6 +64,72 @@ local SOURCE < const > =
 	PATH_PERIFHERIALS .. "/cpu/private/fpu/CPU_FPU_MulAdd.sv"
 }
 
+local function buildRV()
+	local TRAKTOR_HOME < const > = os:getEnvironment("TRAKTOR_HOME")
+	local SCRIPT_HOME < const > = fileSystem:getAbsolutePath(Path(os:getEnvironment("RUN_SCRIPT_PATH"))):normalized().pathNameOS
+
+	os:setEnvironment("MAKE_OS", "linux")
+	os:setEnvironment("MAKE_DIALECT", "make")
+	os:setEnvironment("MAKE_FORMAT", TRAKTOR_HOME .. "/resources/build/configurations/make-format.sbm")
+	os:setEnvironment("MAKE_INCLUDE", SCRIPT_HOME .. "/make-config-rv32.inc")
+	os:setEnvironment("MAKE_TOOLCHAIN", "gcc")
+	os:setEnvironment("MAKE_OBJECT_FILE", "%s.o")
+	os:setEnvironment("MAKE_STATIC_LIBRARY_FILE", "lib%s.a")
+	os:setEnvironment("MAKE_SHARED_LIBRARY_FILE", "lib%s.so")
+	os:setEnvironment("MAKE_EXECUTABLE_FILE", "%s")
+	os:setEnvironment("MAKE_VERBOSE", "false")
+	os:setEnvironment("MAKE_HOME", SCRIPT_HOME)
+
+	run:execute(
+		TRAKTOR_HOME .. "/bin/linux/releasestatic/Traktor.SolutionBuilder.App " ..
+		"-f=make2 " ..
+		"-make-solution-template=" .. TRAKTOR_HOME .. "/resources/build/configurations/make-solution.sbm " ..
+		"-make-project-template=" .. TRAKTOR_HOME .. "/resources/build/configurations/make-project.sbm " ..
+		"retrodack-rv.xms"
+	)
+
+	run:pushd("build/rv")
+	if run:execute("make -f RetroDACK.mak ReleaseStatic") ~= 0 then return false end
+	run:popd()
+
+	-- Create HEX file of firmware.
+	run:execute("riscv32-unknown-elf-objcopy -O ihex build/rv/ReleaseStatic/Firmware build/rv/ReleaseStatic/Firmware.hex")
+
+	-- Create Verilog files of firmware.
+	run:execute("../klara-rv/bin/Hex2Verilog -word=32 build/rv/ReleaseStatic/Firmware.hex -vmem=build/rv/ReleaseStatic/Firmware.vmem -vmem-range=build/rv/ReleaseStatic/Firmware.vmem-range")
+
+	return true
+end
+
+local function buildHostLinux()
+	local TRAKTOR_HOME < const > = os:getEnvironment("TRAKTOR_HOME")
+
+	os:setEnvironment("MAKE_OS", "linux")
+	os:setEnvironment("MAKE_DIALECT", "make")
+	os:setEnvironment("MAKE_FORMAT", TRAKTOR_HOME .. "/resources/build/configurations/make-format.sbm")
+	os:setEnvironment("MAKE_INCLUDE", TRAKTOR_HOME .. "/resources/build/configurations/make-config-linux.inc")
+	os:setEnvironment("MAKE_TOOLCHAIN", "gcc")
+	os:setEnvironment("MAKE_OBJECT_FILE", "%s.o")
+	os:setEnvironment("MAKE_STATIC_LIBRARY_FILE", "lib%s.a")
+	os:setEnvironment("MAKE_SHARED_LIBRARY_FILE", "lib%s.so")
+	os:setEnvironment("MAKE_EXECUTABLE_FILE", "%s")
+	os:setEnvironment("MAKE_VERBOSE", "false")
+
+	run:execute(
+		TRAKTOR_HOME .. "/bin/linux/releasestatic/Traktor.SolutionBuilder.App " ..
+		"-f=make2 " ..
+		"-make-solution-template=" .. TRAKTOR_HOME .. "/resources/build/configurations/make-solution.sbm " ..
+		"-make-project-template=" .. TRAKTOR_HOME .. "/resources/build/configurations/make-project.sbm " ..
+		"retrodack-linux.xms"
+	)
+
+	run:pushd("build/linux")
+	if run:execute("make -f RetroDACK.mak ReleaseStatic") ~= 0 then return false end
+	run:popd()
+
+	return true
+end
+
 function main()
 
 	-- Ensure we can launch yosys before all else.
@@ -70,7 +138,15 @@ function main()
 		return 1
 	end
 
-	-- Concatenate all source files.
+	-- Compile firmware and tools.
+	if not buildRV() then return 1 end
+	if not buildHostLinux() then return 1 end
+
+	-- Create constraints.
+	run:run("./generate-constraints.run", "rtl/Constraints.lpf")
+	run:run("./generate-top-io.run", "rtl/RetroDACK_IO.sv")
+
+	-- Convert all source files into Verilog.
 	local f = ""
 	for _, sv in ipairs(SOURCE) do
 		local v = sv2v(
@@ -82,13 +158,6 @@ function main()
 		f = f .. " " .. v
 	end
 	stdout:printLn(f)
-
-	-- Create constraints.
-	run:run("./generate-constraints.run", "rtl/Constraints.lpf")
-	run:run("./generate-top-io.run", "rtl/RetroDACK_IO.sv")
-
-	-- Compile firmware.
-	run:run("make")
 
 	-- Ensure old bit file is removed.
 	run:rm("build/RetroDACK.bit")

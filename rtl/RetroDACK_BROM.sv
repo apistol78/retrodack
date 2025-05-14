@@ -18,11 +18,11 @@ module RetroDACK_BROM(
 );
 
 	logic [31:0] data [
-	`include "firmware.vmem-range"		
+	`include "build/rv/ReleaseStatic/Firmware.vmem-range"		
 	];
 
 	initial o_ready = 0;
-	initial $readmemh("firmware.vmem", data);
+	initial $readmemh("build/rv/ReleaseStatic/Firmware.vmem", data);
 
 	always_ff @(posedge i_clock)
 		if (i_request) begin
