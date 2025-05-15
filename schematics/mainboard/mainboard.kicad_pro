@@ -37,9 +37,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 2.7,
-          "height": 2.7,
-          "width": 2.7
+          "drill": 2.5,
+          "height": 2.5,
+          "width": 2.5
         },
         "silk_line_width": 0.15,
         "silk_text_italic": false,
@@ -58,7 +58,12 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        [
+          "silk_overlap|140760295|122335000|983b391f-f782-4615-ad7d-26f107b9e030|f00e725e-8978-46f2-a3d0-cb87dcceb6e8",
+          ""
+        ]
+      ],
       "meta": {
         "version": 2
       },
@@ -485,6 +490,20 @@
         "via_diameter": 0.5,
         "via_drill": 0.3,
         "wire_width": 6
+      },
+      {
+        "name": "3V3_NC",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 0,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.3
+      },
+      {
+        "name": "VBUS_NC",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 1,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.4
       }
     ],
     "meta": {
@@ -496,6 +515,22 @@
       {
         "netclass": "Default",
         "pattern": "GND"
+      },
+      {
+        "netclass": "VBUS_NC",
+        "pattern": "VBUS"
+      },
+      {
+        "netclass": "3V3_NC",
+        "pattern": "3V3"
+      },
+      {
+        "netclass": "3V3_NC",
+        "pattern": "3V3_LCD"
+      },
+      {
+        "netclass": "3V3_NC",
+        "pattern": "3V3_SD"
       }
     ]
   },
