@@ -4728,6 +4728,14 @@
 				(hide yes)
 			)
 		)
+		(property "LCSC" "C28233"
+			(at 226.06 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "2"
 			(uuid "d0e6488a-0fae-4ec9-ba8d-f2bdb72d9173")
 		)
@@ -4796,6 +4804,14 @@
 					(size 1.27 1.27)
 				)
 				(hide yes)
+			)
+		)
+		(property "LCSC" "C15850"
+			(at 236.22 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
 			)
 		)
 		(pin "2"
@@ -4932,6 +4948,14 @@
 					(size 1.27 1.27)
 				)
 				(hide yes)
+			)
+		)
+		(property "LCSC" "C1713"
+			(at 76.2 39.37 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
 			)
 		)
 		(pin "2"
@@ -5193,7 +5217,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "R"
+		(property "Value" "4k7"
 			(at 124.46 126.9999 0)
 			(effects
 				(font
@@ -5227,6 +5251,14 @@
 					(size 1.27 1.27)
 				)
 				(hide yes)
+			)
+		)
+		(property "LCSC" "C17673"
+			(at 121.92 125.73 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
 			)
 		)
 		(pin "2"
@@ -5432,6 +5464,14 @@
 				(hide yes)
 			)
 		)
+		(property "LCSC" "C28233"
+			(at 226.06 39.37 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "2"
 			(uuid "cb41704b-211e-40aa-b3b4-059d405ad620")
 		)
@@ -5502,6 +5542,14 @@
 				(hide yes)
 			)
 		)
+		(property "LCSC" "C15850"
+			(at 185.42 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "2"
 			(uuid "65cd5999-00cd-480e-89e9-25b9926ecd08")
 		)
@@ -5570,6 +5618,14 @@
 					(size 1.27 1.27)
 				)
 				(hide yes)
+			)
+		)
+		(property "LCSC" "C1713"
+			(at 185.42 39.37 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
 			)
 		)
 		(pin "2"
@@ -5709,6 +5765,14 @@
 				(hide yes)
 			)
 		)
+		(property "LCSC" "C28233"
+			(at 120.65 39.37 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "2"
 			(uuid "a11795f4-0ea1-46ce-9fc4-ec7da00d58c3")
 		)
@@ -5845,6 +5909,14 @@
 				(hide yes)
 			)
 		)
+		(property "LCSC" "C28233"
+			(at 175.26 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "2"
 			(uuid "79c68902-2aeb-4db2-ab34-ef57667b1bac")
 		)
@@ -5911,6 +5983,14 @@
 					(size 1.27 1.27)
 				)
 				(hide yes)
+			)
+		)
+		(property "LCSC" "C2667049"
+			(at 170.18 132.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
 			)
 		)
 		(pin "31"
@@ -6040,7 +6120,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "R"
+		(property "Value" "4k7"
 			(at 118.11 126.9999 0)
 			(effects
 				(font
@@ -6074,6 +6154,14 @@
 					(size 1.27 1.27)
 				)
 				(hide yes)
+			)
+		)
+		(property "LCSC" "C17673"
+			(at 115.57 125.73 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
 			)
 		)
 		(pin "2"
@@ -6344,6 +6432,15 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 130.81 39.37 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC" "C1713"
 			(at 130.81 39.37 0)
 			(effects
 				(font
@@ -6623,6 +6720,14 @@
 				(hide yes)
 			)
 		)
+		(property "LCSC" "C1713"
+			(at 50.8 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "2"
 			(uuid "755b12ed-1882-48e7-acd8-e4678525e5ec")
 		)
@@ -6691,6 +6796,14 @@
 					(size 1.27 1.27)
 				)
 				(hide yes)
+			)
+		)
+		(property "LCSC" "C1713"
+			(at 236.22 39.37 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
 			)
 		)
 		(pin "2"
@@ -6896,6 +7009,14 @@
 				(hide yes)
 			)
 		)
+		(property "LCSC" "C28233"
+			(at 175.26 39.37 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "2"
 			(uuid "a2050b0a-f5f6-406b-8e45-bb17584f4314")
 		)
@@ -6964,13 +7085,12 @@
 				(hide yes)
 			)
 		)
-		(property "LCPC" "C6185"
+		(property "LCSC" "C6185"
 			(at 64.77 80.01 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(hide yes)
 			)
 		)
 		(pin "3"
@@ -7122,6 +7242,14 @@
 					(size 1.27 1.27)
 				)
 				(hide yes)
+			)
+		)
+		(property "LCSC" "C28233"
+			(at 66.04 39.37 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
 			)
 		)
 		(pin "2"

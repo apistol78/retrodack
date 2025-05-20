@@ -1,0 +1,22 @@
+Designator,Val,Package,Mid X,Mid Y,Rotation,Layer
+C1,0.1uF,C_0805_2012Metric_Pad1.18x1.45mm_HandSolder,136.1,-82.9625,90.0,top
+C10,0.1uF,C_0805_2012Metric_Pad1.18x1.45mm_HandSolder,150.5,-79.4625,90.0,top
+C11,22uF,C_0805_2012Metric_Pad1.18x1.45mm_HandSolder,153.0,-79.4625,90.0,top
+C12,0.1uF,C_0805_2012Metric_Pad1.18x1.45mm_HandSolder,144.8,-76.6,180.0,top
+C13,10uF,C_0805_2012Metric_Pad1.18x1.45mm_HandSolder,144.8,-74.0,180.0,top
+C2,10uF,C_0805_2012Metric_Pad1.18x1.45mm_HandSolder,138.6,-82.9625,90.0,top
+C25,47uF,CP_EIA-3216-18_Kemet-A,152.0,-95.4475,-90.0,top
+C3,10uF,C_0805_2012Metric_Pad1.18x1.45mm_HandSolder,138.8,-99.2,180.0,top
+C4,0.1uF,C_0805_2012Metric_Pad1.18x1.45mm_HandSolder,137.0,-78.4625,90.0,top
+C5,10uF,C_0805_2012Metric_Pad1.18x1.45mm_HandSolder,139.5,-78.4625,90.0,top
+C6,0.1uF,C_0805_2012Metric_Pad1.18x1.45mm_HandSolder,150.5,-88.5375,-90.0,top
+C7,10uF,C_0805_2012Metric_Pad1.18x1.45mm_HandSolder,153.0,-88.5375,-90.0,top
+C8,0.1uF,C_0805_2012Metric_Pad1.18x1.45mm_HandSolder,153.0,-83.9625,-90.0,top
+C9,22uF,C_0805_2012Metric_Pad1.18x1.45mm_HandSolder,150.5,-83.9625,-90.0,top
+J1,Conn_01x10_Pin,PinHeader_1x10_P2.54mm_Vertical,124.2,-86.43,0.0,top
+J2,AudioJack3,Jack_3.5mm_Switronic_ST-005-G_horizontal,164.15,-94.25,180.0,top
+J3,Conn_01x02_Pin,PinHeader_1x02_P2.54mm_Vertical,168.8,-79.73,0.0,top
+R1,4k7,R_0805_2012Metric_Pad1.20x1.40mm_HandSolder,142.0,-89.0,90.0,top
+R3,4k7,R_0805_2012Metric_Pad1.20x1.40mm_HandSolder,144.5,-89.0,90.0,top
+U1,~,QFN50P500X500X100-33N,145.1,-83.0,0.0,top
+U2,AMS1117-1.8,SOT-223-3_TabPin2,145.55,-96.7,0.0,top
