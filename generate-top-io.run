@@ -9,8 +9,9 @@ function main()
 		"pin-clock.csv",
 		"pin-lcd.csv",
 		"pin-uart.csv",
+		"pin-i2c.csv",
 		"pin-sd.csv",
-		"pin-usb-hci.csv",
+		-- "pin-usb-hci.csv",
 		"pin-sdram.csv",
 	}
 

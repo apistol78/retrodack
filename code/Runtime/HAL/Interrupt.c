@@ -1,3 +1,11 @@
+/*
+ RetroDÄCK
+ Copyright (c) 2025 Anders Pistol.
+
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
 #include "Runtime/HAL/CSR.h"
 #include "Runtime/HAL/Interrupt.h"
 
@@ -108,7 +116,7 @@ void interrupt_init()
 
 	// Global interrupt enable 
 	csr_set_bits_mie(MIE_MTI_BIT_MASK | MIE_MEI_BIT_MASK | MIE_MSI_BIT_MASK);
-	interrupt_enable();
+	// interrupt_enable();
 
 	// Enable PLIC interrupts.
 	*PLIC_ENABLE = 2 | 4 | 8 | 16;

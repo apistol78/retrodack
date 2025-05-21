@@ -10,14 +10,6 @@
 
 #include "Runtime/HAL/Common.h"
 
-EXTERN_C void uart_tx_u8(uint8_t data);
+EXTERN_C int32_t i2c_write(uint8_t deviceAddr, uint8_t controlAddr, uint8_t controlData);
 
-EXTERN_C uint32_t uart_rx_full();
-
-EXTERN_C uint32_t uart_rx_empty();
-
-EXTERN_C uint8_t uart_rx_u8();
-
-EXTERN_C uint16_t uart_rx_u16();
-
-EXTERN_C uint32_t uart_rx_u32();
+EXTERN_C int32_t i2c_read(uint8_t deviceAddr, uint8_t controlAddr, uint8_t* outControlData, int32_t nbytes);

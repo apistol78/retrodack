@@ -223,7 +223,7 @@ module RetroDACK(
 	wire [31:0] bus_wdata;
 
 	CPU_BusMux #(
-		.REGISTERED(0)
+		.REGISTERED(1)
 	) bus(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -340,6 +340,34 @@ module RetroDACK(
 
 
 	//====================================================
+	// I2C
+	wire i2c_select;
+	wire [1:0] i2c_address;
+	wire [31:0] i2c_wdata;
+	wire [31:0] i2c_rdata;
+	wire i2c_ready;
+
+	wire I2C_SDA_direction;
+	wire I2C_SDA_w;
+
+	assign I2C_SDA = I2C_SDA_direction ? I2C_SDA_w : 1'bz;
+
+	I2C i2c(
+		.i_clock(clock),
+		.i_request(bridge_far_request && i2c_select),
+		.i_rw(bridge_far_rw),
+		.i_wdata(i2c_wdata),
+		.o_rdata(i2c_rdata),
+		.o_ready(i2c_ready),
+		// ---
+		.I2C_SCL(I2C_SCL),
+		.I2C_SDA_direction(I2C_SDA_direction),
+		.I2C_SDA_r(I2C_SDA),
+		.I2C_SDA_w(I2C_SDA_w),
+	);
+
+
+	//====================================================
 	// TIMER
 	wire timer_select;
 	wire [3:0] timer_address;
@@ -374,7 +402,7 @@ module RetroDACK(
 		.i_reset(reset),
 		.i_clock(clock),
 
-		.i_interrupt_0(0),
+		.i_interrupt_0(~I2C_INTERRUPT),
 		.i_interrupt_1(0),
 		.i_interrupt_2(0),
 		.i_interrupt_3(0),
@@ -433,6 +461,10 @@ module RetroDACK(
 	assign uart_address = bridge_far_address[3:2];
 	assign uart_wdata = bridge_far_wdata;
 
+	assign i2c_select = bridge_far_address[27:24] == 4'h3;
+	assign i2c_address = bridge_far_address[3:2];
+	assign i2c_wdata = bridge_far_wdata;
+
 	assign timer_select = bridge_far_address[27:24] == 4'h5;
 	assign timer_address = bridge_far_address[5:2];
 	assign timer_wdata = bridge_far_wdata;
@@ -443,12 +475,14 @@ module RetroDACK(
 
 	assign bridge_far_rdata =
 		uart_select	? uart_rdata	:
+		i2c_select ? i2c_rdata		:
 		timer_select ? timer_rdata	:
 		plic_select ? plic_rdata	:
 		32'h00000000;
 	
 	assign bridge_far_ready =
 		uart_select	? uart_ready	:
+		i2c_select ? i2c_ready		:
 		timer_select ? timer_ready	:
 		plic_select ? plic_ready	:
 		1'b0;

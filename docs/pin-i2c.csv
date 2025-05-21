@@ -1,0 +1,4 @@
+SODIMM,Designator,FPGA,Signal,Direction
+,PT29A,A7,I2C_SCL,output
+,PT29B,A8,I2C_SDA,inout
+,PT18B,A6,I2C_INTERRUPT,input

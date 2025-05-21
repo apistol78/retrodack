@@ -28,6 +28,7 @@ local SOURCE < const > =
 	PATH_PERIFHERIALS .. "/uart/UART.sv",
 	PATH_PERIFHERIALS .. "/uart/UART_RX.sv",
 	PATH_PERIFHERIALS .. "/uart/UART_TX.sv",
+	PATH_PERIFHERIALS .. "/i2c/I2C.sv",
 	PATH_PERIFHERIALS .. "/cpu/CPU.sv",
 	PATH_PERIFHERIALS .. "/cpu/CPU_BusMux.sv",
 	PATH_PERIFHERIALS .. "/cpu/CPU_PLIC.sv",

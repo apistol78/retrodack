@@ -5,8 +5,11 @@
 #include "Runtime/CRT.h"
 #include "Runtime/File.h"
 #include "Runtime/Runtime.h"
+#include "Runtime/HAL/I2C.h"
+#include "Runtime/HAL/Interrupt.h"
 #include "Runtime/HAL/SD.h"
 #include "Runtime/HAL/SystemRegisters.h"
+#include "Runtime/HAL/Timer.h"
 #include "Runtime/HAL/UART.h"
 
 typedef void (*call_fn_t)();
@@ -230,6 +233,55 @@ static void remote_control()
 	}
 }
 
+#define TRACKBALL_REG_LED_RED 0x00
+#define TRACKBALL_REG_LED_GRN 0x01
+#define TRACKBALL_REG_LED_BLU 0x02
+#define TRACKBALL_REG_LED_WHT 0x03
+
+#define TRACKBALL_REG_LEFT 0x04
+#define TRACKBALL_REG_RIGHT 0x05
+#define TRACKBALL_REG_UP 0x06
+#define TRACKBALL_REG_DOWN 0x07
+#define TRACKBALL_REG_SWITCH 0x08
+#define TRACKBALL_MSK_SWITCH_STATE 0b10000000
+
+#define TRACKBALL_REG_USER_FLASH 0xD0
+#define TRACKBALL_REG_FLASH_PAGE 0xF0
+#define TRACKBALL_REG_INT 0xF9
+#define TRACKBALL_MSK_INT_TRIGGERED 0b00000001
+#define TRACKBALL_MSK_INT_OUT_EN 0b00000010
+#define TRACKBALL_REG_CHIP_ID_L 0xFA
+#define TRACKBALL_RED_CHIP_ID_H 0xFB
+#define TRACKBALL_REG_VERSION 0xFC
+#define TRACKBALL_REG_I2C_ADDR 0xFD
+#define TRACKBALL_REG_CTRL 0xFE
+#define TRACKBALL_MSK_CTRL_SLEEP 0b00000001
+#define TRACKBALL_MSK_CTRL_RESET 0b00000010
+#define TRACKBALL_MSK_CTRL_FREAD 0b00000100
+#define TRACKBALL_MSK_CTRL_FWRITE 0b00001000
+
+
+volatile int32_t g_i2c_counter = 0;
+volatile int32_t x = 0, y = 0;
+
+void i2c_handler(uint32_t source)
+{
+	++g_i2c_counter;
+
+	uint8_t data[5];
+	i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5);
+	
+	if (data[0])
+		x += data[0];
+	if (data[1])
+		x -= data[1];
+	if (data[2])
+		y += data[2];
+	if (data[3])
+		y -= data[3];
+
+}
+
 void main(int argc, const char** argv)
 {
 	// Initialize SP, since we hot restart and startup doesn't set SP.
@@ -259,11 +311,43 @@ void main(int argc, const char** argv)
 	}
 
 	int32_t i = 0;
+	
 	for (;;)
 	{
-		printf("Hello world %d!\n\r", i);
-		++i;
+		printf("request chip id...\n\r");
+
+		uint8_t data[5];
+		i2c_read(0x0a, TRACKBALL_REG_CHIP_ID_L, data, 2);
+
+		if (data[0] == 0x11 && data[1] == 0xba)
+		{
+			printf("found trackball!\n\r");
+
+			i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0xff);
+
+			i2c_read(0x0a, TRACKBALL_REG_INT, data, 1);
+			data[0] |= TRACKBALL_MSK_INT_OUT_EN;
+			i2c_write(0x0a, TRACKBALL_REG_INT, data[0]);
+
+			interrupt_init();
+			interrupt_set_handler(IRQ_SOURCE_PLIC_0, i2c_handler);
+			interrupt_enable();
+
+			for (;;)
+			{
+				printf("(%d) %d : %d\n\r", g_i2c_counter, x, y);
+				timer_wait_ms(100);
+			}
+		}
+		else
+		{
+			printf("not trackball found!\n\r");
+		}
+
+		timer_wait_ms(1000);
 	}
+
+	for (;;);
 
 	/*
 	printf("initialize storage...\n");
