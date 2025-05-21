@@ -2172,6 +2172,17 @@
 		)
 		(uuid "a73d067c-df84-4f36-9b35-4e0b7557c85e")
 	)
+	(text "https://www.jbl-ec.com/pj-321-3-5mm-audio-jack-trs-through-hole-right-angle-product/"
+		(exclude_from_sim no)
+		(at 63.5 192.532 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(href "https://www.jbl-ec.com/pj-321-3-5mm-audio-jack-trs-through-hole-right-angle-product/")
+		)
+		(uuid "d00643cc-bb4e-47f0-b1c7-c8e65645b492")
+	)
 	(junction
 		(at 121.92 135.89)
 		(diameter 0)
