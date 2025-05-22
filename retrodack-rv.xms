@@ -114,23 +114,15 @@
 						</item>
 					</items>
 				</item>
-				<item type="Filter">
-					<name>HAL</name>
-					<items>
-						<item type="File" version="1">
-							<fileName>HAL/*.c</fileName>
-							<excludeFilter/>
-							<items/>
-						</item>
-						<item type="File" version="1">
-							<fileName>HAL/*.h</fileName>
-							<excludeFilter/>
-							<items/>
-						</item>
-					</items>
-				</item>
 			</items>
-			<dependencies/>
+			<dependencies>
+				<item type="ExternalDependency" version="3">
+					<inheritIncludePaths>true</inheritIncludePaths>
+					<link>LnkYes</link>
+					<solutionFileName>../klara-rv/klara-rv.xms</solutionFileName>
+					<projectName>KlaraRV.HAL</projectName>
+				</item>
+			</dependencies>
 		</item>
 		<item type="Project" version="1">
 			<enable>true</enable>

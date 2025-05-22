@@ -1,16 +1,26 @@
+/*
+ RetroDÄCK
+ Copyright (c) 2025 Anders Pistol.
+
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
 #include <stdio.h>
+
+#include <hal/Audio.h>
+#include <hal/Interrupt.h>
+#include <hal/SD.h>
+#include <hal/SystemRegisters.h>
+#include <hal/Timer.h>
+#include <hal/UART.h>
+#include <hal/Video.h>
+
 #include "Runtime/CRT.h"
 #include "Runtime/File.h"
 #include "Runtime/Input.h"
 #include "Runtime/Kernel.h"
 #include "Runtime/Runtime.h"
-#include "Runtime/HAL/Audio.h"
-#include "Runtime/HAL/Interrupt.h"
-#include "Runtime/HAL/SD.h"
-#include "Runtime/HAL/SystemRegisters.h"
-#include "Runtime/HAL/Timer.h"
-#include "Runtime/HAL/UART.h"
-#include "Runtime/HAL/Video.h"
 
 // Needed by custom printf implementation.
 void _putchar(char character)

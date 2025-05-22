@@ -1,11 +1,21 @@
+/*
+ RetroDÄCK
+ Copyright (c) 2025 Anders Pistol.
+
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <hal/CSR.h>
+#include <hal/Interrupt.h>
+#include <hal/SystemRegisters.h>
+#include <hal/Timer.h>
+
 #include "Runtime/Kernel.h"
-#include "Runtime/HAL/CSR.h"
-#include "Runtime/HAL/Interrupt.h"
-#include "Runtime/HAL/SystemRegisters.h"
-#include "Runtime/HAL/Timer.h"
 
 // #define TIMER_MS            (volatile uint32_t*)(TIMER_BASE + 0x0 * 0x04)
 // #define TIMER_CYCLES_L      (volatile uint32_t*)(TIMER_BASE + 0x1 * 0x04)
