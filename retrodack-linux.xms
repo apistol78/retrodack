@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<object type="Solution" version="5">
+<object type="traktor.sb.Solution" version="5">
 	<name>RetroDACK</name>
 	<rootPath>build/linux</rootPath>
 	<aggregateOutputPath/>
 	<projects>
-		<item type="Project" version="1">
+		<item type="traktor.sb.Project" version="1">
 			<enable>true</enable>
 			<name>Launch</name>
 			<sourcePath>code/Launch</sourcePath>
 			<configurations>
-				<item type="Configuration" version="5">
+				<item type="traktor.sb.Configuration" version="5">
 					<name>DebugShared</name>
 					<targetFormat>TfExecutableConsole</targetFormat>
 					<targetProfile>TpDebug</targetProfile>
@@ -33,7 +33,7 @@
 					<aggregationItems/>
 					<consumerLibraryPath/>
 				</item>
-				<item type="Configuration" version="5">
+				<item type="traktor.sb.Configuration" version="5">
 					<name>ReleaseShared</name>
 					<targetFormat>TfExecutableConsole</targetFormat>
 					<targetProfile>TpRelease</targetProfile>
@@ -57,7 +57,7 @@
 					<aggregationItems/>
 					<consumerLibraryPath/>
 				</item>
-				<item type="Configuration" version="5">
+				<item type="traktor.sb.Configuration" version="5">
 					<name>DebugStatic</name>
 					<targetFormat>TfExecutableConsole</targetFormat>
 					<targetProfile>TpDebug</targetProfile>
@@ -82,7 +82,7 @@
 					<aggregationItems/>
 					<consumerLibraryPath/>
 				</item>
-				<item type="Configuration" version="5">
+				<item type="traktor.sb.Configuration" version="5">
 					<name>ReleaseStatic</name>
 					<targetFormat>TfExecutableConsole</targetFormat>
 					<targetProfile>TpRelease</targetProfile>
@@ -109,26 +109,26 @@
 				</item>
 			</configurations>
 			<items>
-				<item type="File" version="1">
+				<item type="traktor.sb.File" version="1">
 					<fileName>*.*</fileName>
 					<excludeFilter/>
 					<items/>
 				</item>
 			</items>
 			<dependencies>
-				<item type="ExternalDependency" version="3">
+				<item type="traktor.sb.ExternalDependency" version="3">
 					<inheritIncludePaths>true</inheritIncludePaths>
 					<link>LnkYes</link>
 					<solutionFileName>$(TRAKTOR_HOME)/resources/build/TraktorLinux.xms</solutionFileName>
 					<projectName>Traktor.Core</projectName>
 				</item>
-				<item type="ExternalDependency" version="3">
+				<item type="traktor.sb.ExternalDependency" version="3">
 					<inheritIncludePaths>true</inheritIncludePaths>
 					<link>LnkYes</link>
 					<solutionFileName>$(TRAKTOR_HOME)/resources/build/TraktorLinux.xms</solutionFileName>
 					<projectName>Traktor.Net</projectName>
 				</item>
-				<item type="ExternalDependency" version="3">
+				<item type="traktor.sb.ExternalDependency" version="3">
 					<inheritIncludePaths>true</inheritIncludePaths>
 					<link>LnkYes</link>
 					<solutionFileName>$(TRAKTOR_HOME)/resources/build/TraktorLinux.xms</solutionFileName>
