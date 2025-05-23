@@ -9,16 +9,17 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <hal/I2C.h>
+#include <hal/Interrupt.h>
+#include <hal/SD.h>
+#include <hal/Timer.h>
+#include <hal/UART.h>
+
 #include "Firmware/ELF.h"
 #include "Runtime/CRT.h"
 #include "Runtime/File.h"
 #include "Runtime/Runtime.h"
-#include "Runtime/HAL/I2C.h"
-#include "Runtime/HAL/Interrupt.h"
-#include "Runtime/HAL/SD.h"
-#include "Runtime/HAL/SystemRegisters.h"
-#include "Runtime/HAL/Timer.h"
-#include "Runtime/HAL/UART.h"
 
 typedef void (*call_fn_t)();
 
@@ -106,7 +107,7 @@ static int32_t launch_elf(const char* filename)
 
 	if (jstart != 0)
 	{
-		const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE) - 0x8;
+		const uint32_t sp = 0x20100000 + /*sysreg_read(SR_REG_RAM_SIZE)*/ 0x01000000 - 0x8;
 		printf("launching application (stack @ 0x%08x)...\n", sp);
 		__asm__ volatile (
 			"fence					\n"
@@ -127,7 +128,7 @@ static void remote_control()
 	for (;;)
 	{
 		uint8_t cmd = uart_rx_u8();
-		sysreg_write(SR_REG_LEDS, cmd);
+		// sysreg_write(SR_REG_LEDS, cmd);
 
 		// poke
 		if (cmd == 0x01)
@@ -293,7 +294,7 @@ void i2c_handler(uint32_t source)
 void main(int argc, const char** argv)
 {
 	// Initialize SP, since we hot restart and startup doesn't set SP.
-	const uint32_t sp = 0x20000000 + sysreg_read(SR_REG_RAM_SIZE);
+	const uint32_t sp = 0x20100000 + /*sysreg_read(SR_REG_RAM_SIZE)*/ 0x01000000;
 	__asm__ volatile (
 		"mv sp, %0	\n"
 		:
@@ -322,6 +323,7 @@ void main(int argc, const char** argv)
 	
 	for (;;)
 	{
+		/*
 		printf("request chip id...\n\r");
 
 		uint8_t data[5];
@@ -353,6 +355,7 @@ void main(int argc, const char** argv)
 		}
 
 		timer_wait_ms(1000);
+		*/
 	}
 
 	for (;;);

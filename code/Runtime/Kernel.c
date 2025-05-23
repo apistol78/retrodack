@@ -12,7 +12,6 @@
 
 #include <hal/CSR.h>
 #include <hal/Interrupt.h>
-#include <hal/SystemRegisters.h>
 #include <hal/Timer.h>
 
 #include "Runtime/Kernel.h"
