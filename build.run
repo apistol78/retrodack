@@ -94,8 +94,9 @@ local function buildRV()
 	if run:execute("make -f RetroDACK.mak ReleaseStatic") ~= 0 then return false end
 	run:popd()
 
-	-- Create HEX file of firmware.
+	-- Create HEX and dump files of firmware.
 	run:execute("riscv32-unknown-elf-objcopy -O ihex build/rv/ReleaseStatic/Firmware build/rv/ReleaseStatic/Firmware.hex")
+	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Firmware", "build/rv/ReleaseStatic/Firmware.dump")
 
 	-- Create Verilog files of firmware.
 	run:execute("../klara-rv/bin/Hex2Verilog -word=32 build/rv/ReleaseStatic/Firmware.hex -vmem=build/rv/ReleaseStatic/Firmware.vmem -vmem-range=build/rv/ReleaseStatic/Firmware.vmem-range")
@@ -134,65 +135,69 @@ end
 
 function main()
 
-	-- Ensure we can launch yosys before all else.
-	if os:whereIs("yosys") == nil then
-		stderr:printLn("Unable to locate yosys; ensure it's accessible through PATH.")
-		return 1
-	end
-
 	-- Compile firmware and tools.
 	if not buildRV() then return 1 end
 	if not buildHostLinux() then return 1 end
 
-	-- Create constraints.
-	run:run("./generate-constraints.run", "rtl/Constraints.lpf")
-	run:run("./generate-top-io.run", "rtl/RetroDACK_IO.sv")
+	local synthesize < const > = false
+	if synthesize then
+		-- Ensure we can launch yosys before all else.
+		if os:whereIs("yosys") == nil then
+			stderr:printLn("Unable to locate yosys; ensure it's accessible through PATH.")
+			return 1
+		end
 
-	-- Convert all source files into Verilog.
-	local f = ""
-	for _, sv in ipairs(SOURCE) do
-		local v = sv2v(
-			sv,
-			{ ".", "./rtl", PATH_PERIFHERIALS .. "/cpu" },
-			{},
-			"build/rtl-v"
-		)
-		f = f .. " " .. v
-	end
-	stdout:printLn(f)
+		-- Create constraints.
+		run:run("./generate-constraints.run", "rtl/Constraints.lpf")
+		run:run("./generate-top-io.run", "rtl/RetroDACK_IO.sv")
 
-	-- Ensure old bit file is removed.
-	run:rm("build/RetroDACK.bit")
-	run:rm("build/RetroDACK.json")
-	run:rm("build/RetroDACK.log")
+		-- Convert all source files into Verilog.
+		local f = ""
+		for _, sv in ipairs(SOURCE) do
+			local v = sv2v(
+				sv,
+				{ ".", "./rtl", PATH_PERIFHERIALS .. "/cpu" },
+				{},
+				"build/rtl-v"
+			)
+			f = f .. " " .. v
+		end
+		stdout:printLn(f)
 
-	-- Synthesize
-	local xc = run:execute("yosys -l build/RetroDACK.log -p \"opt; share -aggressive; synth_ecp5 -abc9 -json build/RetroDACK.json\" " .. f)
-	if xc ~= 0 then
-		stderr:printLn("yosys failed; build aborted.")
-		return 1
-	end
+		-- Ensure old bit file is removed.
+		run:rm("build/RetroDACK.bit")
+		run:rm("build/RetroDACK.json")
+		run:rm("build/RetroDACK.log")
 
-	-- Place and route.
-	local xc = run:execute("nextpnr-ecp5 --25k --package CABGA256 --speed 6 --timing-allow-fail --top RetroDACK --json build/RetroDACK.json --textcfg build/RetroDACK.config --lpf rtl/Constraints.lpf --report build/RetroDACK.report.json --freq 100")
-	if xc ~= 0 then
-		stderr:printLn("nextpnr-ecp5 failed; build aborted.")
-		return 1
-	end
+		-- Synthesize
+		local xc = run:execute("yosys -l build/RetroDACK.log -p \"opt; share -aggressive; synth_ecp5 -abc9 -json build/RetroDACK.json\" " .. f)
+		if xc ~= 0 then
+			stderr:printLn("yosys failed; build aborted.")
+			return 1
+		end
 
-	-- Create bit file.
-	local xc = run:execute("ecppack --compress --svf build/RetroDACK.svf build/RetroDACK.config build/RetroDACK.bit")
-	if xc ~= 0 then
-		stderr:printLn("ecppack failed; build aborted.")
-		return 1
-	end
+		-- Place and route.
+		local xc = run:execute("nextpnr-ecp5 --25k --package CABGA256 --speed 6 --timing-allow-fail --top RetroDACK --json build/RetroDACK.json --textcfg build/RetroDACK.config --lpf rtl/Constraints.lpf --report build/RetroDACK.report.json --freq 100")
+		if xc ~= 0 then
+			stderr:printLn("nextpnr-ecp5 failed; build aborted.")
+			return 1
+		end
 
-	-- Program target.
-	local xc = run:execute("openFPGALoader -c cmsisdap --vid=0x1d50 --pid=0x602b ./build/RetroDACK.bit")
-	if xc ~= 0 then
-		stderr:printLn("openFPGALoader failed; build aborted.")
-		return 1
+		-- Create bit file.
+		local xc = run:execute("ecppack --compress --svf build/RetroDACK.svf build/RetroDACK.config build/RetroDACK.bit")
+		if xc ~= 0 then
+			stderr:printLn("ecppack failed; build aborted.")
+			return 1
+		end
+
+		-- Program target.
+		local xc = run:execute("openFPGALoader -c cmsisdap --vid=0x1d50 --pid=0x602b ./build/RetroDACK.bit")
+		if xc ~= 0 then
+			stderr:printLn("openFPGALoader failed; build aborted.")
+			return 1
+		end
 	end
 
 	stdout:printLn("Build successful.")
+	return 0
 end
