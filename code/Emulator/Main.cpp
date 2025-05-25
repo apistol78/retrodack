@@ -5,7 +5,10 @@
 #include <diskio.h>
 
 // Traktor
+#include <Core/Io/FileOutputStream.h>
+#include <Core/Io/FileSystem.h>
 #include <Core/Io/MemoryStream.h>
+#include <Core/Io/Utf8Encoding.h>
 #include <Core/Log/Log.h>
 #include <Core/Misc/CommandLine.h>
 
@@ -126,7 +129,15 @@ int main(int argc, const char** argv)
 	bus.map(0x58000000, 0x58004000, false, false, &plic);
 	bus.map(0x5a000000, 0x5b000000, false, false, &video);
 
-    CPU cpu(&bus, nullptr, false);
+	Ref< OutputStream > os = nullptr;	
+	if (cmdLine.hasOption(L't', L"trace"))
+	{
+		Ref< IStream > f = FileSystem::getInstance().open(L"CPU.trace", File::FmWrite);
+		if (f)
+			os = new FileOutputStream(f, new Utf8Encoding());
+	}
+
+    CPU cpu(&bus, os, false);
 
     cpu.setSP(0x10000000 + 0x00001000 - 4);
 
