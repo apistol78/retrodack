@@ -37934,7 +37934,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_1.00mm:PinHeader_1x02_P1.00mm_Vertical"
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
 			(at 165.1 436.88 0)
 			(effects
 				(font
@@ -38814,7 +38814,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "Conn_01x02_Pin"
+		(property "Value" "SPEAKER"
 			(at 769.62 167.6399 0)
 			(effects
 				(font
