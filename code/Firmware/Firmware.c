@@ -132,7 +132,6 @@ void main(int argc, const char** argv)
 		:
 		: "r" (sp)
 	);
-	*/
 
 	// Initialize segments when running from ROM.
 	{
@@ -151,6 +150,9 @@ void main(int argc, const char** argv)
         uint32_t len = (uint32_t)(&BSS_END - &BSS_START);
 		memset(dest, 0, len);
 	}
+	*/
+
+	crt_init();
 
 	printf("initialize storage...\n");
 	sd_init(SD_MODE_SW);
