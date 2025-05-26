@@ -12,7 +12,7 @@
 #include <ff.h>
 #include <diskio.h>
 
-#include <hal/SD.h>
+#include <HAL/SD.h>
 
 #include "Runtime/File.h"
 #include "Runtime/Kernel.h"

@@ -8,10 +8,10 @@
 #include <Core/Misc/String.h>
 #include <Core/Misc/TString.h>
 
-#include <cpu/Bus.h>
-#include <cpu/BusAccess.h>
-#include <cpu/CPU.h>
-#include <cpu/DCache.h>
+#include <Emulator/CPU/Bus.h>
+#include <Emulator/CPU/BusAccess.h>
+#include <Emulator/CPU/CPU.h>
+#include <Emulator/CPU/DCache.h>
 
 #include "Emulator/LoadELF.h"
 

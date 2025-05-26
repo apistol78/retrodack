@@ -10,9 +10,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <hal/CSR.h>
-#include <hal/Interrupt.h>
-#include <hal/Timer.h>
+#include <HAL/CSR.h>
+#include <HAL/Interrupt.h>
+#include <HAL/Timer.h>
 
 #include "Runtime/Kernel.h"
 

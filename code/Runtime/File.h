@@ -8,7 +8,7 @@
 */
 #pragma once
 
-#include <hal/Common.h>
+#include <HAL/Common.h>
 
 #define FILE_MODE_READ  0
 #define FILE_MODE_WRITE 1

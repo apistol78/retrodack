@@ -8,12 +8,12 @@
 */
 #include <stdio.h>
 
-#include <hal/Audio.h>
-#include <hal/Interrupt.h>
-#include <hal/SD.h>
-#include <hal/Timer.h>
-#include <hal/UART.h>
-#include <hal/Video.h>
+#include <HAL/Audio.h>
+#include <HAL/Interrupt.h>
+#include <HAL/SD.h>
+#include <HAL/Timer.h>
+#include <HAL/UART.h>
+#include <HAL/Video.h>
 
 #include "Runtime/CRT.h"
 #include "Runtime/File.h"

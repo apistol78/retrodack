@@ -27,15 +27,15 @@
 #include <Drawing/Image.h>
 
 // Klara-RV
-#include <cpu/Bus.h>
-#include <cpu/CPU.h>
-#include <devices/Audio.h>
-#include <devices/Memory.h>
-#include <devices/PLIC.h>
-#include <devices/SD.h>
-#include <devices/Timer.h>
-#include <devices/UART.h>
-#include <devices/Video.h>
+#include <Emulator/CPU/Bus.h>
+#include <Emulator/CPU/CPU.h>
+#include <Emulator/Devices/Audio.h>
+#include <Emulator/Devices/Memory.h>
+#include <Emulator/Devices/PLIC.h>
+#include <Emulator/Devices/SD.h>
+#include <Emulator/Devices/Timer.h>
+#include <Emulator/Devices/UART.h>
+#include <Emulator/Devices/Video.h>
 
 //
 #include "Emulator/LoadELF.h"

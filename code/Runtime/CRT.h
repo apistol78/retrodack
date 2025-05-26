@@ -8,6 +8,6 @@
 */
 #pragma once
 
-#include <hal/Common.h>
+#include <HAL/Common.h>
 
 EXTERN_C void crt_init();

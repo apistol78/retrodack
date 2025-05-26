@@ -10,11 +10,11 @@
 #include <stdio.h>
 #include <string.h>
 
-// #include <hal/I2C.h>
-// #include <hal/Interrupt.h>
-#include <hal/SD.h>
-// #include <hal/Timer.h>
-// #include <hal/UART.h>
+// #include <HAL/I2C.h>
+// #include <HAL/Interrupt.h>
+#include <HAL/SD.h>
+// #include <HAL/Timer.h>
+// #include <HAL/UART.h>
 
 #include "Firmware/ELF.h"
 #include "Runtime/CRT.h"

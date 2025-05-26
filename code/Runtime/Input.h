@@ -8,7 +8,7 @@
 */
 #pragma once
 
-#include <hal/Common.h>
+#include <HAL/Common.h>
 
 EXTERN_C void input_init();
 

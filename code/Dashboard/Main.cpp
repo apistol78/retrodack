@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <hal/Video.h>
+#include <HAL/Video.h>
 
 #include "Runtime/Runtime.h"
 #include "Runtime/Kernel.h"

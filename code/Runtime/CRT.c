@@ -13,7 +13,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <hal/UART.h>
+#include <HAL/UART.h>
 
 #include "Runtime/File.h"
 #include "Runtime/Kernel.h"
