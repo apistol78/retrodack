@@ -368,6 +368,33 @@ module RetroDACK(
 
 
 	//====================================================
+	// SD (internal)
+	// wire sd_internal_select;
+	// wire [1:0] sd_internal_address;
+	// wire [31:0] sd_internal_rdata;
+	// wire sd_internal_ready;
+
+	// SD sd_internal(
+	// 	.i_reset(reset),
+	// 	.i_clock(clock),
+	// 	.i_request(sd_select && bridge_far_request),
+	// 	.i_rw(bridge_far_rw),
+	// 	.i_address(sd_address),
+	// 	.i_wdata(bridge_far_wdata),
+	// 	.o_rdata(sd_rdata),
+	// 	.o_ready(sd_ready),
+	// 	// ---
+	// 	.SD_CLK(sd_clk),
+	// 	.SD_CMD(sd_cmd),
+	// 	.SD_DAT(sd_dat)
+	// );
+
+
+	//====================================================
+	// SD (external)
+
+
+	//====================================================
 	// TIMER
 	wire timer_select;
 	wire [3:0] timer_address;

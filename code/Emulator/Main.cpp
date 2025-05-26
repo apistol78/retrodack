@@ -1,3 +1,16 @@
+#if defined(__LINUX__) || defined(__RPI__) || defined(__APPLE__)
+#	include <sys/types.h>
+#	include <sys/stat.h>
+#	include <signal.h>
+#	include <stdio.h>
+#	include <stdlib.h>
+#	include <fcntl.h>
+#	include <errno.h>
+#	include <unistd.h>
+#	include <syslog.h>
+#	include <string.h>
+#endif
+
 #include <cstring>
 
 // FatFS
@@ -11,6 +24,7 @@
 #include <Core/Io/Utf8Encoding.h>
 #include <Core/Log/Log.h>
 #include <Core/Misc/CommandLine.h>
+#include <Drawing/Image.h>
 
 // Klara-RV
 #include <cpu/Bus.h>
@@ -81,6 +95,8 @@ bool createFsImage()
 	BYTE work[FF_MAX_SS];
 	FRESULT res;
 	FATFS fs;
+	FIL f;
+	UINT bw;
 
 	std::memset(fs_image, 0, fs_image_size);
 
@@ -90,13 +106,54 @@ bool createFsImage()
 	res = f_mount(&fs, "", 0);
 	if (res) return false;
 
+	Ref< IStream > sf = FileSystem::getInstance().open(L"fs/Dashboard", File::FmRead);
+	if (sf)
+	{
+		res = f_open(&f, "Dashboard", FA_CREATE_ALWAYS | FA_WRITE);
+		if (res) return false;
+
+		for (;;)
+		{
+			const int64_t nrd = sf->read(work, sizeof(work));
+			if (nrd <= 0)
+				break;
+
+			res = f_write(&f, work, (UINT)nrd, &bw);
+			if (res) return false;
+		}
+
+		f_close(&f);
+	}
+
 	return true;
 }
 
+bool g_going = true;
+
+#if defined(__LINUX__) || defined(__RPI__) || defined(__APPLE__)
+void abortHandler(int s)
+{
+	g_going = false;
+}
+#endif
 
 int main(int argc, const char** argv)
 {
 	const CommandLine cmdLine(argc, argv);
+
+#if defined(__LINUX__) || defined(__RPI__) || defined(__APPLE__)
+	{
+		struct sigaction sa = { SIG_IGN };
+		sigaction(SIGPIPE, &sa, nullptr);
+	}
+	{
+		struct sigaction sa;
+		sa.sa_handler = abortHandler;
+		sigemptyset(&sa.sa_mask);
+		sa.sa_flags = 0;
+		sigaction(SIGINT, &sa, nullptr);
+	}
+#endif
 
 	// Create file system from files.
 	if (!createFsImage())
@@ -107,8 +164,8 @@ int main(int argc, const char** argv)
 
 	// Create emulation devices.
 	Memory rom(0x00100000);
-    Memory ram(0x00001000);
-	Memory sdram(0x00010000);
+    Memory ram(0x00010000);
+	Memory sdram(0x01000000);
 	Video video(720, 720);
 	UART uart;
 	// Unknown i2c(L"I2C", true);
@@ -118,9 +175,9 @@ int main(int argc, const char** argv)
 	// Audio audio;
 
 	Bus bus;
-	bus.map(0x00000000, 0x00000000 + 0x00020000, false, false, &rom);
-    bus.map(0x10000000, 0x10000000 + 0x00001000, false, false, &ram);
-	bus.map(0x20000000, 0x20000000 + 0x01000000, true, false, &sdram);
+	bus.map(0x00000000, 0x00000000 + rom.getCapacity(), false, false, &rom);
+    bus.map(0x10000000, 0x10000000 + ram.getCapacity(), false, false, &ram);
+	bus.map(0x20000000, 0x20000000 + sdram.getCapacity(), true, false, &sdram);
 	bus.map(0x51000000, 0x51000100, false, false, &uart);
 	// bus.map(0x53000000, 0x53000100, false, false, &i2c);
 	bus.map(0x54000000, 0x54000100, false, true, &sd);
@@ -138,8 +195,9 @@ int main(int argc, const char** argv)
 	}
 
     CPU cpu(&bus, os, false);
-
     cpu.setSP(0x10000000 + 0x00001000 - 4);
+
+	tmr.setCallback([&](){ cpu.interrupt(TIMER); });
 
 	if (cmdLine.hasOption(L'e', L"elf"))
 	{
@@ -150,10 +208,14 @@ int main(int argc, const char** argv)
     
     rom.setReadOnly(true);
     
-    for (;;)
+    while (g_going)
     {
-        cpu.tick();
+        const bool failed = !cpu.tick();
+		if (failed)
+			break;
     }
+
+	video.getImage()->save(L"RetroDACK.png");
 
     return 0;
 }

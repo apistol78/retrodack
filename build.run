@@ -133,13 +133,26 @@ local function buildHostLinux()
 	return true
 end
 
+local function buildEmulatorFS()
+	local SCRIPT_HOME < const > = fileSystem:getAbsolutePath(Path(os:getEnvironment("RUN_SCRIPT_PATH"))):normalized().pathNameOS
+
+	run:mkdir("fs")
+	run:rm(SCRIPT_HOME .. "/fs/Dashboard")
+	run:copy(SCRIPT_HOME .. "/build/rv/ReleaseStatic/Dashboard", SCRIPT_HOME .. "/fs/Dashboard")
+
+	return true
+end
+
 function main()
 
 	-- Compile firmware and tools.
 	if not buildRV() then return 1 end
 	if not buildHostLinux() then return 1 end
 
-	local synthesize < const > = false
+	-- Build filesystem folder for emulator.
+	if not buildEmulatorFS() then return 1 end
+
+	local synthesize < const > = true
 	if synthesize then
 		-- Ensure we can launch yosys before all else.
 		if os:whereIs("yosys") == nil then

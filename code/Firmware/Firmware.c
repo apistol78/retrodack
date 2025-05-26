@@ -10,11 +10,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <hal/I2C.h>
-#include <hal/Interrupt.h>
+// #include <hal/I2C.h>
+// #include <hal/Interrupt.h>
 #include <hal/SD.h>
-#include <hal/Timer.h>
-#include <hal/UART.h>
+// #include <hal/Timer.h>
+// #include <hal/UART.h>
 
 #include "Firmware/ELF.h"
 #include "Runtime/CRT.h"
@@ -28,29 +28,29 @@ void __call_exitprocs(void) {}
 
 static int32_t launch_elf(const char* filename)
 {
-	printf("open \"%s\"...\n", filename);
+	// printf("open \"%s\"...\n", filename);
 
 	int32_t fd = file_open(filename, FILE_MODE_READ);
 	if (fd <= 0)
 	{
-		printf("unable to open \"%s\"\n", filename);
+		// printf("unable to open \"%s\"\n", filename);
 		return 1;
 	}
 
 	char tmp[256] = {};
 	uint32_t jstart = 0;
 
-	printf("read header ...\n");
+	// printf("read header ...\n");
 
 	ELF32_Header hdr = {};
 	file_read(fd, (uint8_t*)&hdr, sizeof(hdr));
 	if (hdr.e_machine != 0xf3)
 	{
-		printf("invalid ELF header\n");
+		// printf("invalid ELF header\n");
 		return 2;
 	}
 
-	printf("reading %d sections...\n", hdr.e_shnum);
+	// printf("reading %d sections...\n", hdr.e_shnum);
 	for (uint32_t i = 0; i < hdr.e_shnum; ++i)
 	{
 		ELF32_SectionHeader shdr = {};
@@ -65,7 +65,7 @@ static int32_t launch_elf(const char* filename)
 		{
 			if ((shdr.sh_flags & 0x02) == 0x02)	// SHF_ALLOC
 			{
-				printf("reading section at 0x%08x (%d bytes)...\n", shdr.sh_addr, shdr.sh_size);
+				// printf("reading section at 0x%08x (%d bytes)...\n", shdr.sh_addr, shdr.sh_size);
 				file_seek(fd, shdr.sh_offset, 0);
 				for (uint32_t i = 0; i < shdr.sh_size; i += 512)
 				{
@@ -108,7 +108,7 @@ static int32_t launch_elf(const char* filename)
 	if (jstart != 0)
 	{
 		const uint32_t sp = 0x20000000 + /*sysreg_read(SR_REG_RAM_SIZE)*/ 0x01000000 - 0x8;
-		printf("launching application (stack @ 0x%08x)...\n", sp);
+		// printf("launching application (stack @ 0x%08x)...\n", sp);
 		__asm__ volatile (
 			"fence					\n"
 			"mv		sp, %0			\n"
@@ -118,7 +118,7 @@ static int32_t launch_elf(const char* filename)
 		((call_fn_t)jstart)();
 	}
 	
-	printf("no start address\n");
+	// printf("no start address\n");
 	return 4;
 }
 
@@ -152,15 +152,15 @@ void main(int argc, const char** argv)
 	}
 	*/
 
-	crt_init();
+	// crt_init();
 
-	printf("initialize storage...\n");
+	// printf("initialize storage...\n");
 	sd_init(SD_MODE_SW);
 
-	printf("initialize file system...\n");
+	// printf("initialize file system...\n");
 	file_init();
 
-	launch_elf("BOOT");
+	launch_elf("Dashboard");
 
 	for (;;);
 }
