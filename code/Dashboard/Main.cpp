@@ -42,7 +42,7 @@ int main()
 
     for (int i = 0; i < 256; ++i)
     {
-        video_set_palette(
+        hal_video_set_palette(
             i,
             (rand() & 255) | ((rand() & 255) << 8) | ((rand() & 255) << 16)
         );
@@ -51,10 +51,10 @@ int main()
     for (int j = 0; j < 10; ++j)
     {
         printf("%d\n", j);
-        volatile uint8_t* vmem = (volatile uint8_t*)video_get_primary_target();
+        volatile uint8_t* vmem = (volatile uint8_t*)hal_video_get_primary_target();
         for (uint32_t i = 0; i < 720 * 720; ++i)
             vmem[i] = rand();
-        video_present();
+        hal_video_present();
     }
 
     for (;;)

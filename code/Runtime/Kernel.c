@@ -327,12 +327,12 @@ void kernel_init()
 	g_schedule = 0;
 
 	// Setup timer interrupt for kernel scheduler.
-	interrupt_set_handler(IRQ_SOURCE_TIMER, kernel_scheduler);
+	hal_interrupt_set_handler(IRQ_SOURCE_TIMER, kernel_scheduler);
 	*TIMER_COUNTDOWN = KERNEL_TIMER_RATE;
 
 	// Ensure interrupts are enabled.
-	csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
-	csr_clr_bits_mstatus(MIP_MTI_BIT_MASK);
+	hal_csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
+	hal_csr_clr_bits_mstatus(MIP_MTI_BIT_MASK);
 }
 
 uint32_t kernel_create_thread(kernel_thread_fn_t fn)
@@ -392,12 +392,12 @@ uint32_t kernel_current_thread()
 
 void kernel_yield()
 {
-	csr_set_bits_mip(MIP_MTI_BIT_MASK);
+	hal_csr_set_bits_mip(MIP_MTI_BIT_MASK);
 }
 
 void kernel_sleep(uint32_t ms)
 {
-	const uint32_t fin_ms = timer_get_ms() + ms;
+	const uint32_t fin_ms = hal_timer_get_ms() + ms;
 
 	volatile kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = 0;
@@ -407,7 +407,7 @@ void kernel_sleep(uint32_t ms)
 	{
 		kernel_yield();
 	}
-	while (t->sleep >= timer_get_ms());
+	while (t->sleep >= hal_timer_get_ms());
 
 	t->sleep = 0;
 }
@@ -415,13 +415,13 @@ void kernel_sleep(uint32_t ms)
 void kernel_enter_critical()
 {
 	if (g_critical++ == 0)
-		csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
+		hal_csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 }
 
 void kernel_leave_critical()
 {
 	if (--g_critical == 0)
-		csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
+		hal_csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 }
 
 void kernel_cs_init(volatile kernel_cs_t* cs)
@@ -481,7 +481,7 @@ void kernel_sig_wait(volatile kernel_sig_t* sig)
 
 int32_t kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 {
-	const uint32_t fin_ms = timer_get_ms() + timeout;
+	const uint32_t fin_ms = hal_timer_get_ms() + timeout;
 
 	volatile kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = sig;
@@ -491,7 +491,7 @@ int32_t kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 	while (sig->counter == 0)
 	{
 		kernel_yield();
-		if (timer_get_ms() >= fin_ms)
+		if (hal_timer_get_ms() >= fin_ms)
 			break;
 	}
 

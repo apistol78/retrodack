@@ -24,7 +24,7 @@
 // Needed by custom printf implementation.
 void _putchar(char character)
 {
-	uart_tx_u8(character);
+	hal_uart_tx_u8(character);
 }
 
 int32_t runtime_init()
@@ -65,17 +65,17 @@ int32_t runtime_init()
 	// printf("** MEMORY   : %d KiB **\n", sysreg_read(SR_REG_RAM_SIZE) / 1024);
 
 	printf("** Initialize IRQ handler **\n");
-	interrupt_init();
+	hal_interrupt_init();
 	
 	printf("** Initialize Video **\n");
-	if (video_init() != 0)
+	if (hal_video_init() != 0)
 		printf("Video init failed!\n");
 
 	printf("** Initialize Audio **\n");
-	audio_init();
+	hal_audio_init();
 
 	printf("** Initialize SD card **\n");
-	if (sd_init(SD_MODE_HW) != 0)
+	if (hal_sd_init(SD_MODE_HW) != 0)
 		printf("SD init failed!\n");
 
 	printf("** Initialize FS **\n");
@@ -112,9 +112,9 @@ void runtime_warm_restart()
 {
 	typedef void (*call_fn_t)();
 
-	video_set_palette(0, 0x00000000);
-	video_clear(0);
-	video_present(0);
+	hal_video_set_palette(0, 0x00000000);
+	hal_video_clear(0);
+	hal_video_present(0);
 
 	const uint32_t sp = 0x20100000 + /*sysreg_read(SR_REG_RAM_SIZE)*/ 0x01000000;
 	__asm__ volatile (
@@ -132,9 +132,9 @@ void runtime_warm_restart()
 
 void runtime_cold_restart()
 {
-	video_set_palette(0, 0x00000000);
-	video_clear(0);
-	video_present(0);
+	hal_video_set_palette(0, 0x00000000);
+	hal_video_clear(0);
+	hal_video_present(0);
 
 	// sysreg_modify(SR_REG_FLAGS, 0b100, 0b100);
 

@@ -137,7 +137,7 @@ int __attribute__((used)) _write(int file, char* ptr, int len)
 	else
 	{
 		for (int i = 0; i < len; ++i)
-			uart_tx_u8(*ptr++);
+			hal_uart_tx_u8(*ptr++);
 		return len;
 	}
 }
@@ -166,7 +166,7 @@ int __attribute__((used)) _read(int file, char* ptr, int len)
 	else
 	{
 		for (int i = 0; i < len; ++i)
-			*ptr++ = uart_rx_u8(0);
+			*ptr++ = hal_uart_rx_u8(0);
 		return len;
 	}
 }

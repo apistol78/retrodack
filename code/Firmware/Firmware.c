@@ -155,7 +155,7 @@ void main(int argc, const char** argv)
 	// crt_init();
 
 	// printf("initialize storage...\n");
-	sd_init(SD_MODE_SW);
+	hal_sd_init(SD_MODE_SW);
 
 	// printf("initialize file system...\n");
 	file_init();
