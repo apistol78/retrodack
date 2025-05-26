@@ -24,7 +24,20 @@
 #include <Core/Io/Utf8Encoding.h>
 #include <Core/Log/Log.h>
 #include <Core/Misc/CommandLine.h>
+#include <Core/Timer/Timer.h>
 #include <Drawing/Image.h>
+#include <Ui/Application.h>
+#include <Ui/Bitmap.h>
+#include <Ui/Image.h>
+#include <Ui/Form.h>
+#include <Ui/FloodLayout.h>
+#if defined(_WIN32)
+#	include <Ui/Win32/WidgetFactoryWin32.h>
+#elif defined(__APPLE__)
+#	include <Ui/Cocoa/WidgetFactoryCocoa.h>
+#elif defined(__LINUX__) || defined(__RPI__)
+#	include <Ui/X11/WidgetFactoryX11.h>
+#endif
 
 // Klara-RV
 #include <Emulator/CPU/Bus.h>
@@ -155,6 +168,23 @@ int main(int argc, const char** argv)
 	}
 #endif
 
+#if defined(_WIN32)
+	ui::Application::getInstance()->initialize(
+		new ui::WidgetFactoryWin32(),
+		nullptr
+	);
+#elif defined(__APPLE__)
+	ui::Application::getInstance()->initialize(
+		new ui::WidgetFactoryCocoa(),
+		nullptr
+	);
+#elif defined(__LINUX__) || defined(__RPI__)
+	ui::Application::getInstance()->initialize(
+		new ui::WidgetFactoryX11(),
+		nullptr
+	);
+#endif
+
 	// Create file system from files.
 	if (!createFsImage())
 	{
@@ -169,7 +199,7 @@ int main(int argc, const char** argv)
 	Video video(720, 720);
 	UART uart;
 	// Unknown i2c(L"I2C", true);
-	SD sd(new MemoryStream(fs_image, fs_image_size));
+	SD sd(fs_image, fs_image_size);
 	::Timer tmr;
 	PLIC plic;
 	// Audio audio;
@@ -208,14 +238,63 @@ int main(int argc, const char** argv)
     
     rom.setReadOnly(true);
     
+
+	// Create user interface.
+	Ref< ui::Form > form = new ui::Form();
+	form->create(L"RetroDACK", 720_ut, 720_ut, ui::Form::WsDefault, new ui::FloodLayout());
+
+	Ref< ui::Bitmap > uiImage = new ui::Bitmap(720, 720);
+	
+	Ref< ui::Image > image = new ui::Image();
+	image->create(form, uiImage, ui::Image::WsScale | ui::Image::WsNearestFilter);
+
+	form->update();
+	form->show();
+
+
+	traktor::Timer timer;
     while (g_going)
     {
-        const bool failed = !cpu.tick();
-		if (failed)
+		for (int32_t i = 0; i < 100 && g_going; ++i)
+		{
+        	if (!cpu.tick(1000))
+			{
+				g_going = false;
+				break;
+			}
+		}
+
+		if (!ui::Application::getInstance()->process())
 			break;
+
+		if (timer.getElapsedTime() > 1.0f / 20.0f)
+		{
+			drawing::Image* videoImage = video.getImage();
+			if (videoImage)
+			{
+				if (uiImage)
+				{
+					ui::Size sz = uiImage->getSize(form);
+					if (sz.cx != videoImage->getWidth() || sz.cy != videoImage->getHeight())
+					{
+						uiImage->destroy();
+						uiImage->create(videoImage);
+					}
+					else
+						uiImage->copyImage(videoImage);
+				}
+				image->setImage(uiImage);
+			}
+			timer.reset();
+			// plic.raise(0);
+		}			
     }
 
-	video.getImage()->save(L"RetroDACK.png");
+	if (form)
+	{
+		form->destroy();
+		form = nullptr;
+	}
 
     return 0;
 }
