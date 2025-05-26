@@ -14,8 +14,8 @@
 #include <cstring>
 
 // FatFS
-#include <ff.h>
-#include <diskio.h>
+// #include <ff.h>
+// #include <diskio.h>
 
 // Traktor
 #include <Core/Io/FileOutputStream.h>
@@ -61,82 +61,82 @@ constexpr uint32_t fs_image_size = 4 * 1024 * 1024;
 uint8_t fs_image[fs_image_size];
 
 
-DSTATUS disk_initialize (BYTE pdrv)
-{
-	//log::info << L"disk_initialize" << Endl;
-	return 0;
-}
+// DSTATUS disk_initialize (BYTE pdrv)
+// {
+// 	//log::info << L"disk_initialize" << Endl;
+// 	return 0;
+// }
 
-DSTATUS disk_status (BYTE pdrv)
-{
-	//log::info << L"disk_status" << Endl;
-	return 0;
-}
+// DSTATUS disk_status (BYTE pdrv)
+// {
+// 	//log::info << L"disk_status" << Endl;
+// 	return 0;
+// }
 
-DRESULT disk_read (BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
-{
-	//log::info << L"disk_read, sector " << sector << L", count " << count << Endl;
-	const uint32_t offset = sector * 512;
-	const uint32_t size = count * 512;
-	std::memcpy(buff, &fs_image[offset], size);
-	return RES_OK;
-}
+// DRESULT disk_read (BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
+// {
+// 	//log::info << L"disk_read, sector " << sector << L", count " << count << Endl;
+// 	const uint32_t offset = sector * 512;
+// 	const uint32_t size = count * 512;
+// 	std::memcpy(buff, &fs_image[offset], size);
+// 	return RES_OK;
+// }
 
-DRESULT disk_write (BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count)
-{
-	//log::info << L"disk_write, sector " << sector << L", count " << count << Endl;
-	const uint32_t offset = sector * 512;
-	const uint32_t size = count * 512;
-	std::memcpy(&fs_image[offset], buff, size);
-	return RES_OK;
-}
+// DRESULT disk_write (BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count)
+// {
+// 	//log::info << L"disk_write, sector " << sector << L", count " << count << Endl;
+// 	const uint32_t offset = sector * 512;
+// 	const uint32_t size = count * 512;
+// 	std::memcpy(&fs_image[offset], buff, size);
+// 	return RES_OK;
+// }
 
-DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff)
-{
-	//log::info << L"disk_ioctl" << Endl;
-	if (cmd == GET_SECTOR_SIZE)
-		*(WORD*)buff = 512;
-	else if (cmd == GET_BLOCK_SIZE)
-		*(DWORD*)buff = 512;
-	else if (cmd == GET_SECTOR_COUNT)
-		*(DWORD*)buff = fs_image_size / 512;
-	return RES_OK;
-}
+// DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff)
+// {
+// 	//log::info << L"disk_ioctl" << Endl;
+// 	if (cmd == GET_SECTOR_SIZE)
+// 		*(WORD*)buff = 512;
+// 	else if (cmd == GET_BLOCK_SIZE)
+// 		*(DWORD*)buff = 512;
+// 	else if (cmd == GET_SECTOR_COUNT)
+// 		*(DWORD*)buff = fs_image_size / 512;
+// 	return RES_OK;
+// }
 
 bool createFsImage()
 {
-	BYTE work[FF_MAX_SS];
-	FRESULT res;
-	FATFS fs;
-	FIL f;
-	UINT bw;
+	// BYTE work[FF_MAX_SS];
+	// FRESULT res;
+	// FATFS fs;
+	// FIL f;
+	// UINT bw;
 
-	std::memset(fs_image, 0, fs_image_size);
+	// std::memset(fs_image, 0, fs_image_size);
 
-	res = f_mkfs("", NULL, work, sizeof(work));
-	if (res) return false;
+	// res = f_mkfs("", NULL, work, sizeof(work));
+	// if (res) return false;
 
-	res = f_mount(&fs, "", 0);
-	if (res) return false;
+	// res = f_mount(&fs, "", 0);
+	// if (res) return false;
 
-	Ref< IStream > sf = FileSystem::getInstance().open(L"fs/Dashboard", File::FmRead);
-	if (sf)
-	{
-		res = f_open(&f, "Dashboard", FA_CREATE_ALWAYS | FA_WRITE);
-		if (res) return false;
+	// Ref< IStream > sf = FileSystem::getInstance().open(L"fs/Dashboard", File::FmRead);
+	// if (sf)
+	// {
+	// 	res = f_open(&f, "Dashboard", FA_CREATE_ALWAYS | FA_WRITE);
+	// 	if (res) return false;
 
-		for (;;)
-		{
-			const int64_t nrd = sf->read(work, sizeof(work));
-			if (nrd <= 0)
-				break;
+	// 	for (;;)
+	// 	{
+	// 		const int64_t nrd = sf->read(work, sizeof(work));
+	// 		if (nrd <= 0)
+	// 			break;
 
-			res = f_write(&f, work, (UINT)nrd, &bw);
-			if (res) return false;
-		}
+	// 		res = f_write(&f, work, (UINT)nrd, &bw);
+	// 		if (res) return false;
+	// 	}
 
-		f_close(&f);
-	}
+	// 	f_close(&f);
+	// }
 
 	return true;
 }

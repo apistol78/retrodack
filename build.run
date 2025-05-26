@@ -7,7 +7,8 @@
  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 ]]
 
-import (traktor)
+import(traktor)
+import(traktor.run)
 
 run:loadScript("../klara-rv/sv2v.run")
 
@@ -64,6 +65,16 @@ local SOURCE < const > =
 	PATH_PERIFHERIALS .. "/cpu/private/fpu/CPU_FPU_Mul.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/fpu/CPU_FPU_MulAdd.sv"
 }
+
+local function writeFile(fn, lines)
+	local f = fileSystem:open(Path(run.cwd .. "/" .. fn), File.FmWrite)
+	if f == nil then return false end
+	local so = StreamOutput(f, Utf8Encoding())
+	for _, ln in ipairs(lines) do
+		so:printLn(ln)
+	end
+	f:close()
+end
 
 local function buildRV()
 	local TRAKTOR_HOME < const > = os:getEnvironment("TRAKTOR_HOME")
@@ -133,6 +144,41 @@ local function buildHostLinux()
 	return true
 end
 
+local function buildHostWin64()
+	local TRAKTOR_HOME < const > = os:getEnvironment("TRAKTOR_HOME")
+
+	if run:execute(
+		TRAKTOR_HOME .. "/bin/win64/releasestatic/Traktor.SolutionBuilder.App " ..
+		"-f=msvc " ..
+		"-p=" .. TRAKTOR_HOME .. "/resources/build/configurations/msvc-2022-win64.xml " ..
+		"retrodack-win64.xms"
+	) ~= 0 then
+		stderr:printLn("Failed to execute solution generator.")
+		return false
+	end
+
+	run:pushd("build/win64")
+
+	writeFile(
+		"build.bat",
+		{
+			"@echo off",
+			"call \"" .. TRAKTOR_HOME .. "/scripts/config.bat\"",
+			"call \"" .. TRAKTOR_HOME .. "/scripts/config-vs-x64.bat\"",
+			"msbuild -m RetroDACK.sln /p:Configuration=ReleaseStatic"
+		}
+	)
+
+	if run:execute("build/win64/build.bat") ~= 0 then
+		stderr:printLn("Failed to execute build file.")
+		return false
+	end
+
+	run:popd()
+
+	return true
+end
+
 local function buildEmulatorFS()
 	local SCRIPT_HOME < const > = fileSystem:getAbsolutePath(Path(os:getEnvironment("RUN_SCRIPT_PATH"))):normalized().pathNameOS
 
@@ -146,8 +192,12 @@ end
 function main()
 
 	-- Compile firmware and tools.
-	if not buildRV() then return 1 end
-	if not buildHostLinux() then return 1 end
+	if os.identifier == "windows" then
+		if not buildHostWin64() then return 1 end
+	else
+		if not buildRV() then return 1 end
+		if not buildHostLinux() then return 1 end
+	end
 
 	-- Build filesystem folder for emulator.
 	if not buildEmulatorFS() then return 1 end

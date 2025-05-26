@@ -36,13 +36,13 @@
 using namespace traktor;
 
 template < typename T >
-bool write(IStream* target, T value)
+bool write(traktor::IStream* target, T value)
 {
 	return target->write(&value, sizeof(T)) == sizeof(T);
 }
 
 template < typename T >
-bool write(IStream* target, const T* value, int32_t count)
+bool write(traktor::IStream* target, const T* value, int32_t count)
 {
 	const uint8_t* wp = (const uint8_t*)value;
 	while (count > 0)
@@ -61,7 +61,7 @@ bool write(IStream* target, const T* value, int32_t count)
 }
 
 template < typename T >
-T read(IStream* target)
+T read(traktor::IStream* target)
 {
 	T value = 0;
 	target->read(&value, sizeof(T));
@@ -69,12 +69,12 @@ T read(IStream* target)
 }
 
 template < typename T >
-void read(IStream* target, T* value, int32_t count)
+void read(traktor::IStream* target, T* value, int32_t count)
 {
 	target->read(value, count * sizeof(T));
 }
 
-bool sendLine(IStream* target, uint32_t base, const uint8_t* line, uint32_t length)
+bool sendLine(traktor::IStream* target, uint32_t base, const uint8_t* line, uint32_t length)
 {
 #define CW(s) { if (!(s)) return false; }
 	uint8_t cs = 0;
@@ -107,7 +107,7 @@ bool sendLine(IStream* target, uint32_t base, const uint8_t* line, uint32_t leng
 	return true;
 }
 
-bool sendJump(IStream* target, uint32_t start, uint32_t sp)
+bool sendJump(traktor::IStream* target, uint32_t start, uint32_t sp)
 {
 #define CW(s) { if (!(s)) return false; }
 	uint8_t cs = 0;
@@ -146,7 +146,7 @@ bool sendJump(IStream* target, uint32_t start, uint32_t sp)
 	return true;
 }
 
-bool uploadImage(IStream* target, const std::wstring& fileName, uint32_t offset)
+bool uploadImage(traktor::IStream* target, const std::wstring& fileName, uint32_t offset)
 {
 	Ref< traktor::IStream > f = FileSystem::getInstance().open(fileName, File::FmRead);
 	if (!f)
@@ -175,7 +175,7 @@ bool uploadImage(IStream* target, const std::wstring& fileName, uint32_t offset)
 	return true;
 }
 
-bool uploadELF(IStream* target, const std::wstring& fileName, uint32_t sp)
+bool uploadELF(traktor::IStream* target, const std::wstring& fileName, uint32_t sp)
 {
 	AlignedVector< uint8_t > elf;
 	uint32_t start = -1;
@@ -183,7 +183,7 @@ bool uploadELF(IStream* target, const std::wstring& fileName, uint32_t sp)
 
 	// Read entire ELF into memory.
 	{
-		Ref< IStream > f = FileSystem::getInstance().open(fileName, File::FmRead);
+		Ref< traktor::IStream > f = FileSystem::getInstance().open(fileName, File::FmRead);
 		if (!f)
 		{
 			log::error << L"Unable to open ELF \"" << fileName << L"\"." << Endl;
@@ -261,7 +261,7 @@ bool uploadELF(IStream* target, const std::wstring& fileName, uint32_t sp)
 	return true;
 }
 
-bool uploadHEX(IStream* target, const std::wstring& fileName, uint32_t sp)
+bool uploadHEX(traktor::IStream* target, const std::wstring& fileName, uint32_t sp)
 {
 	StaticVector< uint8_t, 16 > record;
 	std::wstring tmp;
@@ -365,7 +365,7 @@ bool uploadHEX(IStream* target, const std::wstring& fileName, uint32_t sp)
 	return true;
 }
 
-bool uploadFile(IStream* target, const std::wstring& fileName)
+bool uploadFile(traktor::IStream* target, const std::wstring& fileName)
 {
 	while (target->available() > 0)
 	{
@@ -453,7 +453,7 @@ void for_each(uint32_t from, uint32_t to, uint32_t step, const std::function< vo
 	}
 }
 
-bool memcheck(IStream* target, uint32_t from, uint32_t to, uint32_t step)
+bool memcheck(traktor::IStream* target, uint32_t from, uint32_t to, uint32_t step)
 {
 	uint8_t utd[64];
 	uint8_t ind[64];
@@ -554,7 +554,7 @@ int main(int argc, const char** argv)
 
 	Ref< Serial > serial;
 	Ref< net::UdpSocket > socket;
-	Ref< IStream > target;
+	Ref< traktor::IStream > target;
 
 	if (!commandLine.hasOption(L"udp"))
 	{
