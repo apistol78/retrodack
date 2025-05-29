@@ -194,7 +194,7 @@ int main(int argc, const char** argv)
 
 	// Create emulation devices.
 	Memory rom(0x00100000);
-    Memory ram(0x00010000);
+    // Memory ram(0x00010000);
 	Memory sdram(0x01000000);
 	Video video(720, 720);
 	UART uart;
@@ -206,7 +206,7 @@ int main(int argc, const char** argv)
 
 	Bus bus;
 	bus.map(0x00000000, 0x00000000 + rom.getCapacity(), false, false, &rom);
-    bus.map(0x10000000, 0x10000000 + ram.getCapacity(), false, false, &ram);
+    // bus.map(0x10000000, 0x10000000 + ram.getCapacity(), false, false, &ram);
 	bus.map(0x20000000, 0x20000000 + sdram.getCapacity(), true, false, &sdram);
 	bus.map(0x51000000, 0x51000100, false, false, &uart);
 	// bus.map(0x53000000, 0x53000100, false, false, &i2c);
@@ -225,7 +225,7 @@ int main(int argc, const char** argv)
 	}
 
     CPU cpu(&bus, os, false);
-    cpu.setSP(0x10000000 + 0x00001000 - 4);
+    cpu.setSP(0x20000000 + sdram.getCapacity() - 4);
 
 	tmr.setCallback([&](){ cpu.interrupt(TIMER); });
 

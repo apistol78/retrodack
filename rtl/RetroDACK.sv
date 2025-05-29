@@ -89,24 +89,24 @@ module RetroDACK(
 
 	//====================================================
 	// RAM
-	wire ram_select;
-	wire [31:0] ram_address;
-	wire [31:0] ram_wdata;
-	wire [31:0] ram_rdata;
-	wire ram_ready;
+	// wire ram_select;
+	// wire [31:0] ram_address;
+	// wire [31:0] ram_wdata;
+	// wire [31:0] ram_rdata;
+	// wire ram_ready;
 
-	BRAM #(
-		.SIZE(32'h1000)
-	) ram(
-		.i_clock(clock),
-		.i_request(bus_request && ram_select),
-		.i_rw(bus_rw),
-		.i_address(ram_address),
-		.i_wdata(ram_wdata),
-		.o_rdata(ram_rdata),
-		.o_ready(ram_ready),
-		.o_valid()
-	);
+	// BRAM #(
+	// 	.SIZE(32'h1000)
+	// ) ram(
+	// 	.i_clock(clock),
+	// 	.i_request(bus_request && ram_select),
+	// 	.i_rw(bus_rw),
+	// 	.i_address(ram_address),
+	// 	.i_wdata(ram_wdata),
+	// 	.o_rdata(ram_rdata),
+	// 	.o_ready(ram_ready),
+	// 	.o_valid()
+	// );
 
 
 	//=====================================
@@ -183,9 +183,9 @@ module RetroDACK(
 	assign rom_select = bus_address[31:28] == 4'h0;
 	assign rom_address = { 4'h0, bus_address[27:0] };
 
-	assign ram_select = bus_address[31:28] == 4'h1;
-	assign ram_address = { 4'h0, bus_address[27:0] };
-	assign ram_wdata = bus_wdata;
+	// assign ram_select = bus_address[31:28] == 4'h1;
+	// assign ram_address = { 4'h0, bus_address[27:0] };
+	// assign ram_wdata = bus_wdata;
 
 	assign sdram_select = bus_address[31:28] == 4'h2;
 	assign sdram_address = { 4'h0, bus_address[27:0] };
@@ -199,14 +199,14 @@ module RetroDACK(
 
 	assign bus_rdata =
 		rom_select		? rom_rdata		:
-		ram_select		? ram_rdata		:
+		// ram_select		? ram_rdata		:
 		sdram_select	? sdram_rdata	:
 		bridge_select	? bridge_rdata	:
 		32'h00000000;
 
 	assign bus_ready =
 		rom_select		? rom_ready		:
-		ram_select		? ram_ready		:
+		// ram_select		? ram_ready		:
 		sdram_select	? sdram_ready	:
 		bridge_select	? bridge_ready	:
 		pin_select		? pin_ready		:
@@ -322,7 +322,8 @@ module RetroDACK(
 	UART #(
 		.FREQUENCY(`FREQUENCY),
 		.BAUDRATE(115200),
-		.RX_FIFO_DEPTH(16)
+		.RX_FIFO_DEPTH(4),
+		.TX_FIFO_DEPTH(4)
 	) uart(
 		.i_reset(reset),
 		.i_clock(clock),
