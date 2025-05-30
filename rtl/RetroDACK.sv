@@ -266,6 +266,7 @@ module RetroDACK(
 	wire cpu_fault;
 
 	CPU #(
+		.STACK_POINTER(32'h20010000),
 		.FREQUENCY(`FREQUENCY),
 		.DCACHE_SIZE(0),
 		.DCACHE_REGISTERED(1),
@@ -418,6 +419,51 @@ module RetroDACK(
 
 
 	//====================================================
+	// AUDIO
+	wire audio_output_busy;
+	wire [15:0] audio_output_sample;
+	wire audio_sdout;
+	wire audio_sclk;
+	wire audio_lrck;
+	wire audio_mclk;
+
+	AUDIO_i2s_output #(
+		.FREQUENCY(`FREQUENCY)
+	) audio_i2s_output(
+		.i_clock(clock),
+		.o_busy(audio_output_busy),
+		.i_sample(audio_output_sample),
+		.o_i2s_sdout(I2S_SDOUT),
+		.o_i2s_sclk(I2S_SCLK),
+		.o_i2s_lrck(I2S_LRCK),
+		.o_i2s_mclk(I2S_MCLK)
+	);
+
+	wire audio_select;
+	wire [3:0] audio_address;
+	wire [15:0] audio_wdata;
+	wire [31:0] audio_rdata;
+	wire audio_ready;
+	wire audio_interrupt;
+	AUDIO_controller audio_controller(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		.i_request(audio_select && bridge_far_request),
+		.i_rw(bridge_far_rw),
+		.i_address(audio_address),
+		.i_wdata(audio_wdata),
+		.o_rdata(audio_rdata),
+		.o_ready(audio_ready),
+		.o_interrupt(audio_interrupt),
+
+		.i_output_busy(audio_output_busy),
+		.o_output_sample(audio_output_sample),
+		.o_output_reload(audio_output_reload)
+	);
+
+
+	//====================================================
 	// PLIC
 	wire plic_interrupt;
 	wire plic_select;
@@ -497,6 +543,10 @@ module RetroDACK(
 	assign timer_address = bridge_far_address[5:2];
 	assign timer_wdata = bridge_far_wdata;
 
+	assign audio_select = bridge_far_address[27:24] == 4'h6;
+	assign audio_address = bridge_far_address[5:2];
+	assign audio_wdata = bridge_far_wdata[15:0];
+
 	assign plic_select = bridge_far_address[27:24] == 4'h8;
 	assign plic_address = bridge_far_address[23:0];
 	assign plic_wdata = bridge_far_wdata;
@@ -505,6 +555,7 @@ module RetroDACK(
 		uart_select	? uart_rdata	:
 		i2c_select ? i2c_rdata		:
 		timer_select ? timer_rdata	:
+		audio_select ? audio_rdata	:
 		plic_select ? plic_rdata	:
 		32'h00000000;
 	
@@ -512,6 +563,7 @@ module RetroDACK(
 		uart_select	? uart_ready	:
 		i2c_select ? i2c_ready		:
 		timer_select ? timer_ready	:
+		audio_select ? audio_ready	:
 		plic_select ? plic_ready	:
 		1'b0;
 

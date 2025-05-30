@@ -2,12 +2,13 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include <HAL/Audio.h>
 #include <HAL/Video.h>
 
 #include "Runtime/Runtime.h"
 #include "Runtime/Kernel.h"
 
-
+/*
 //
 
 typedef struct
@@ -150,6 +151,7 @@ const int32_t indices[] =
 	4, 7, 5
 };
 
+*/
 
 
 int main()
@@ -169,14 +171,25 @@ int main()
         );
     }
 	
-    float head = 0.0f;
-    float pitch = 0.0f;
-	ivec2_t sv[8];
+    // float head = 0.0f;
+    // float pitch = 0.0f;
+	// ivec2_t sv[8];
+
+
+	float a = 0.0f;
 
     for (;;)
     {
-        runtime_update();
+		int16_t sm[128];
+		for (int i = 0; i < 128; ++i)
+		{
+			sm[i] = (int16_t)(sin(a) * 15000.0f);
+			a += 6.28f / 128.0f;
+		}
 
+		hal_audio_play_mono(sm, 128);
+
+		/*
         hal_video_clear(0);
 
         framebuffer = (uint8_t*)hal_video_get_secondary_target();
@@ -224,6 +237,7 @@ int main()
 
 		head += 0.01f * 2;
         pitch += 0.0165f * 2;
+		*/
     }
 
 

@@ -203,7 +203,7 @@ int main(int argc, const char** argv)
 	SD sd(fs_image, fs_image_size);
 	::Timer tmr;
 	PLIC plic;
-	// Audio audio;
+	Audio audio;
 
 	Bus bus;
 	bus.map(0x00000000, 0x00000000 + rom.getCapacity(), false, false, &rom);
@@ -213,7 +213,7 @@ int main(int argc, const char** argv)
 	// bus.map(0x53000000, 0x53000100, false, false, &i2c);
 	bus.map(0x54000000, 0x54000100, false, true, &sd);
 	bus.map(0x55000000, 0x55000100, false, true, &tmr);
-	// bus.map(0x56000000, 0x56000100, false, true, &audio);
+	bus.map(0x56000000, 0x56000100, false, true, &audio);
 	bus.map(0x58000000, 0x58004000, false, false, &plic);
 	bus.map(0x5a000000, 0x5b000000, false, false, &video);
 
@@ -235,6 +235,11 @@ int main(int argc, const char** argv)
 		const std::wstring fileName = cmdLine.getOption(L'e', L"elf").getString();
 		if (!loadELF(fileName, cpu, bus))
 			return 1;
+		if (bus.error())
+		{
+			log::error << L"BUS error after loading ELF." << Endl;
+			return 1;
+		}
 	}
     
     rom.setReadOnly(true);
@@ -258,7 +263,7 @@ int main(int argc, const char** argv)
     {
 		for (int32_t i = 0; i < 100 && g_going; ++i)
 		{
-        	if (!cpu.tick(10000))
+        	if (!cpu.tick(10000) || bus.error())
 			{
 				g_going = false;
 				break;

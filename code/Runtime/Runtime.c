@@ -92,22 +92,6 @@ int32_t runtime_init()
     return 0;
 }
 
-void runtime_update()
-{
-	input_update();
-
-	// Check for reset signal on UART.
-	// if (!uart_rx_empty(0))
-	// {
-	// 	uint8_t cmd = uart_rx_u8(0);
-	// 	if (cmd == 0xff)
-	// 	{
-	// 		sysreg_modify(SR_REG_FLAGS, 1, 1);	// Set boot mode into UART mode to prepare FM to download ELF.
-	// 		runtime_cold_restart();
-	// 	}
-	// }
-}
-
 void runtime_warm_restart()
 {
 	typedef void (*call_fn_t)();

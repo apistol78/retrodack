@@ -19,9 +19,13 @@ local SOURCE < const > =
 {
 	PATH_SOC .. "/RetroDACK.sv",
 	PATH_SOC .. "/RetroDACK_BROM.sv",
+	PATH_PERIFHERIALS .. "/audio/AUDIO_controller.sv",
+	PATH_PERIFHERIALS .. "/audio/AUDIO_i2s_output.sv",
 	PATH_PERIFHERIALS .. "/block/BRAM.sv",
+	PATH_PERIFHERIALS .. "/block/BRAM_1r1w.sv",
 	PATH_PERIFHERIALS .. "/clock/PLL_ECP5.sv",
 	PATH_PERIFHERIALS .. "/fifo/FIFO.sv",
+	PATH_PERIFHERIALS .. "/fifo/FIFO_BRAM.sv",
 	PATH_PERIFHERIALS .. "/misc/Bridge.sv",
 	PATH_PERIFHERIALS .. "/misc/ClockDivider.sv",
 	PATH_PERIFHERIALS .. "/misc/Timer.sv",
@@ -108,6 +112,10 @@ local function buildRV()
 	-- Create HEX and dump files of firmware.
 	run:execute("riscv32-unknown-elf-objcopy -O ihex build/rv/ReleaseStatic/Firmware build/rv/ReleaseStatic/Firmware.hex")
 	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Firmware", "build/rv/ReleaseStatic/Firmware.dump")
+
+	-- Create HEX and dump files of dashboard.
+	run:execute("riscv32-unknown-elf-objcopy -O ihex build/rv/ReleaseStatic/Dashboard build/rv/ReleaseStatic/Dashboard.hex")
+	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Dashboard", "build/rv/ReleaseStatic/Dashboard.dump")
 
 	-- Create Verilog files of firmware.
 	run:execute("../klara-rv/bin/Hex2Verilog -word=32 build/rv/ReleaseStatic/Firmware.hex -vmem=build/rv/ReleaseStatic/Firmware.vmem -vmem-range=build/rv/ReleaseStatic/Firmware.vmem-range")
@@ -202,13 +210,9 @@ function main()
 	-- Build filesystem folder for emulator.
 	if not buildEmulatorFS() then return 1 end
 
-	local synthesize < const > = true
+	-- Synthesize system.
+	local synthesize < const > = (os:whereIs("yosys") ~= nil)
 	if synthesize then
-		-- Ensure we can launch yosys before all else.
-		if os:whereIs("yosys") == nil then
-			stderr:printLn("Unable to locate yosys; ensure it's accessible through PATH.")
-			return 1
-		end
 
 		-- Create constraints.
 		run:run("./generate-constraints.run", "rtl/Constraints.lpf")
@@ -259,6 +263,9 @@ function main()
 			stderr:printLn("openFPGALoader failed; build aborted.")
 			return 1
 		end
+
+	else
+		stdout:printLn("No yosys found in environment; synthesize skipped.")
 	end
 
 	stdout:printLn("Build successful.")

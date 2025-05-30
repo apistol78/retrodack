@@ -1,0 +1,5 @@
+SODIMM,Designator,FPGA,Signal,Direction
+,PT29A,A7,I2S_SDOUT,output
+,PT29B,A8,I2S_SCLK,output
+,PT18B,A6,I2S_LRCK,output
+,PT18B,A6,I2S_MCLK,output
