@@ -5,7 +5,7 @@
 	<aggregateOutputPath/>
 	<projects>
 		<item type="traktor.sb.Project" version="1">
-			<enable>true</enable>
+			<enable>false</enable>
 			<name>RetroDACK.Launch</name>
 			<sourcePath>code/Launch</sourcePath>
 			<configurations>
@@ -150,7 +150,9 @@
 						<item>code</item>
 						<item>code/Emulator/FatFs/source</item>
 					</includePaths>
-					<definitions/>
+					<definitions>
+						<item>_TCHAR_DEFINED</item>
+					</definitions>
 					<libraryPaths/>
 					<libraries/>
 					<warningLevel>WlCompilerDefault</warningLevel>
@@ -172,7 +174,9 @@
 						<item>code</item>
 						<item>code/Emulator/FatFs/source</item>
 					</includePaths>
-					<definitions/>
+					<definitions>
+						<item>_TCHAR_DEFINED</item>
+					</definitions>
 					<libraryPaths/>
 					<libraries/>
 					<warningLevel>WlCompilerDefault</warningLevel>
@@ -194,7 +198,10 @@
 						<item>code</item>
 						<item>code/Emulator/FatFs/source</item>
 					</includePaths>
-					<definitions/>
+					<definitions>
+						<item>T_STATIC</item>
+						<item>_TCHAR_DEFINED</item>
+					</definitions>
 					<libraryPaths/>
 					<libraries/>
 					<warningLevel>WlCompilerDefault</warningLevel>
@@ -216,7 +223,10 @@
 						<item>code</item>
 						<item>code/Emulator/FatFs/source</item>
 					</includePaths>
-					<definitions/>
+					<definitions>
+						<item>T_STATIC</item>
+						<item>_TCHAR_DEFINED</item>
+					</definitions>
 					<libraryPaths/>
 					<libraries/>
 					<warningLevel>WlCompilerDefault</warningLevel>

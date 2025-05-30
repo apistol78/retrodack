@@ -11,6 +11,7 @@
 #	include <string.h>
 #endif
 
+#include <cmath>
 #include <cstring>
 
 // FatFS
@@ -119,7 +120,7 @@ bool createFsImage()
 	res = f_mount(&fs, "", 0);
 	if (res) return false;
 
-	Ref< IStream > sf = FileSystem::getInstance().open(L"fs/Dashboard", File::FmRead);
+	Ref< traktor::IStream > sf = FileSystem::getInstance().open(L"fs/Dashboard", File::FmRead);
 	if (sf)
 	{
 		res = f_open(&f, "Dashboard", FA_CREATE_ALWAYS | FA_WRITE);
@@ -219,7 +220,7 @@ int main(int argc, const char** argv)
 	Ref< OutputStream > os = nullptr;	
 	if (cmdLine.hasOption(L't', L"trace"))
 	{
-		Ref< IStream > f = FileSystem::getInstance().open(L"CPU.trace", File::FmWrite);
+		Ref< traktor::IStream > f = FileSystem::getInstance().open(L"CPU.trace", File::FmWrite);
 		if (f)
 			os = new FileOutputStream(f, new Utf8Encoding());
 	}
