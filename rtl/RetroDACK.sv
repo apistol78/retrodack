@@ -371,25 +371,29 @@ module RetroDACK(
 
 	//====================================================
 	// SD (internal)
-	// wire sd_internal_select;
-	// wire [1:0] sd_internal_address;
-	// wire [31:0] sd_internal_rdata;
-	// wire sd_internal_ready;
+	wire sd_internal_select;
+	wire [1:0] sd_internal_address;
+	wire [31:0] sd_internal_wdata;
+	wire [31:0] sd_internal_rdata;
+	wire sd_internal_ready;
 
-	// SD sd_internal(
-	// 	.i_reset(reset),
-	// 	.i_clock(clock),
-	// 	.i_request(sd_select && bridge_far_request),
-	// 	.i_rw(bridge_far_rw),
-	// 	.i_address(sd_address),
-	// 	.i_wdata(bridge_far_wdata),
-	// 	.o_rdata(sd_rdata),
-	// 	.o_ready(sd_ready),
-	// 	// ---
-	// 	.SD_CLK(sd_clk),
-	// 	.SD_CMD(sd_cmd),
-	// 	.SD_DAT(sd_dat)
-	// );
+	wire [3:0] sd_internal_dat;
+	assign sd_internal_dat = { SD_INTERNAL_DAT0, SD_INTERNAL_DAT1, SD_INTERNAL_DAT2, SD_INTERNAL_DAT3 };
+
+	SD sd_internal(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(sd_internal_select && bridge_far_request),
+		.i_rw(bridge_far_rw),
+		.i_address(sd_address),
+		.i_wdata(sd_internal_wdata),
+		.o_rdata(sd_internal_rdata),
+		.o_ready(sd_internal_ready),
+		// ---
+		.SD_CLK(SD_INTERNAL_CLK),
+		.SD_CMD(SD_INTERNAL_CMD),
+		.SD_DAT(sd_internal_dat)
+	);
 
 
 	//====================================================
@@ -539,6 +543,10 @@ module RetroDACK(
 	assign i2c_address = bridge_far_address[3:2];
 	assign i2c_wdata = bridge_far_wdata;
 
+	assign sd_internal_select = bridge_far_address[27:24] == 4'h4;
+	assign sd_internal_address = bridge_far_address[3:2];
+	assign sd_internal_wdata = bridge_far_wdata;
+
 	assign timer_select = bridge_far_address[27:24] == 4'h5;
 	assign timer_address = bridge_far_address[5:2];
 	assign timer_wdata = bridge_far_wdata;
@@ -552,19 +560,21 @@ module RetroDACK(
 	assign plic_wdata = bridge_far_wdata;
 
 	assign bridge_far_rdata =
-		uart_select	? uart_rdata	:
-		i2c_select ? i2c_rdata		:
-		timer_select ? timer_rdata	:
-		audio_select ? audio_rdata	:
-		plic_select ? plic_rdata	:
+		uart_select	? uart_rdata				:
+		i2c_select ? i2c_rdata					:
+		sd_internal_select ? sd_internal_rdata	:
+		timer_select ? timer_rdata				:
+		audio_select ? audio_rdata				:
+		plic_select ? plic_rdata				:
 		32'h00000000;
 	
 	assign bridge_far_ready =
-		uart_select	? uart_ready	:
-		i2c_select ? i2c_ready		:
-		timer_select ? timer_ready	:
-		audio_select ? audio_ready	:
-		plic_select ? plic_ready	:
+		uart_select	? uart_ready				:
+		i2c_select ? i2c_ready					:
+		sd_internal_select ? sd_internal_ready	:
+		timer_select ? timer_ready				:
+		audio_select ? audio_ready				:
+		plic_select ? plic_ready				:
 		1'b0;
 
 
