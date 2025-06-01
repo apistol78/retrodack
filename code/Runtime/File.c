@@ -19,6 +19,8 @@
 
 // FatFs hooks
 
+static void* c_base[] = { (void*)SD_INTERNAL_BASE, (void*)SD_EXTERNAL_BASE };
+
 DSTATUS disk_initialize(BYTE pdrv)
 {
 	return 0;
@@ -33,7 +35,7 @@ DRESULT disk_read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 {
 	for (UINT i = 0; i < count; ++i)
 	{
-		if (hal_sd_read_block512(sector, buff + 512 * i, 512) != 512)
+		if (hal_sd_read_block512(c_base[pdrv], sector, buff + 512 * i, 512) != 512)
 		{
 			printf("[FILE] Disk read error.\n");
 			return RES_ERROR;
@@ -46,7 +48,7 @@ DRESULT disk_write(BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count)
 {
 	for (UINT i = 0; i < count; ++i)
 	{
-		if (hal_sd_write_block512(sector, buff + 512 * i, 512) != 512)
+		if (hal_sd_write_block512(c_base[pdrv], sector, buff + 512 * i, 512) != 512)
 		{
 			printf("[FILE] Disk write error.\n");
 			return RES_ERROR;
@@ -67,7 +69,8 @@ DRESULT disk_ioctl(BYTE pdrv, BYTE cmd, void* buff)
 // HAL
 
 kernel_cs_t lock = { 0 };
-FATFS fs;
+FATFS fsInternal;
+FATFS fsExternal;
 FIL fps[32];
 uint32_t fpa = 0;
 
@@ -120,7 +123,9 @@ int32_t file_init()
 	memset(fps, 0, sizeof(fps));
 	fpa = 0;
 
-	if ((result = f_mount(&fs, "", 1)) != FR_OK)
+	if ((result = f_mount(&fsInternal, "0:", 1)) != FR_OK)
+		return 1;
+	if ((result = f_mount(&fsExternal, "1:", 1)) != FR_OK)
 		return 1;
 
 	return 0;

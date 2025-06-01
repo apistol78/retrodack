@@ -56,11 +56,8 @@
 
 using namespace traktor;
 
-
-
 constexpr uint32_t fs_image_size = 4 * 1024 * 1024;
 uint8_t fs_image[fs_image_size];
-
 
 DSTATUS disk_initialize(BYTE pdrv)
 {
@@ -139,6 +136,7 @@ bool createFsImage()
 		f_close(&f);
 	}
 
+	f_unmount("");
 	return true;
 }
 
@@ -200,7 +198,8 @@ int main(int argc, const char** argv)
 	Video video(720, 720);
 	UART uart;
 	// Unknown i2c(L"I2C", true);
-	SD sd(fs_image, fs_image_size);
+	SD sdInternal(fs_image, fs_image_size);
+	SD sdExternal(fs_image, fs_image_size);
 	::Timer tmr;
 	PLIC plic;
 	Audio audio;
@@ -211,9 +210,10 @@ int main(int argc, const char** argv)
 	bus.map(0x20000000, 0x20000000 + sdram.getCapacity(), true, false, &sdram);
 	bus.map(0x51000000, 0x51000100, false, false, &uart);
 	// bus.map(0x53000000, 0x53000100, false, false, &i2c);
-	bus.map(0x54000000, 0x54000100, false, true, &sd);
+	bus.map(0x54000000, 0x54000100, false, true, &sdInternal);
 	bus.map(0x55000000, 0x55000100, false, true, &tmr);
 	bus.map(0x56000000, 0x56000100, false, true, &audio);
+	bus.map(0x57000000, 0x57000100, false, true, &sdExternal);
 	bus.map(0x58000000, 0x58004000, false, false, &plic);
 	bus.map(0x5a000000, 0x5b000000, false, false, &video);
 

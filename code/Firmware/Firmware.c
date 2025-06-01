@@ -114,28 +114,32 @@ void main(int argc, const char** argv)
 		: "r" (sp)
 	);
 
-	// Initialize segments when running from ROM.
-	{
-		extern uint8_t INIT_DATA_VALUES;
-		extern uint8_t INIT_DATA_START;
-		extern uint8_t INIT_DATA_END;
-		uint8_t* src = (uint8_t*)&INIT_DATA_VALUES;
-		uint8_t* dest = (uint8_t*)&INIT_DATA_START;
-		uint32_t len = (uint32_t)(&INIT_DATA_END - &INIT_DATA_START);
-		memcpy(dest, src, len);
-	}
-	{
-		extern uint8_t BSS_START;
-		extern uint8_t BSS_END;
-        uint8_t* dest = (uint8_t*)&BSS_START;
-        uint32_t len = (uint32_t)(&BSS_END - &BSS_START);
-		memset(dest, 0, len);
-	}
+	// // Initialize segments when running from ROM.
+	// {
+	// 	extern uint8_t INIT_DATA_VALUES;
+	// 	extern uint8_t INIT_DATA_START;
+	// 	extern uint8_t INIT_DATA_END;
+	// 	uint8_t* src = (uint8_t*)&INIT_DATA_VALUES;
+	// 	uint8_t* dest = (uint8_t*)&INIT_DATA_START;
+	// 	uint32_t len = (uint32_t)(&INIT_DATA_END - &INIT_DATA_START);
+	// 	memcpy(dest, src, len);
+	// }
+	// {
+	// 	extern uint8_t BSS_START;
+	// 	extern uint8_t BSS_END;
+    //     uint8_t* dest = (uint8_t*)&BSS_START;
+    //     uint32_t len = (uint32_t)(&BSS_END - &BSS_START);
+	// 	memset(dest, 0, len);
+	// }
 
-	hal_sd_init(SD_MODE_SW);
+	crt_init();
+
+	hal_sd_init(SD_INTERNAL_BASE, SD_MODE_SW);
+	hal_sd_init(SD_EXTERNAL_BASE, SD_MODE_SW);
+
 	file_init();
 
-	launch_elf("Dashboard");
+	launch_elf("0:/Dashboard");
 
 	for (;;);
 }
