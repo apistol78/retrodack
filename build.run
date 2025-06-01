@@ -259,7 +259,13 @@ function main()
 		end
 
 		-- Program target.
-		local xc = run:execute("openFPGALoader -c cmsisdap --vid=0x1d50 --pid=0x602b ./build/RetroDACK.bit")
+		local flash < const > = false
+		local xc = 0
+		if flash then
+			xc = run:execute("openFPGALoader -c cmsisdap -f --vid=0x1d50 --pid=0x602b ./build/RetroDACK.bit")
+		else
+			xc = run:execute("openFPGALoader -c cmsisdap --vid=0x1d50 --pid=0x602b ./build/RetroDACK.bit")
+		end
 		if xc ~= 0 then
 			stderr:printLn("openFPGALoader failed; build aborted.")
 			return 1

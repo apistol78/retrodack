@@ -7,7 +7,7 @@ function main()
 	local FILES =
 	{
 		"pin-clock.csv",
-		"pin-lcd.csv",
+		-- "pin-lcd.csv",
 		"pin-uart.csv",
 		"pin-i2c.csv",
 		"pin-i2s.csv",
