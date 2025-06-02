@@ -1,3 +1,6 @@
+#include <stack>
+#include <vector>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -5,159 +8,27 @@
 #include <HAL/Audio.h>
 #include <HAL/Video.h>
 
+#include "Runtime/File.h"
 #include "Runtime/Runtime.h"
 #include "Runtime/Kernel.h"
 
-/*
-//
 
-typedef struct
+bool read_image()
 {
-	float x, y, z;
-}
-vec3_t;
+	uint8_t* framebuffer = (uint8_t*)hal_video_get_secondary_target();
 
+	const int32_t fd = file_open("Background", FILE_MODE_READ);
+	file_read(fd, framebuffer, 720 * 720);
+	file_close(fd);
 
-//
-
-typedef struct
-{
-	int32_t x, y;
-} ivec2_t;
-
-int32_t orient2d(const ivec2_t* a, const ivec2_t* b, const ivec2_t* c)
-{
-	return (b->x - a->x) * (c->y - a->y) - (b->y - a->y) * (c->x - a->x);
+	return true;
 }
 
-int32_t min3(int32_t a, int32_t b, int32_t c)
-{
-	int32_t t = a < b ? a : b;
-	return t < c ? t : c;
-}
-
-int32_t max3(int32_t a, int32_t b, int32_t c)
-{
-	int t = a > b ? a : b;
-	return t > c ? t : c;
-}
-
-int32_t min(int32_t a, int32_t b)
-{
-	return a < b ? a : b;
-}
-
-int32_t max(int32_t a, int32_t b)
-{
-	return a > b ? a : b;
-}
-
-
-uint8_t* framebuffer;
-
-void triangle(const ivec2_t* v0, const ivec2_t* v1, const ivec2_t* v2, uint8_t color)
-{
-	// Compute triangle bounding box
-	int32_t minX = min3(v0->x, v1->x, v2->x);
-	int32_t minY = min3(v0->y, v1->y, v2->y);
-	int32_t maxX = max3(v0->x, v1->x, v2->x);
-	int32_t maxY = max3(v0->y, v1->y, v2->y);
-
-	// Clip against screen bounds
-	minX = max(minX, 0);
-	minY = max(minY, 0);
-	maxX = min(maxX, 720 - 1);
-	maxY = min(maxY, 720 - 1);
-
-	// Triangle setup
-	int32_t A01 = v0->y - v1->y, B01 = v1->x - v0->x;
-	int32_t A12 = v1->y - v2->y, B12 = v2->x - v1->x;
-	int32_t A20 = v2->y - v0->y, B20 = v0->x - v2->x;
-
-	// Barycentric coordinates at minX/minY corner
-	ivec2_t p = { minX, minY };
-	int32_t w0_row = orient2d(v1, v2, &p);
-	int32_t w1_row = orient2d(v2, v0, &p);
-	int32_t w2_row = orient2d(v0, v1, &p);
-
-	// Rasterize
-	uint32_t offset = minY * 720;
-	for (p.y = minY; p.y <= maxY; p.y++)
-	{
-		// Barycentric coordinates at start of row
-		int32_t w0 = w0_row;
-		int32_t w1 = w1_row;
-		int32_t w2 = w2_row;
-
-		for (p.x = minX; p.x <= maxX; p.x++)
-		{
-			// If p is on or inside all edges, render pixel.
-			if (w0 >= 0 && w1 >= 0 && w2 >= 0)
-				framebuffer[p.x + offset] = color;
-
-			// One step to the right
-			w0 += A12;
-			w1 += A20;
-			w2 += A01;
-		}
-
-		// One row step
-		w0_row += B12;
-		w1_row += B20;
-		w2_row += B01;
-
-		offset += 720;
-	}	
-}
-
-// -------------------
-
-const vec3_t vertices[] =
-{
-	{ -1.0f, -1.0f,  1.0f },
-	{  1.0f, -1.0f,  1.0f },
-	{ -1.0f,  1.0f,  1.0f },
-	{  1.0f,  1.0f,  1.0f },
-	{ -1.0f, -1.0f, -1.0f },
-	{  1.0f, -1.0f, -1.0f },
-	{ -1.0f,  1.0f, -1.0f },
-	{  1.0f,  1.0f, -1.0f }
-};
-
-const int32_t indices[] =
-{
-	// Top
-	2, 7, 6,
-	2, 3, 7,
-
-	//Bottom
-	0, 4, 5,
-	0, 5, 1,
-
-	//Left
-	0, 2, 6,
-	0, 6, 4,
-
-	//Right
-	1, 7, 3,
-	1, 5, 7,
-
-	//Front
-	0, 3, 2,
-	0, 1, 3,
-
-	//Back
-	4, 6, 7,
-	4, 7, 5
-};
-
-*/
 
 
 int main()
 {
     runtime_init();
-    printf("Hello world!\n");
     
     // kernel_cs_init(&lock);
     // kernel_create_thread(&thread_1);
@@ -174,6 +45,9 @@ int main()
     // float head = 0.0f;
     // float pitch = 0.0f;
 	// ivec2_t sv[8];
+
+	read_image();
+	hal_video_present();
 
 
 	float a = 0.0f;

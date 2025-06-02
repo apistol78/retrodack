@@ -22,22 +22,20 @@
 #include "Runtime/File.h"
 #include "Runtime/Runtime.h"
 
-typedef void (*call_fn_t)();
-
 void __register_exitproc(void) {}
 void __call_exitprocs(void) {}
 
-void main(int argc, const char** argv)
+int main()
 {
 	// Initialize SP, since we hot restart and startup doesn't set SP.
-	const uint32_t sp = 0x20000000 + 0x00800000;
-	__asm__ volatile (
-		"mv sp, %0	\n"
-		:
-		: "r" (sp)
-	);
+	// const uint32_t sp = 0x22000000 - 4;
+	// __asm__ volatile (
+	// 	"mv sp, %0	\n"
+	// 	:
+	// 	: "r" (sp)
+	// );
 
-	// // Initialize segments when running from ROM.
+	// Initialize segments when running from ROM.
 	// {
 	// 	extern uint8_t INIT_DATA_VALUES;
 	// 	extern uint8_t INIT_DATA_START;
@@ -45,24 +43,18 @@ void main(int argc, const char** argv)
 	// 	uint8_t* src = (uint8_t*)&INIT_DATA_VALUES;
 	// 	uint8_t* dest = (uint8_t*)&INIT_DATA_START;
 	// 	uint32_t len = (uint32_t)(&INIT_DATA_END - &INIT_DATA_START);
-	// 	memcpy(dest, src, len);
-	// }
-	// {
-	// 	extern uint8_t BSS_START;
-	// 	extern uint8_t BSS_END;
-    //     uint8_t* dest = (uint8_t*)&BSS_START;
-    //     uint32_t len = (uint32_t)(&BSS_END - &BSS_START);
-	// 	memset(dest, 0, len);
+	// 	for (uint32_t i = 0; i < len; ++i)
+	// 		dest[i] = src[i];
 	// }
 
 	crt_init();
 
-	hal_sd_init(SD_INTERNAL_BASE, SD_MODE_SW);
-	hal_sd_init(SD_EXTERNAL_BASE, SD_MODE_SW);
+	hal_sd_init((void*)SD_INTERNAL_BASE, SD_MODE_SW);
+	hal_sd_init((void*)SD_EXTERNAL_BASE, SD_MODE_SW);
 
 	file_init();
-
-	elf_launch("0:/Dashboard");
+	elf_launch("Dashboard");
 
 	for (;;);
+	return 0;
 }

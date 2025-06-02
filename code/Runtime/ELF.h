@@ -8,7 +8,7 @@
 */
 #pragma once
 
-#include <stdint.h>
+#include <HAL/Common.h>
 
 #define EI_NIDENT 16
 

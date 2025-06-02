@@ -25,6 +25,7 @@
 #include <Core/Io/Utf8Encoding.h>
 #include <Core/Log/Log.h>
 #include <Core/Misc/CommandLine.h>
+#include <Core/Misc/TString.h>
 #include <Core/Timer/Timer.h>
 #include <Drawing/Image.h>
 #include <Ui/Application.h>
@@ -117,23 +118,39 @@ bool createFsImage()
 	res = f_mount(&fs, "", 0);
 	if (res) return false;
 
-	Ref< traktor::IStream > sf = FileSystem::getInstance().open(L"fs/Dashboard", File::FmRead);
-	if (sf)
+	for (auto ff : FileSystem::getInstance().find(L"fs/*.*"))
 	{
-		res = f_open(&f, "Dashboard", FA_CREATE_ALWAYS | FA_WRITE);
-		if (res) return false;
+		if (ff->isDirectory())
+			continue;
 
-		for (;;)
+		Ref< traktor::IStream > sf = FileSystem::getInstance().open(ff->getPath(), File::FmRead);
+		if (sf)
 		{
-			const int64_t nrd = sf->read(work, sizeof(work));
-			if (nrd <= 0)
-				break;
+			char fn[512];
+			strcpy(fn, wstombs(ff->getPath().getFileNameNoExtension()).c_str());
 
-			res = f_write(&f, work, (UINT)nrd, &bw);
-			if (res) return false;
+			res = f_open(&f, fn, FA_CREATE_ALWAYS | FA_WRITE);
+			if (res)
+			{
+				log::error << L"Unable to create FS image file \"" << ff->getPath().getFileNameNoExtension() << L"\"." << Endl;
+				return false;
+			}
+
+			for (;;)
+			{
+				const int64_t nrd = sf->read(work, sizeof(work));
+				if (nrd <= 0)
+					break;
+
+				res = f_write(&f, work, (UINT)nrd, &bw);
+				if (res)
+					return false;
+			}
+
+			f_close(&f);
+
+			log::info << L"Added \"" << ff->getPath().getFileNameNoExtension() << L"\" to FS image." << Endl;
 		}
-
-		f_close(&f);
 	}
 
 	f_unmount("");
@@ -194,7 +211,7 @@ int main(int argc, const char** argv)
 	// Create emulation devices.
 	Memory rom(0x00100000);
     // Memory ram(0x00010000);
-	Memory sdram(0x01000000);
+	Memory sdram(0x02000000);
 	Video video(720, 720);
 	UART uart;
 	// Unknown i2c(L"I2C", true);
@@ -226,7 +243,7 @@ int main(int argc, const char** argv)
 	}
 
     CPU cpu(&bus, os, false);
-    cpu.setSP(0x20000000 + sdram.getCapacity() - 4);
+    cpu.setSP(0x22000000 - 4);
 
 	tmr.setCallback([&](){ cpu.interrupt(TIMER); });
 

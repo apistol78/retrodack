@@ -75,9 +75,9 @@ int32_t runtime_init()
 	hal_audio_init();
 
 	printf("** Initialize SD cards **\n");
-	if (hal_sd_init(SD_INTERNAL_BASE, SD_MODE_HW) != 0)
+	if (hal_sd_init((void*)SD_INTERNAL_BASE, SD_MODE_HW) != 0)
 		printf("SD (internal) init failed!\n");
-	if (hal_sd_init(SD_EXTERNAL_BASE, SD_MODE_HW) != 0)
+	if (hal_sd_init((void*)SD_EXTERNAL_BASE, SD_MODE_HW) != 0)
 		printf("SD (external) init failed!\n");
 
 	printf("** Initialize FS **\n");

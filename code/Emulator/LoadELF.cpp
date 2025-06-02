@@ -128,6 +128,8 @@ bool loadELF(const std::wstring& fileName, CPU& cpu, Bus& bus)
 				const auto pbits = (const uint8_t*)(elf.c_ptr() + shdr[i].sh_offset);
 				const uint32_t addr = shdr[i].sh_addr;
 
+				log::info << L"SHF_ALLOC " << str(L"0x%08x", addr) << L" - " << str(L"0x%08x", addr + shdr[i].sh_size) << Endl;
+
 				for (uint32_t j = 0; j < shdr[i].sh_size; ++j)
 					busAccess.writeU8(0, addr + j, pbits[j]);
 			}
@@ -139,12 +141,9 @@ bool loadELF(const std::wstring& fileName, CPU& cpu, Bus& bus)
 			for (int32_t j = 0; j < shdr[i].sh_size / sizeof(ELF32_Sym); ++j)
 			{
 				const char* name = strings + sym[j].st_name;
+				// log::info << L"SHT_SYMTAB " << mbstows(name) << L" = " << str(L"0x%08x", sym[j].st_value) << Endl;
 				if (strcmp(name, "_start") == 0)
-				{
-					log::info << L"Entry found, " << str(L"0x%08x", sym[j].st_value) << Endl;
 					cpu.jump(sym[j].st_value);
-					break;
-				}
 			}
 		}
 	}

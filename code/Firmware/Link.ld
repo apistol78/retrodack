@@ -1,10 +1,10 @@
 OUTPUT_ARCH( "riscv" )
-ENTRY( _start_no_args )
+ENTRY( _start )
 
 MEMORY
 {
     rom	(rx)	: ORIGIN = 0x00000000, LENGTH = 0x00020000
-	ram	(rwx)	: ORIGIN = 0x20000000, LENGTH = 0x01000000
+	ram	(rwx)	: ORIGIN = 0x21E00000, LENGTH = 0x00100000
 }
 
 SECTIONS
@@ -96,8 +96,8 @@ SECTIONS
 	/*--------------------------------------------------------------------*/
 
     . = ORIGIN(ram);
-
 	. = ALIGN(16);
+	_fdata = .;
 
 	.data : 
 	{
@@ -107,6 +107,10 @@ SECTIONS
 		*(.data)
 		*(.data.*)
 		*(.gnu.linkonce.d.*)
+
+		/* Have _gp point to middle of sdata/sbss to maximize displacement range */
+		. = ALIGN(16);
+		_gp = . + 0x800;
 
 		*(.sdata)
 		*(.sdata.*)
@@ -118,7 +122,6 @@ SECTIONS
 
 	. = ALIGN(16);
 
-	_gp = . + 0x800;
 	__global_pointer$ = .;
 
 	PROVIDE( edata = . );
@@ -130,25 +133,26 @@ SECTIONS
 
 	/* Start of uninitialized data segment */
 	. = ALIGN(16);
+	_fbss = .;
     
-	__bss_start = .;
-	.bss (NOLOAD) : 
+	/* Writable uninitialized small data segment */
+	.sbss : 
 	{
-	    BSS_START = .;
+		*(.sbss)
+		*(.sbss.*)
+		*(.gnu.linkonce.sb.*)
+	} >ram
 
+	/* bss: Uninitialized writeable data section */
+	. = .;
+	__bss_start = .;
+	.bss : 
+	{
 		*(.bss)
 		*(.bss.*)
 		*(.gnu.linkonce.b.*)
 		*(COMMON)
-
-		*(.sbss)
-		*(.sbss.*)
-		*(.gnu.linkonce.sb.*)
-
-	    BSS_END = .;
 	} >ram
-
-	. = ALIGN(16);
 
 	PROVIDE( end = . );
 	_end = ALIGN(8);

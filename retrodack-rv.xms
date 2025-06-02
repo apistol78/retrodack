@@ -144,7 +144,7 @@
 					<libraryPaths/>
 					<libraries/>
 					<warningLevel>WlCompilerDefault</warningLevel>
-					<additionalCompilerOptions>-Os -fno-use-cxa-atexit</additionalCompilerOptions>
+					<additionalCompilerOptions>-Os</additionalCompilerOptions>
 					<additionalLinkerOptions>-T$(MAKE_HOME)/code/Firmware/Link.ld</additionalLinkerOptions>
 					<debugExecutable/>
 					<debugArguments/>
@@ -168,7 +168,7 @@
 					<libraryPaths/>
 					<libraries/>
 					<warningLevel>WlCompilerDefault</warningLevel>
-					<additionalCompilerOptions>-Os -fno-use-cxa-atexit</additionalCompilerOptions>
+					<additionalCompilerOptions>-Os</additionalCompilerOptions>
 					<additionalLinkerOptions>-T$(MAKE_HOME)/code/Firmware/Link.ld</additionalLinkerOptions>
 					<debugExecutable/>
 					<debugArguments/>
@@ -179,11 +179,13 @@
 				</item>
 			</configurations>
 			<items>
+				<!--
 				<item type="traktor.sb.File" version="1">
 					<fileName>*.s</fileName>
 					<excludeFilter/>
 					<items/>
 				</item>
+				-->
 				<item type="traktor.sb.File" version="1">
 					<fileName>*.c</fileName>
 					<excludeFilter/>
