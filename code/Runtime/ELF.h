@@ -73,3 +73,5 @@ typedef struct
 	uint16_t st_shndx;
 } ELF32_Sym;
 #pragma pack()
+
+EXTERN_C int32_t elf_launch(const char* filename);

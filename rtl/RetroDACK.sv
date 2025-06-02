@@ -110,7 +110,7 @@ module RetroDACK(
 
 
 	//=====================================
-    // SDRAM ($20000000)
+    // SDRAM ($20000000 - $22000000)
 	wire sdram_select;
 	wire [31:0] sdram_address;
 	wire [31:0] sdram_wdata;
