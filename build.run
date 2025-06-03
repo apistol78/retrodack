@@ -193,12 +193,22 @@ local function buildEmulatorFS()
 
 	run:mkdir("fs")
 	run:rm(SCRIPT_HOME .. "/fs/Dashboard")
-	run:copy(SCRIPT_HOME .. "/build/rv/ReleaseStatic/Dashboard", SCRIPT_HOME .. "/fs/Dashboard")
+	run:copy(SCRIPT_HOME .. "/build/rv/ReleaseStatic/Dashboard", SCRIPT_HOME .. "/fs/DASH")
 
 	return true
 end
 
 function main()
+	local synthesize < const > = run.commandLine:hasOption("synth")
+	local program < const > = run.commandLine:hasOption("prog")
+	local flash < const > = run.commandLine:hasOption("flash")
+	local emulation < const > = run.commandLine:hasOption("emu")
+	local serial < const > = run.commandLine:hasOption("serial")
+
+	if serial then
+		run:execute("picocom -b 115200 --imap lfcrlf --emap lfcrlf --omap lfcrlf /dev/ttyACM0")
+		return 0
+	end
 
 	-- Compile firmware and tools.
 	if os.identifier == "windows" then
@@ -212,7 +222,6 @@ function main()
 	if not buildEmulatorFS() then return 1 end
 
 	-- Synthesize system.
-	local synthesize < const > = (os:whereIs("yosys") ~= nil)
 	if synthesize then
 
 		-- Create constraints.
@@ -228,6 +237,7 @@ function main()
 				{},
 				"build/rtl-v"
 			)
+			if v == nil then return 1 end
 			f = f .. " " .. v
 		end
 		stdout:printLn(f)
@@ -257,9 +267,10 @@ function main()
 			stderr:printLn("ecppack failed; build aborted.")
 			return 1
 		end
+	end
 
-		-- Program target.
-		local flash < const > = false
+	-- Program target.
+	if program then
 		local xc = 0
 		if flash then
 			xc = run:execute("openFPGALoader -c cmsisdap -f --vid=0x1d50 --pid=0x602b ./build/RetroDACK.bit")
@@ -270,9 +281,11 @@ function main()
 			stderr:printLn("openFPGALoader failed; build aborted.")
 			return 1
 		end
+	end
 
-	else
-		stdout:printLn("No yosys found in environment; synthesize skipped.")
+	-- Launch emulator.
+	if emulation then
+		run:execute("build/linux/ReleaseStatic/RetroDACK.Emulator -elf=build/rv/ReleaseStatic/Dashboard")
 	end
 
 	stdout:printLn("Build successful.")

@@ -268,9 +268,9 @@ module RetroDACK(
 	CPU #(
 		.STACK_POINTER(32'h22000000 - 4),
 		.FREQUENCY(`FREQUENCY),
-		.DCACHE_SIZE(0),
+		.DCACHE_SIZE(2),
 		.DCACHE_REGISTERED(1),
-		.ICACHE_SIZE(1),
+		.ICACHE_SIZE(2),
 		.ICACHE_REGISTERED(1)		
 	) cpu(
 		.i_reset(reset),
@@ -377,22 +377,43 @@ module RetroDACK(
 	wire [31:0] sd_internal_rdata;
 	wire sd_internal_ready;
 
-	wire [3:0] sd_internal_dat;
-	assign sd_internal_dat = { SD_INTERNAL_DAT0, SD_INTERNAL_DAT1, SD_INTERNAL_DAT2, SD_INTERNAL_DAT3 };
+	wire sd_internal_cmd_dir;
+	wire sd_internal_cmd_out;
+	//assign SD_INTERNAL_CMD = sd_internal_cmd_dir ? sd_internal_cmd_out : 1'bz;
+	assign SD_EXTERNAL_CMD = sd_internal_cmd_dir ? sd_internal_cmd_out : 1'bz;
+
+	wire sd_internal_dat_dir;
+	wire [3:0] sd_internal_dat_out;
+	//assign { SD_INTERNAL_DAT0, SD_INTERNAL_DAT1, SD_INTERNAL_DAT2, SD_INTERNAL_DAT3 } = sd_internal_dat_dir ? sd_internal_dat_out : 4'bz; 
+	//assign { SD_EXTERNAL_DAT0, SD_EXTERNAL_DAT1, SD_EXTERNAL_DAT2, SD_EXTERNAL_DAT3 } = sd_internal_dat_dir ? sd_internal_dat_out : 4'bz; 
+	assign { SD_EXTERNAL_DAT3, SD_EXTERNAL_DAT2, SD_EXTERNAL_DAT1, SD_EXTERNAL_DAT0 } = sd_internal_dat_dir ? sd_internal_dat_out : 4'bz; 
 
 	SD sd_internal(
 		.i_reset(reset),
 		.i_clock(clock),
-		.i_request(sd_internal_select && bridge_far_request),
+		.i_request(bridge_far_request && sd_internal_select),
 		.i_rw(bridge_far_rw),
-		.i_address(sd_address),
+		.i_address(sd_internal_address),
 		.i_wdata(sd_internal_wdata),
 		.o_rdata(sd_internal_rdata),
 		.o_ready(sd_internal_ready),
 		// ---
-		.SD_CLK(SD_INTERNAL_CLK),
-		.SD_CMD(SD_INTERNAL_CMD),
-		.SD_DAT(sd_internal_dat)
+		// .SD_CLK(SD_INTERNAL_CLK),
+		// .SD_CMD_dir(sd_internal_cmd_dir),
+		// .SD_CMD_in(SD_INTERNAL_CMD),
+		// .SD_CMD_out(sd_internal_cmd_out),
+		// .SD_DAT_dir(sd_internal_dat_dir),
+		// .SD_DAT_in({ SD_INTERNAL_DAT0, SD_INTERNAL_DAT1, SD_INTERNAL_DAT2, SD_INTERNAL_DAT3 }),
+		// .SD_DAT_out(sd_internal_dat_out)
+
+		.SD_CLK(SD_EXTERNAL_CLK),
+		.SD_CMD_dir(sd_internal_cmd_dir),
+		.SD_CMD_in(SD_EXTERNAL_CMD),
+		.SD_CMD_out(sd_internal_cmd_out),
+		.SD_DAT_dir(sd_internal_dat_dir),
+		//.SD_DAT_in({ SD_EXTERNAL_DAT0, SD_EXTERNAL_DAT1, SD_EXTERNAL_DAT2, SD_EXTERNAL_DAT3 }),
+		.SD_DAT_in({ SD_EXTERNAL_DAT3, SD_EXTERNAL_DAT2, SD_EXTERNAL_DAT1, SD_EXTERNAL_DAT0 }),
+		.SD_DAT_out(sd_internal_dat_out)
 	);
 
 
@@ -407,6 +428,7 @@ module RetroDACK(
 	wire [31:0] timer_wdata;
 	wire [31:0] timer_rdata;
 	wire timer_ready;
+
 	Timer #(
 		.FREQUENCY(`FREQUENCY)
 	) timer(
@@ -449,6 +471,7 @@ module RetroDACK(
 	wire [31:0] audio_rdata;
 	wire audio_ready;
 	wire audio_interrupt;
+
 	AUDIO_controller audio_controller(
 		.i_reset(reset),
 		.i_clock(clock),

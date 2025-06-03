@@ -6,6 +6,7 @@
  License, v. 2.0. If a copy of the MPL was not distributed with this
  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -19,8 +20,6 @@
 
 // FatFs hooks
 
-static void* c_base[] = { (void*)SD_INTERNAL_BASE, (void*)SD_EXTERNAL_BASE };
-
 DSTATUS disk_initialize(BYTE pdrv)
 {
 	return 0;
@@ -28,16 +27,43 @@ DSTATUS disk_initialize(BYTE pdrv)
 
 DSTATUS disk_status(BYTE pdrv)
 {
+	printf("disk_status\n");
 	return 0;
 }
 
 DRESULT disk_read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 {
+	printf("disk_read %u (%d)\n", (uint32_t)sector, (int)count);
+
+	//memset(buff, 0, count * 512);
+
 	for (UINT i = 0; i < count; ++i)
 	{
-		if (hal_sd_read_block512(/*c_base[pdrv]*/(void*)SD_INTERNAL_BASE, sector, buff + 512 * i, 512) != 512)
+		if (hal_sd_read_block512(sector + i, buff + 512 * i, 512) != 512)
+		{
+			printf("failed to read block %d\n", sector + i);
 			return RES_ERROR;
+		}
 	}
+
+	// for (uint32_t i = 0; i < 512 * count; i += 16)
+	// {
+	// 	for (uint32_t j = 0; j < 16; ++j)
+	// 	{
+	// 		printf("%02x ", (int)buff[i + j]);
+	// 	}
+	// 	printf("  ");
+	// 	for (uint32_t j = 0; j < 16; ++j)
+	// 	{
+	// 		if (isgraph(buff[i + j]))
+	// 			printf("%c", (int)buff[i + j]);
+	// 		else
+	// 			printf(".");
+	// 	}
+	// 	printf("\n");
+	// }
+
+	printf("disk_read successful!\n");
 	return RES_OK;
 }
 
@@ -45,7 +71,7 @@ DRESULT disk_write(BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count)
 {
 	for (UINT i = 0; i < count; ++i)
 	{
-		if (hal_sd_write_block512(/*c_base[pdrv]*/(void*)SD_INTERNAL_BASE, sector, buff + 512 * i, 512) != 512)
+		if (hal_sd_write_block512(sector, buff + 512 * i, 512) != 512)
 			return RES_ERROR;
 	}
 	return RES_OK;
@@ -64,7 +90,7 @@ DRESULT disk_ioctl(BYTE pdrv, BYTE cmd, void* buff)
 
 kernel_cs_t lock = { 0 };
 FATFS fsInternal;
-FATFS fsExternal;
+// FATFS fsExternal;
 FIL fps[32];
 uint32_t fpa = 0;
 
@@ -114,27 +140,32 @@ int32_t file_init()
 {
 	int32_t result;
 
+	memset(&fsInternal, 0, sizeof(fsInternal));
+
 	memset(fps, 0, sizeof(fps));
 	fpa = 0;
 
-	if ((result = f_mount(&fsInternal, "0:", 1)) != FR_OK)
+	if ((result = f_mount(&fsInternal, "", 1)) != FR_OK)
 		return 1;
-	if ((result = f_mount(&fsExternal, "1:", 1)) != FR_OK)
-		return 1;
+	// if ((result = f_mount(&fsExternal, "1:", 1)) != FR_OK)
+	// 	return 1;
 
 	return 0;
 }
 
 int32_t file_open(const char* name, int32_t mode)
 {
-	kernel_cs_lock(&lock);
+	//kernel_cs_lock(&lock);
 
 	FIL* fp = file_alloc();
 	if (!fp)
 	{
-		kernel_cs_unlock(&lock);
+		printf("unable to alloc file pointer!\n");
+		//kernel_cs_unlock(&lock);
 		return 0;
 	}
+
+	printf("file_open %s...\n", name);
 
 	FRESULT r = FR_INVALID_PARAMETER;
 	if (mode == FILE_MODE_READ)
@@ -142,7 +173,7 @@ int32_t file_open(const char* name, int32_t mode)
 		if ((r = f_open(fp, name, FA_READ)) == FR_OK)
 		{
 			const int32_t index = file_index(fp);
-			kernel_cs_unlock(&lock);
+			//kernel_cs_unlock(&lock);
 			return index;
 		}
 	}
@@ -151,20 +182,22 @@ int32_t file_open(const char* name, int32_t mode)
 		if ((r = f_open(fp, name, FA_CREATE_ALWAYS | FA_WRITE)) == FR_OK)
 		{
 			const int32_t index = file_index(fp);
-			kernel_cs_unlock(&lock);
+			//kernel_cs_unlock(&lock);
 			return index;
 		}
 	}
 
 	file_free(fp);
 
-	kernel_cs_unlock(&lock);
+	printf("failed to open file!\n");
+
+	//kernel_cs_unlock(&lock);
 	return 0;
 }
 
 void file_close(int32_t fd)
 {
-	kernel_cs_lock(&lock);
+	//kernel_cs_lock(&lock);
 
 	FIL* fp = file_from_index(fd);
 	if (fp)
@@ -173,18 +206,18 @@ void file_close(int32_t fd)
 		file_free(fp);
 	}
 
-	kernel_cs_unlock(&lock);
+	//kernel_cs_unlock(&lock);
 }
 
 int32_t file_size(int32_t fd)
 {
 	int32_t fs = -1;
 
-	kernel_cs_lock(&lock);
+	//kernel_cs_lock(&lock);
 	FIL* fp = file_from_index(fd);
 	if (fp)
 		fs = f_size(fp);
-	kernel_cs_unlock(&lock);
+	//kernel_cs_unlock(&lock);
 
 	return fs;
 }
@@ -193,12 +226,12 @@ int32_t file_seek(int32_t fd, int32_t offset, int32_t from)
 {
 	FRESULT result = FR_INVALID_PARAMETER;
 
-	kernel_cs_lock(&lock);
+	//kernel_cs_lock(&lock);
 
 	FIL* fp = file_from_index(fd);
 	if (!fp)
 	{
-		kernel_cs_unlock(&lock);
+		//kernel_cs_unlock(&lock);
 		return -1;
 	}
 
@@ -228,7 +261,7 @@ int32_t file_seek(int32_t fd, int32_t offset, int32_t from)
 	if (result == FR_OK)
 		ft = f_tell(fp);
 
-	kernel_cs_unlock(&lock);
+	//kernel_cs_unlock(&lock);
 	return ft;
 }
 
@@ -254,31 +287,45 @@ int32_t file_write(int32_t fd, const uint8_t* ptr, int32_t len)
 	else
 	{
 		kernel_cs_unlock(&lock);
-		return -1;
+		return -2;
 	}
 }
 
 int32_t file_read(int32_t fd, uint8_t* ptr, int32_t len)
 {
-	kernel_cs_lock(&lock);
+	//kernel_cs_lock(&lock);
 
-	FIL* fp = file_from_index(fd);
+	printf("file_read %d %d\n", fd, len);
+
+	FIL* fp = &fps[0]; // file_from_index(fd);
 	if (!fp)
 	{
-		kernel_cs_unlock(&lock);
+		//kernel_cs_unlock(&lock);
 		return -1;
 	}
 
+	// const FFOBJID* obj = &fp->obj;
+	// printf("obj->fs %p (%p)\n", obj->fs, &fsInternal);
+	// printf("obj->fs->fs_type %d\n", (int)obj->fs->fs_type);
+	// printf("obj->fs->id %d\n", (int)obj->fs->id);
+	// printf("obj->id %d\n", (int)obj->id);
+	// printf("obj->attr %d\n", (int)obj->attr);
+	// printf("obj->stat %d\n", (int)obj->stat);
+	// printf("obj->sclust %d\n", (int)obj->sclust);
+	// printf("obj->objsize %d\n", (int)obj->objsize);
+
 	UINT br = 0;
-	if (f_read(fp, ptr, len, &br) == FR_OK)
+	FRESULT result = f_read(fp, ptr, len, &br);
+	if (result == FR_OK)
 	{
-		kernel_cs_unlock(&lock);
+		//kernel_cs_unlock(&lock);
 		return (int32_t)br;
 	}
 	else
 	{
-		kernel_cs_unlock(&lock);
-		return -1;
+		//kernel_cs_unlock(&lock);
+		printf("f_read failed, FRESULT %d\n", (int32_t)result);
+		return -2;
 	}
 }
 

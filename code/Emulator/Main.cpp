@@ -54,6 +54,7 @@
 
 //
 #include "Emulator/LoadELF.h"
+#include "Emulator/LoadHEX.h"
 
 using namespace traktor;
 
@@ -259,6 +260,22 @@ int main(int argc, const char** argv)
 		}
 	}
     
+	if (cmdLine.hasOption(L'h', L"hex"))
+	{
+		sdram.setReadOnly(true);
+
+		const std::wstring fileName = cmdLine.getOption(L'h', L"hex").getString();
+		if (!loadHEX(fileName, cpu, bus))
+			return 1;
+		if (bus.error())
+		{
+			log::error << L"BUS error after loading HEX." << Endl;
+			return 1;
+		}
+
+		sdram.setReadOnly(false);
+	}
+
     rom.setReadOnly(true);
     
 

@@ -179,13 +179,11 @@
 				</item>
 			</configurations>
 			<items>
-				<!--
 				<item type="traktor.sb.File" version="1">
 					<fileName>*.s</fileName>
 					<excludeFilter/>
 					<items/>
 				</item>
-				-->
 				<item type="traktor.sb.File" version="1">
 					<fileName>*.c</fileName>
 					<excludeFilter/>

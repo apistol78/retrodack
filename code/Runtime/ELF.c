@@ -6,6 +6,7 @@
  License, v. 2.0. If a copy of the MPL was not distributed with this
  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
+#include <stdio.h>
 #include <string.h>
 
 #include "Runtime/ELF.h"
@@ -15,25 +16,56 @@ typedef void (*call_fn_t)();
 
 int32_t elf_launch(const char* filename)
 {
+	uint8_t tmp[8000];
+	ELF32_Header hdr;
+	ELF32_ProgramHeader phdr;
+	ELF32_SectionHeader shdr;
+	ELF32_SectionHeader shdr_link;
+	ELF32_Sym sym;
+	uint32_t jstart = 0;
+
 	const int32_t fd = file_open(filename, FILE_MODE_READ);
 	if (fd <= 0)
 		return 1;
 
-	char tmp[4096];
-	uint32_t jstart = 0;
+	printf("%s opened as %d...\n", filename, fd);
 
-	ELF32_Header hdr;
-	file_read(fd, (uint8_t*)&hdr, sizeof(hdr));
+	const int32_t r = file_read(fd, (uint8_t*)&hdr, sizeof(hdr));
+
+	printf("header machine %02x (%d %d)\n", hdr.e_machine, r, sizeof(hdr));
+
 	if (hdr.e_machine != 0xf3)
 		return 2;
 
+	for (uint32_t i = 0; i < hdr.e_phnum; ++i)
+	{
+		printf("reading program header %u...\n", i);
+
+		file_seek(fd, hdr.e_phoff + i * sizeof(ELF32_SectionHeader), 0);
+		file_read(fd, (uint8_t*)&phdr, sizeof(phdr));
+
+		if (phdr.p_type == 0x01) // PT_LOAD
+		{
+			file_seek(fd, phdr.p_offset, 0);
+			for (uint32_t i = 0; i < phdr.p_filesz; i += 512)
+			{
+				uint32_t nb = phdr.p_filesz - i;
+				if (nb > 512)
+					nb = 512;
+				if (file_read(fd, (void*)(phdr.p_paddr + i), nb) != nb)
+					return 3;
+			}
+		}
+	}
+
 	for (uint32_t i = 0; i < hdr.e_shnum; ++i)
 	{
-		ELF32_SectionHeader shdr;
+		printf("reading section header %u...\n", i);
+
 		file_seek(fd, hdr.e_shoff + i * sizeof(ELF32_SectionHeader), 0);
 		file_read(fd, (uint8_t*)&shdr, sizeof(shdr));
 
-		if (
+		/*if (
 			shdr.sh_type == 0x01 ||	// SHT_PROGBITS
 			shdr.sh_type == 0x0e ||	// SHT_INIT_ARRAY
 			shdr.sh_type == 0x0f	// SHT_FINI_ARRAY
@@ -52,15 +84,13 @@ int32_t elf_launch(const char* filename)
 				}
 			}
 		}
-		else if (shdr.sh_type == 0x02)	// SHT_SYMTAB
+		else*/ if (shdr.sh_type == 0x02)	// SHT_SYMTAB
 		{
-			ELF32_SectionHeader shdr_link;
 			file_seek(fd, hdr.e_shoff + shdr.sh_link * sizeof(ELF32_SectionHeader), 0);
 			file_read(fd, (uint8_t*)&shdr_link, sizeof(shdr_link));
 
 			for (int32_t j = 0; j < shdr.sh_size; j += sizeof(ELF32_Sym))
 			{
-				ELF32_Sym sym;
 				file_seek(fd, shdr.sh_offset + j, 0);
 				file_read(fd, (uint8_t*)&sym, sizeof(sym));
 
@@ -85,6 +115,8 @@ int32_t elf_launch(const char* filename)
 
 	if (jstart != 0)
 	{
+		printf("jumping to 0x%08x...\n", jstart);
+
 		const uint32_t sp = 0x22000000 - 4;
 		__asm__ volatile (
 			"fence					\n"

@@ -114,10 +114,29 @@ bool loadELF(const std::wstring& fileName, CPU& cpu, Bus& bus)
 		return false;		
 	}
 
+	auto phdr = (const ELF32_ProgramHeader*)(elf.c_ptr() + hdr->e_phoff);
+	for (uint32_t i = 0; i < hdr->e_phnum; ++i)
+	{
+		if (phdr[i].p_type == 0x01) // PT_LOAD
+		{
+			const auto pbits = (const uint8_t*)(elf.c_ptr() + phdr[i].p_offset);
+			const uint32_t addr = phdr[i].p_paddr;
+
+			log::info << L"PT_LOAD " << str(L"0x%08x", addr) << L" - file size " << str(L"0x%08x", addr + phdr[i].p_filesz)  << L" - mem size " << str(L"0x%08x", addr + phdr[i].p_memsz) << Endl;
+
+			for (uint32_t j = 0; j < phdr[i].p_filesz; ++j)
+			{
+				busAccess.writeU8(0, addr + j, pbits[j]);
+				if (bus.error())
+					return false;
+			}
+		}
+	}
+
 	auto shdr = (const ELF32_SectionHeader*)(elf.c_ptr() + hdr->e_shoff);
 	for (uint32_t i = 0; i < hdr->e_shnum; ++i)
 	{
-		if (
+		/*if (
 			shdr[i].sh_type == 0x01 ||	// SHT_PROGBITS
 			shdr[i].sh_type == 0x0e ||	// SHT_INIT_ARRAY
 			shdr[i].sh_type == 0x0f		// SHT_FINI_ARRAY
@@ -134,7 +153,7 @@ bool loadELF(const std::wstring& fileName, CPU& cpu, Bus& bus)
 					busAccess.writeU8(0, addr + j, pbits[j]);
 			}
 		}
-		else if (shdr[i].sh_type == 0x02)	// SHT_SYMTAB
+		else*/ if (shdr[i].sh_type == 0x02)	// SHT_SYMTAB
 		{
 			const char* strings = (const char*)(elf.c_ptr() + shdr[shdr[i].sh_link].sh_offset);
 			auto sym = (const ELF32_Sym*)(elf.c_ptr() + shdr[i].sh_offset);

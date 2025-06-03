@@ -96,8 +96,8 @@ SECTIONS
 	/*--------------------------------------------------------------------*/
 
     . = ORIGIN(ram);
+
 	. = ALIGN(16);
-	_fdata = .;
 
 	.data : 
 	{
@@ -107,10 +107,6 @@ SECTIONS
 		*(.data)
 		*(.data.*)
 		*(.gnu.linkonce.d.*)
-
-		/* Have _gp point to middle of sdata/sbss to maximize displacement range */
-		. = ALIGN(16);
-		_gp = . + 0x800;
 
 		*(.sdata)
 		*(.sdata.*)
@@ -122,6 +118,7 @@ SECTIONS
 
 	. = ALIGN(16);
 
+	_gp = . + 0x800;
 	__global_pointer$ = .;
 
 	PROVIDE( edata = . );
@@ -133,26 +130,25 @@ SECTIONS
 
 	/* Start of uninitialized data segment */
 	. = ALIGN(16);
-	_fbss = .;
     
-	/* Writable uninitialized small data segment */
-	.sbss : 
-	{
-		*(.sbss)
-		*(.sbss.*)
-		*(.gnu.linkonce.sb.*)
-	} >ram
-
-	/* bss: Uninitialized writeable data section */
-	. = .;
 	__bss_start = .;
-	.bss : 
+	.bss (NOLOAD) : 
 	{
+	    BSS_START = .;
+
 		*(.bss)
 		*(.bss.*)
 		*(.gnu.linkonce.b.*)
 		*(COMMON)
+
+		*(.sbss)
+		*(.sbss.*)
+		*(.gnu.linkonce.sb.*)
+
+	    BSS_END = .;
 	} >ram
+
+	. = ALIGN(16);
 
 	PROVIDE( end = . );
 	_end = ALIGN(8);
