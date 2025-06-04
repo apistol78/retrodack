@@ -30,7 +30,7 @@ int main()
 	
 	// hal_video_present();
 
-	//printf("Hello world from Dashboard!\n");
+	printf("Hello world from Dashboard!\n");
 
     for (;;)
     {

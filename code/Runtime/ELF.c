@@ -30,10 +30,9 @@ int32_t elf_launch(const char* filename)
 
 	printf("%s opened as %d...\n", filename, fd);
 
-	const int32_t r = file_read(fd, (uint8_t*)&hdr, sizeof(hdr));
-
-	printf("header machine %02x (%d %d)\n", hdr.e_machine, r, sizeof(hdr));
-
+	// Read header and ensure it's the correct machine type.
+	memset(&hdr, 0, sizeof(hdr));
+	file_read(fd, (uint8_t*)&hdr, sizeof(hdr));
 	if (hdr.e_machine != 0xf3)
 		return 2;
 
@@ -41,11 +40,15 @@ int32_t elf_launch(const char* filename)
 	{
 		printf("reading program header %u...\n", i);
 
-		file_seek(fd, hdr.e_phoff + i * sizeof(ELF32_SectionHeader), 0);
+		file_seek(fd, hdr.e_phoff + i * sizeof(ELF32_ProgramHeader), 0);
 		file_read(fd, (uint8_t*)&phdr, sizeof(phdr));
+
+		printf("... p_type = 0x%02x\n", phdr.p_type);
 
 		if (phdr.p_type == 0x01) // PT_LOAD
 		{
+			printf("PT_LOAD, offset %u, filesz %u, memsz %u, paddr 0x%08x, vaddr 0x%08x\n", phdr.p_offset, phdr.p_filesz, phdr.p_memsz, phdr.p_paddr, phdr.p_vaddr);
+
 			file_seek(fd, phdr.p_offset, 0);
 			for (uint32_t i = 0; i < phdr.p_filesz; i += 512)
 			{

@@ -27,15 +27,12 @@ DSTATUS disk_initialize(BYTE pdrv)
 
 DSTATUS disk_status(BYTE pdrv)
 {
-	printf("disk_status\n");
 	return 0;
 }
 
 DRESULT disk_read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 {
-	printf("disk_read %u (%d)\n", (uint32_t)sector, (int)count);
-
-	//memset(buff, 0, count * 512);
+	// printf("disk_read %u (%d)\n", (uint32_t)sector, (int)count);
 
 	for (UINT i = 0; i < count; ++i)
 	{
@@ -63,7 +60,6 @@ DRESULT disk_read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 	// 	printf("\n");
 	// }
 
-	printf("disk_read successful!\n");
 	return RES_OK;
 }
 
@@ -138,17 +134,15 @@ static FIL* file_from_index(int32_t index)
 
 int32_t file_init()
 {
-	int32_t result;
-
 	memset(&fsInternal, 0, sizeof(fsInternal));
-
 	memset(fps, 0, sizeof(fps));
+
 	fpa = 0;
 
-	if ((result = f_mount(&fsInternal, "", 1)) != FR_OK)
+	if (f_mount(&fsInternal, "", 1) != FR_OK)
 		return 1;
-	// if ((result = f_mount(&fsExternal, "1:", 1)) != FR_OK)
-	// 	return 1;
+	// if (f_mount(&fsExternal, "", 1) != FR_OK)
+	// 	return 2;
 
 	return 0;
 }
@@ -165,7 +159,7 @@ int32_t file_open(const char* name, int32_t mode)
 		return 0;
 	}
 
-	printf("file_open %s...\n", name);
+	// printf("file_open %s...\n", name);
 
 	FRESULT r = FR_INVALID_PARAMETER;
 	if (mode == FILE_MODE_READ)
@@ -188,7 +182,6 @@ int32_t file_open(const char* name, int32_t mode)
 	}
 
 	file_free(fp);
-
 	printf("failed to open file!\n");
 
 	//kernel_cs_unlock(&lock);
@@ -295,9 +288,9 @@ int32_t file_read(int32_t fd, uint8_t* ptr, int32_t len)
 {
 	//kernel_cs_lock(&lock);
 
-	printf("file_read %d %d\n", fd, len);
+	// printf("file_read %d %d\n", fd, len);
 
-	FIL* fp = &fps[0]; // file_from_index(fd);
+	FIL* fp = file_from_index(fd);
 	if (!fp)
 	{
 		//kernel_cs_unlock(&lock);

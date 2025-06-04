@@ -26,8 +26,6 @@
 void __register_exitproc(void) {}
 void __call_exitprocs(void) {}
 
-const volatile uint8_t check[] = { 0x11, 0x22, 0x33, 0x44 };
-
 int main()
 {
 	// Initialize SP, since we hot restart and startup doesn't set SP.
@@ -58,46 +56,14 @@ int main()
 
 	crt_init();
 
-	// printf("checking memory...\n");
-	// for (uint32_t i = 0x20000000; i < 0x21E00000; i += 4)
-	// {
-	// 	*((volatile uint32_t*)i) = i;
-	// }
-	// for (uint32_t i = 0x20000000; i < 0x21E00000; i += 4)
-	// {
-	// 	const uint32_t v = *((volatile uint32_t*)i);
-	// 	if (v != i)
-	// 	{
-	// 		printf("memory fail at %08x (%08x)...\n", i, v);
-	// 		for (;;);
-	// 	}
-	// }
-
-
-	for (uint64_t a = 0; a <= 100; a += 10)
-	{
-		for (uint64_t b = 0; b <= 100; b += 10)
-		{
-			uint64_t r = a * b;
-
-			printf("%08x:%08x\n", (uint32_t)(a >> 32), (uint32_t)a);
-			printf("%08x:%08x\n", (uint32_t)(b >> 32), (uint32_t)b);
-			printf("%08x:%08x\n", (uint32_t)(r >> 32), (uint32_t)r);
-			// printf("%08x:%08x\n", b >> 32, b);
-
-			//printf("%lu * %lu = %lu\n", a, b, r);
-		}
-	}
-
-/*
-	hal_sd_init(SD_MODE_HW);
+	hal_sd_init(SD_MODE_SW);
 	if (file_init())
 		printf("file_init failed\n");
 
 	printf("Launcing dashboard...\n");
 	int32_t r = elf_launch("DASH");
 	printf("Failed to launch, result = %d\n", r);
-*/
+
 	for (;;);
 
 	return 0;
