@@ -361,12 +361,10 @@ module RetroDACK(
 	wire sd_internal_cmd_dir;
 	wire sd_internal_cmd_out;
 	assign SD_INTERNAL_CMD = sd_internal_cmd_dir ? sd_internal_cmd_out : 1'bz;
-	// assign SD_EXTERNAL_CMD = sd_internal_cmd_dir ? sd_internal_cmd_out : 1'bz;
 
 	wire sd_internal_dat_dir;
 	wire [3:0] sd_internal_dat_out;
 	assign { SD_INTERNAL_DAT3, SD_INTERNAL_DAT2, SD_INTERNAL_DAT1, SD_INTERNAL_DAT0 } = sd_internal_dat_dir ? sd_internal_dat_out : 4'bz; 
-	// assign { SD_EXTERNAL_DAT3, SD_EXTERNAL_DAT2, SD_EXTERNAL_DAT1, SD_EXTERNAL_DAT0 } = sd_internal_dat_dir ? sd_internal_dat_out : 4'bz; 
 
 	SD sd_internal(
 		.i_reset(reset),
@@ -385,19 +383,43 @@ module RetroDACK(
 		.SD_DAT_dir(sd_internal_dat_dir),
 		.SD_DAT_in({ SD_INTERNAL_DAT3, SD_INTERNAL_DAT2, SD_INTERNAL_DAT1, SD_INTERNAL_DAT0 }),
 		.SD_DAT_out(sd_internal_dat_out)
-
-		// .SD_CLK(SD_EXTERNAL_CLK),
-		// .SD_CMD_dir(sd_internal_cmd_dir),
-		// .SD_CMD_in(SD_EXTERNAL_CMD),
-		// .SD_CMD_out(sd_internal_cmd_out),
-		// .SD_DAT_dir(sd_internal_dat_dir),
-		// .SD_DAT_in({ SD_EXTERNAL_DAT3, SD_EXTERNAL_DAT2, SD_EXTERNAL_DAT1, SD_EXTERNAL_DAT0 }),
-		// .SD_DAT_out(sd_internal_dat_out)
 	);
 
 
 	//====================================================
 	// SD (external)
+	wire sd_external_select;
+	wire [1:0] sd_external_address;
+	wire [31:0] sd_external_wdata;
+	wire [31:0] sd_external_rdata;
+	wire sd_external_ready;
+
+	wire sd_external_cmd_dir;
+	wire sd_external_cmd_out;
+	assign SD_EXTERNAL_CMD = sd_external_cmd_dir ? sd_external_cmd_out : 1'bz;
+
+	wire sd_external_dat_dir;
+	wire [3:0] sd_external_dat_out;
+	assign { SD_EXTERNAL_DAT3, SD_EXTERNAL_DAT2, SD_EXTERNAL_DAT1, SD_EXTERNAL_DAT0 } = sd_external_dat_dir ? sd_external_dat_out : 4'bz; 
+
+	SD sd_external(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(bridge_far_request && sd_external_select),
+		.i_rw(bridge_far_rw),
+		.i_address(sd_external_address),
+		.i_wdata(sd_external_wdata),
+		.o_rdata(sd_external_rdata),
+		.o_ready(sd_external_ready),
+
+		.SD_CLK(SD_EXTERNAL_CLK),
+		.SD_CMD_dir(sd_external_cmd_dir),
+		.SD_CMD_in(SD_EXTERNAL_CMD),
+		.SD_CMD_out(sd_external_cmd_out),
+		.SD_DAT_dir(sd_external_dat_dir),
+		.SD_DAT_in({ SD_EXTERNAL_DAT3, SD_EXTERNAL_DAT2, SD_EXTERNAL_DAT1, SD_EXTERNAL_DAT0 }),
+		.SD_DAT_out(sd_external_dat_out)
+	);
 
 
 	//====================================================
@@ -557,6 +579,10 @@ module RetroDACK(
 	assign audio_address = bridge_far_address[5:2];
 	assign audio_wdata = bridge_far_wdata[15:0];
 
+	assign sd_external_select = bridge_far_address[27:24] == 4'h7;
+	assign sd_external_address = bridge_far_address[3:2];
+	assign sd_external_wdata = bridge_far_wdata;
+
 	assign plic_select = bridge_far_address[27:24] == 4'h8;
 	assign plic_address = bridge_far_address[23:0];
 	assign plic_wdata = bridge_far_wdata;
@@ -567,6 +593,7 @@ module RetroDACK(
 		sd_internal_select ? sd_internal_rdata	:
 		timer_select ? timer_rdata				:
 		audio_select ? audio_rdata				:
+		sd_external_select ? sd_external_rdata	:
 		plic_select ? plic_rdata				:
 		32'h00000000;
 	
@@ -576,6 +603,7 @@ module RetroDACK(
 		sd_internal_select ? sd_internal_ready	:
 		timer_select ? timer_ready				:
 		audio_select ? audio_ready				:
+		sd_external_select ? sd_external_ready	:
 		plic_select ? plic_ready				:
 		1'b0;
 

@@ -58,12 +58,22 @@ int main()
 
 	hal_sd_init(SD_MODE_SW);
 	if (file_init())
-		printf("file_init failed\n");
+		printf("Failed to initialize SD cards.\n");
 
-	printf("Launcing dashboard...\n");
-	int32_t r = elf_launch("DASH");
+	/*
+
+	1. Try to load "BOOT" elf from external SD card (if SD card inserted)
+	2. If no external SD card then launch "DASH" from internal SD card.
+	3. Dashboard just wait until external SD card inserted and then reset into firmware.
+
+	** If external SD card with "NOBOOT" available then firmware should wait for
+	** commands from serial port.
+
+	*/
+
+	printf("Launching dashboard...\n");
+	const int32_t r = elf_launch("DASH");
 	printf("Failed to launch, result = %d\n", r);
-
 	for (;;);
 
 	return 0;
