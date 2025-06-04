@@ -360,14 +360,13 @@ module RetroDACK(
 
 	wire sd_internal_cmd_dir;
 	wire sd_internal_cmd_out;
-	//assign SD_INTERNAL_CMD = sd_internal_cmd_dir ? sd_internal_cmd_out : 1'bz;
-	assign SD_EXTERNAL_CMD = sd_internal_cmd_dir ? sd_internal_cmd_out : 1'bz;
+	assign SD_INTERNAL_CMD = sd_internal_cmd_dir ? sd_internal_cmd_out : 1'bz;
+	// assign SD_EXTERNAL_CMD = sd_internal_cmd_dir ? sd_internal_cmd_out : 1'bz;
 
 	wire sd_internal_dat_dir;
 	wire [3:0] sd_internal_dat_out;
-	//assign { SD_INTERNAL_DAT0, SD_INTERNAL_DAT1, SD_INTERNAL_DAT2, SD_INTERNAL_DAT3 } = sd_internal_dat_dir ? sd_internal_dat_out : 4'bz; 
-	//assign { SD_EXTERNAL_DAT0, SD_EXTERNAL_DAT1, SD_EXTERNAL_DAT2, SD_EXTERNAL_DAT3 } = sd_internal_dat_dir ? sd_internal_dat_out : 4'bz; 
-	assign { SD_EXTERNAL_DAT3, SD_EXTERNAL_DAT2, SD_EXTERNAL_DAT1, SD_EXTERNAL_DAT0 } = sd_internal_dat_dir ? sd_internal_dat_out : 4'bz; 
+	assign { SD_INTERNAL_DAT3, SD_INTERNAL_DAT2, SD_INTERNAL_DAT1, SD_INTERNAL_DAT0 } = sd_internal_dat_dir ? sd_internal_dat_out : 4'bz; 
+	// assign { SD_EXTERNAL_DAT3, SD_EXTERNAL_DAT2, SD_EXTERNAL_DAT1, SD_EXTERNAL_DAT0 } = sd_internal_dat_dir ? sd_internal_dat_out : 4'bz; 
 
 	SD sd_internal(
 		.i_reset(reset),
@@ -378,23 +377,22 @@ module RetroDACK(
 		.i_wdata(sd_internal_wdata),
 		.o_rdata(sd_internal_rdata),
 		.o_ready(sd_internal_ready),
-		// ---
-		// .SD_CLK(SD_INTERNAL_CLK),
-		// .SD_CMD_dir(sd_internal_cmd_dir),
-		// .SD_CMD_in(SD_INTERNAL_CMD),
-		// .SD_CMD_out(sd_internal_cmd_out),
-		// .SD_DAT_dir(sd_internal_dat_dir),
-		// .SD_DAT_in({ SD_INTERNAL_DAT0, SD_INTERNAL_DAT1, SD_INTERNAL_DAT2, SD_INTERNAL_DAT3 }),
-		// .SD_DAT_out(sd_internal_dat_out)
 
-		.SD_CLK(SD_EXTERNAL_CLK),
+		.SD_CLK(SD_INTERNAL_CLK),
 		.SD_CMD_dir(sd_internal_cmd_dir),
-		.SD_CMD_in(SD_EXTERNAL_CMD),
+		.SD_CMD_in(SD_INTERNAL_CMD),
 		.SD_CMD_out(sd_internal_cmd_out),
 		.SD_DAT_dir(sd_internal_dat_dir),
-		//.SD_DAT_in({ SD_EXTERNAL_DAT0, SD_EXTERNAL_DAT1, SD_EXTERNAL_DAT2, SD_EXTERNAL_DAT3 }),
-		.SD_DAT_in({ SD_EXTERNAL_DAT3, SD_EXTERNAL_DAT2, SD_EXTERNAL_DAT1, SD_EXTERNAL_DAT0 }),
+		.SD_DAT_in({ SD_INTERNAL_DAT3, SD_INTERNAL_DAT2, SD_INTERNAL_DAT1, SD_INTERNAL_DAT0 }),
 		.SD_DAT_out(sd_internal_dat_out)
+
+		// .SD_CLK(SD_EXTERNAL_CLK),
+		// .SD_CMD_dir(sd_internal_cmd_dir),
+		// .SD_CMD_in(SD_EXTERNAL_CMD),
+		// .SD_CMD_out(sd_internal_cmd_out),
+		// .SD_DAT_dir(sd_internal_dat_dir),
+		// .SD_DAT_in({ SD_EXTERNAL_DAT3, SD_EXTERNAL_DAT2, SD_EXTERNAL_DAT1, SD_EXTERNAL_DAT0 }),
+		// .SD_DAT_out(sd_internal_dat_out)
 	);
 
 

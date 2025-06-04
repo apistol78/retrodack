@@ -28,6 +28,8 @@ function main()
 			local name = csv:getValue(r, "Signal")
 			local designator = csv:getValue(r, "Designator")
 			local freq = csv:getValue(r, "Frequency")
+			local iotype = csv:getValue(r, "IOType")
+			local pullmode = csv:getValue(r, "PullMode")
 
 			-- Do some sanity cross checks.
 			local rr = po:find("Designator", function(v) return v == designator end)
@@ -42,9 +44,18 @@ function main()
 
 			stdout:printLn("// Designator " .. designator)
 			stdout:printLn("LOCATE COMP \"" .. name .. "\" SITE \"" .. fpga .. "\";")
-			stdout:printLn("IOBUF PORT \"" .. name .. "\" IO_TYPE=LVCMOS25;")
 
-			if freq ~= nil then
+			if iotype ~= nil and iotype ~= "" then
+				stdout:printLn("IOBUF PORT \"" .. name .. "\" IO_TYPE=" .. iotype .. ";")
+			else
+				stdout:printLn("IOBUF PORT \"" .. name .. "\" IO_TYPE=LVCMOS25;")
+			end
+
+			if pullmode ~= nil and pullmode ~= "" then
+				stdout:printLn("IOBUF PORT \"" .. name .. "\" PULLMODE=" .. pullmode .. ";")
+			end
+
+			if freq ~= nil and freq ~= "" then
 				stdout:printLn("FREQUENCY PORT \"" .. name .. "\" " .. freq .. " MHZ;")
 			end
 
