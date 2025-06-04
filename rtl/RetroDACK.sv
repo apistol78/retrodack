@@ -17,25 +17,9 @@ module RetroDACK(
 	wire clock_sdram;
 	wire reset = 1'b0;
 
-
-	assign LED_R = pin_value[0];
-	assign LED_G = pin_value[1];
-	assign LED_B = pin_value[2];
-
-	bit [2:0] pin_value = 1'b0;
-	wire pin_select;
-	bit pin_ready = 1'b0;
-
-	always @(posedge clock) begin
-		if (bus_request && pin_select) begin
-			pin_value <= bus_wdata[2:0];
-			pin_ready <= 1'b1;
-		end
-		else begin
-			pin_ready <= 1'b0;
-		end
-	end
-
+	assign LED_R = cpu_fault;
+	assign LED_G = !cpu_fault;
+	assign LED_B = 1'b0;
 
 	/*
 	// 125 MHz
@@ -195,8 +179,6 @@ module RetroDACK(
 	assign bridge_address = { 4'h0, bus_address[27:0] };
 	assign bridge_wdata = bus_wdata;
 
-	assign pin_select = bus_address[31:28] == 4'h4;
-
 	assign bus_rdata =
 		rom_select		? rom_rdata		:
 		// ram_select		? ram_rdata		:
@@ -209,7 +191,6 @@ module RetroDACK(
 		// ram_select		? ram_ready		:
 		sdram_select	? sdram_ready	:
 		bridge_select	? bridge_ready	:
-		pin_select		? pin_ready		:
 		1'b0;
 
 
@@ -268,7 +249,7 @@ module RetroDACK(
 	CPU #(
 		.STACK_POINTER(32'h22000000 - 4),
 		.FREQUENCY(`FREQUENCY),
-		.DCACHE_SIZE(2),
+		.DCACHE_SIZE(0),
 		.DCACHE_REGISTERED(1),
 		.ICACHE_SIZE(2),
 		.ICACHE_REGISTERED(1)		

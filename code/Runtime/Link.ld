@@ -93,11 +93,8 @@ SECTIONS
 	/* Initialized data segment                                           */
 	/*--------------------------------------------------------------------*/
 
-	/* Start of initialized data segment */
 	. = ALIGN(16);
-	 _fdata = .;
 
-	/* data: Writable data */
 	.data : 
 	{
 		*(.data)
@@ -105,11 +102,6 @@ SECTIONS
 		*(.gnu.linkonce.d.*)
 	}
 
-	/* Have _gp point to middle of sdata/sbss to maximize displacement range */
-	. = ALIGN(16);
-	_gp = . + 0x800;
-
-	/* Writable small data segment */
 	.sdata : 
 	{
 		*(.sdata)
@@ -118,6 +110,8 @@ SECTIONS
 		*(.gnu.linkonce.s.*)
 	}
 
+	. = ALIGN(16);
+	_gp = . + 0x800;
 	__global_pointer$ = .;
 
 		/* End of initialized data segment */
@@ -130,18 +124,7 @@ SECTIONS
 
 	/* Start of uninitialized data segment */
 	. = ALIGN(8);
-	_fbss = .;
 
-	/* Writable uninitialized small data segment */
-	.sbss : 
-	{
-		*(.sbss)
-		*(.sbss.*)
-		*(.gnu.linkonce.sb.*)
-	}
-
-	/* bss: Uninitialized writeable data section */
-	. = .;
 	__bss_start = .;
 	.bss : 
 	{
@@ -149,9 +132,14 @@ SECTIONS
 		*(.bss.*)
 		*(.gnu.linkonce.b.*)
 		*(COMMON)
+
+		*(.sbss)
+		*(.sbss.*)
+		*(.gnu.linkonce.sb.*)
 	}
 
-	/* End of uninitialized data segment (used by syscalls.c for heap) */
+	. = ALIGN(16);
+
 	PROVIDE( end = . );
 	_end = ALIGN(8);
 }

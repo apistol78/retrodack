@@ -118,12 +118,12 @@ int32_t elf_launch(const char* filename)
 
 	if (jstart != 0)
 	{
-		printf("jumping to 0x%08x...\n", jstart);
+		printf("\n\njumping to 0x%08x...\n\n", jstart);
 
 		const uint32_t sp = 0x22000000 - 4;
 		__asm__ volatile (
-			"fence					\n"
-			"mv		sp, %0			\n"
+			"fence			\n"
+			"mv		sp, %0	\n"
 			:
 			: "r" (sp)
 		);

@@ -192,7 +192,7 @@ local function buildEmulatorFS()
 	local SCRIPT_HOME < const > = fileSystem:getAbsolutePath(Path(os:getEnvironment("RUN_SCRIPT_PATH"))):normalized().pathNameOS
 
 	run:mkdir("fs")
-	run:rm(SCRIPT_HOME .. "/fs/*")
+	run:rm(SCRIPT_HOME .. "/fs/DASH")
 	run:copy(SCRIPT_HOME .. "/build/rv/ReleaseStatic/Dashboard", SCRIPT_HOME .. "/fs/DASH")
 
 	return true

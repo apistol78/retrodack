@@ -31,62 +31,29 @@ int32_t runtime_init()
 {
 	crt_init();
 
-	// Ensure we boot from SD card by default, even
-	// after reset (through UART command).
-	// sysreg_modify(SR_REG_FLAGS, 1, 0);
-
-	// Log device name.
-	// switch (sysreg_read(SR_REG_DEVICE_ID))
-	// {
-	// 	case SR_DEVICE_ID_RV32T:
-	// 		printf("** DEVICE   : Rv32T **\n");
-	// 		break;
-	// 	case SR_DEVICE_ID_T_CV_GX:
-	// 		printf("** DEVICE   : Terasic Cyclone V GX **\n");
-	// 		break;
-	// 	case SR_DEVICE_ID_Q_CV_2:
-	// 		printf("** DEVICE   : QMTech Cyclone V 2 - 5CEFA2F23 **\n");
-	// 		break;
-	// 	case SR_DEVICE_ID_Q_T7:
-	// 		printf("** DEVICE   : QMTech Kintex-7 **\n");
-	// 		break;
-	// 	case SR_DEVICE_ID_RV32:
-	// 		printf("** DEVICE   : Rv32 **\n");
-	// 		break;
-	// 	case SR_DEVICE_ID_Q_CV_5:
-	// 		printf("** DEVICE   : QMTech Cyclone V 5 - 5CEFA5F23 **\n");
-	// 		break;
-	// 	default:
-	// 		printf("** DEVICE   : UNKNOWN **\n");
-	// 		break;
-	// }
-
-	// printf("** FREQUENCY: %d MHz **\n", sysreg_read(SR_REG_FREQUENCY) / 1000000);
-	// printf("** MEMORY   : %d KiB **\n", sysreg_read(SR_REG_RAM_SIZE) / 1024);
-
-	printf("** Initialize IRQ handler **\n");
-	hal_interrupt_init();
+	// printf("** Initialize IRQ handler **\n");
+	// hal_interrupt_init();
 	
-	printf("** Initialize Video **\n");
-	if (hal_video_init() != 0)
-		printf("Video init failed!\n");
+	// printf("** Initialize Video **\n");
+	// if (hal_video_init() != 0)
+	// 	printf("Video init failed!\n");
 
-	printf("** Initialize Audio **\n");
-	hal_audio_init();
+	// printf("** Initialize Audio **\n");
+	// hal_audio_init();
 
-	printf("** Initialize SD card **\n");
-	if (hal_sd_init(SD_MODE_SW) != 0)
-		printf("SD (internal) init failed!\n");
+	// printf("** Initialize SD card **\n");
+	// if (hal_sd_init(SD_MODE_SW) != 0)
+	// 	printf("SD (internal) init failed!\n");
 
-	printf("** Initialize FS **\n");
-	if (file_init() != 0)
-		printf("FS init failed!\n");
+	// printf("** Initialize FS **\n");
+	// if (file_init() != 0)
+	// 	printf("FS init failed!\n");
 
-	printf("** Initialize Input **\n");
-	input_init();
+	// printf("** Initialize Input **\n");
+	// input_init();
 
-	printf("** Initialize Kernel **\n");
-	kernel_init();
+	// printf("** Initialize Kernel **\n");
+	// kernel_init();
 
 	printf("** Ready **\n");
     return 0;

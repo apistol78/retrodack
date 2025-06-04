@@ -15,7 +15,6 @@ SECTIONS
 
     . = ORIGIN(rom);
 
-	/* Begining of code and text segment */
 	_ftext = .;
 	PROVIDE( eprol = . );
 
@@ -96,7 +95,6 @@ SECTIONS
 	/*--------------------------------------------------------------------*/
 
     . = ORIGIN(ram);
-
 	. = ALIGN(16);
 
 	.data : 
