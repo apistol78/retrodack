@@ -249,9 +249,9 @@ module RetroDACK(
 	CPU #(
 		.STACK_POINTER(32'h22000000 - 4),
 		.FREQUENCY(`FREQUENCY),
-		.DCACHE_SIZE(0),
+		.DCACHE_SIZE(6),
 		.DCACHE_REGISTERED(1),
-		.ICACHE_SIZE(2),
+		.ICACHE_SIZE(4),
 		.ICACHE_REGISTERED(1)		
 	) cpu(
 		.i_reset(reset),
