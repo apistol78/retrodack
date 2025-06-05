@@ -1,0 +1,6 @@
+Accessing Flash SPI for XIP
+https://section5.ch/index.php/2017/02/25/ecp5-and-spi-data-overlay/
+
+https://zipcpu.com/blog/2018/08/16/spiflash.html
+
+https://github.com/BrunoLevy/learn-fpga/blob/master/FemtoRV/TUTORIALS/spi_flash.md

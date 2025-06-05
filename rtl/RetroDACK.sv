@@ -21,6 +21,12 @@ module RetroDACK(
 	assign LED_G = !cpu_fault;
 	assign LED_B = 1'b0;
 
+	// CLK need to be tunneled through a primitive
+	// since it's not accessible as a user pin.
+	wire FLASH_CLK;
+	wire tristate = 1'b0;
+	USRMCLK u1 (.USRMCLKI(FLASH_CLK), .USRMCLKTS(tristate));
+
 	/*
 	// 125 MHz
 	`define FREQUENCY 125_000_000
@@ -72,25 +78,25 @@ module RetroDACK(
 
 
 	//====================================================
-	// RAM
-	// wire ram_select;
-	// wire [31:0] ram_address;
-	// wire [31:0] ram_wdata;
-	// wire [31:0] ram_rdata;
-	// wire ram_ready;
+	// SPI Flash
+	wire spif_select;
+	wire [31:0] spif_address;
+	wire [31:0] spif_rdata;
+	wire spif_ready;
 
-	// BRAM #(
-	// 	.SIZE(32'h1000)
-	// ) ram(
-	// 	.i_clock(clock),
-	// 	.i_request(bus_request && ram_select),
-	// 	.i_rw(bus_rw),
-	// 	.i_address(ram_address),
-	// 	.i_wdata(ram_wdata),
-	// 	.o_rdata(ram_rdata),
-	// 	.o_ready(ram_ready),
-	// 	.o_valid()
-	// );
+	SPI_Flash spif(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(bus_request && spif_select),
+		.i_address(spif_address),
+		.o_rdata(spif_rdata),
+		.o_ready(spif_ready),
+
+		.SPI_nCS(FLASH_nCS),
+		.SPI_CLK(FLASH_CLK),
+		.SPI_MOSI(FLASH_MOSI),
+		.SPI_MISO(FLASH_MISO)
+	);
 
 
 	//=====================================
@@ -167,9 +173,8 @@ module RetroDACK(
 	assign rom_select = bus_address[31:28] == 4'h0;
 	assign rom_address = { 4'h0, bus_address[27:0] };
 
-	// assign ram_select = bus_address[31:28] == 4'h1;
-	// assign ram_address = { 4'h0, bus_address[27:0] };
-	// assign ram_wdata = bus_wdata;
+	assign spif_select = bus_address[31:28] == 4'h1;
+	assign spif_address = { 4'h0, bus_address[27:0] };
 
 	assign sdram_select = bus_address[31:28] == 4'h2;
 	assign sdram_address = { 4'h0, bus_address[27:0] };
@@ -181,14 +186,14 @@ module RetroDACK(
 
 	assign bus_rdata =
 		rom_select		? rom_rdata		:
-		// ram_select		? ram_rdata		:
+		spif_select		? spif_rdata	:
 		sdram_select	? sdram_rdata	:
 		bridge_select	? bridge_rdata	:
 		32'h00000000;
 
 	assign bus_ready =
 		rom_select		? rom_ready		:
-		// ram_select		? ram_ready		:
+		spif_select		? spif_ready	:
 		sdram_select	? sdram_ready	:
 		bridge_select	? bridge_ready	:
 		1'b0;

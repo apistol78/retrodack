@@ -61,4 +61,9 @@ inout SDRAM_DQ13,
 inout SDRAM_DQ14,
 inout SDRAM_DQ15,
 output SDRAM_DQM0,
-output SDRAM_DQM1
+output SDRAM_DQM1,
+output FLASH_nCS,
+inout FLASH_MOSI,
+inout FLASH_MISO,
+inout FLASH_IO2,
+inout FLASH_IO3

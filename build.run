@@ -26,6 +26,7 @@ local SOURCE < const > =
 	PATH_PERIFHERIALS .. "/clock/PLL_ECP5.sv",
 	PATH_PERIFHERIALS .. "/fifo/FIFO.sv",
 	PATH_PERIFHERIALS .. "/fifo/FIFO_BRAM.sv",
+	PATH_PERIFHERIALS .. "/flash/SPI_Flash.sv",
 	PATH_PERIFHERIALS .. "/misc/Bridge.sv",
 	PATH_PERIFHERIALS .. "/misc/ClockDivider.sv",
 	PATH_PERIFHERIALS .. "/misc/Timer.sv",
@@ -194,6 +195,7 @@ local function buildEmulatorFS()
 	run:mkdir("fs")
 	run:rm(SCRIPT_HOME .. "/fs/DASH")
 	run:copy(SCRIPT_HOME .. "/build/rv/ReleaseStatic/Dashboard", SCRIPT_HOME .. "/fs/DASH")
+	run:copy(SCRIPT_HOME .. "/Splash.rd", SCRIPT_HOME .. "/fs/SPLASH")
 
 	return true
 end

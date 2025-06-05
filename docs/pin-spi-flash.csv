@@ -1,0 +1,6 @@
+SODIMM,Designator,FPGA,Signal,Direction
+,PB15A,N8,FLASH_nCS,output
+,PB11B,T8,FLASH_MOSI,inout
+,PB11A,T7,FLASH_MISO,inout
+,PB9B,M7,FLASH_IO2,inout
+,PB9A,N7,FLASH_IO3,inout

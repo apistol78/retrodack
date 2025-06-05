@@ -14,6 +14,7 @@ function main()
 		"pin-sd.csv",
 		-- "pin-usb-hci.csv",
 		"pin-sdram.csv",
+		"pin-spi-flash.csv",
 	}
 
 	local first = true
