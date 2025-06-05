@@ -6,6 +6,7 @@
  License, v. 2.0. If a copy of the MPL was not distributed with this
  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
+#include <ctype.h>
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -55,6 +56,31 @@ int main()
 	}
 
 	crt_init();
+	
+	printf("Hello world!\n");
+	printf("Dumping Flash...\n");
+
+	const volatile uint8_t* ptr = (const volatile uint8_t*)0x10000000;
+
+	for (uint32_t i = 0; i < 1024; i += 16)
+	{
+		for (uint32_t j = 0; j < 16; ++j)
+		{
+			printf("%02x ", (int)ptr[i + j]);
+		}
+		printf("  ");
+		for (uint32_t j = 0; j < 16; ++j)
+		{
+			if (isgraph(ptr[i + j]))
+				printf("%c", (int)ptr[i + j]);
+			else
+				printf(".");
+		}
+		printf("\n");	
+	}
+
+	for (;;);
+
 
 	hal_sd_init(SD_MODE_SW);
 	if (file_init())
