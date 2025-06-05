@@ -57,10 +57,12 @@ int main()
 
 	crt_init();
 	
-	printf("Hello world!\n");
-	printf("Dumping Flash...\n");
+	for (;;) {
+		printf("Hello world from firmware!\n");
+	}
 
-	const volatile uint8_t* ptr = (const volatile uint8_t*)0x10000000;
+	/*
+	const volatile uint8_t* ptr = (const volatile uint8_t*)(0x10000000 + 0x10000);
 
 	for (uint32_t i = 0; i < 1024; i += 16)
 	{
@@ -80,7 +82,7 @@ int main()
 	}
 
 	for (;;);
-
+	*/
 
 	hal_sd_init(SD_MODE_SW);
 	if (file_init())
