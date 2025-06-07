@@ -163,9 +163,6 @@ module RetroDACK(
 
 	//====================================================
 	// CPU chip select
-	// assign rom_select = bus_address[31:28] == 4'h0;
-	// assign rom_address = { 4'h0, bus_address[27:0] };
-
 	assign spif_select = bus_address[31:28] == 4'h0;
 	assign spif_address = { 4'h0, bus_address[27:0] + 28'h10000 };
 
@@ -178,14 +175,12 @@ module RetroDACK(
 	assign bridge_wdata = bus_wdata;
 
 	assign bus_rdata =
-		// rom_select		? rom_rdata		:
 		spif_select		? spif_rdata	:
 		sdram_select	? sdram_rdata	:
 		bridge_select	? bridge_rdata	:
 		32'h00000000;
 
 	assign bus_ready =
-		// rom_select		? rom_ready		:
 		spif_select		? spif_ready	:
 		sdram_select	? sdram_ready	:
 		bridge_select	? bridge_ready	:
@@ -247,8 +242,8 @@ module RetroDACK(
 	CPU #(
 		.STACK_POINTER(32'h22000000 - 4),
 		.FREQUENCY(`FREQUENCY),
-		.DCACHE_SIZE(12),
-		.DCACHE_REGISTERED(1),
+		.DCACHE_SIZE(13),
+		.DCACHE_REGISTERED(0),
 		.ICACHE_SIZE(12),
 		.ICACHE_REGISTERED(1)		
 	) cpu(
