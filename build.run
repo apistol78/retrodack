@@ -18,7 +18,7 @@ local PATH_PERIFHERIALS < const > = "../klara-rv/rtl"
 local SOURCE < const > =
 {
 	PATH_SOC .. "/RetroDACK.sv",
-	PATH_SOC .. "/RetroDACK_BROM.sv",
+	-- PATH_SOC .. "/RetroDACK_BROM.sv",
 	PATH_PERIFHERIALS .. "/audio/AUDIO_controller.sv",
 	PATH_PERIFHERIALS .. "/audio/AUDIO_i2s_output.sv",
 	PATH_PERIFHERIALS .. "/block/BRAM.sv",

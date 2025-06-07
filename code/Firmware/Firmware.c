@@ -19,9 +19,11 @@
 #include <HAL/Timer.h>
 #include <HAL/UART.h>
 
+#include "Runtime/Audio.h"
 #include "Runtime/CRT.h"
 #include "Runtime/ELF.h"
 #include "Runtime/File.h"
+#include "Runtime/Input.h"
 #include "Runtime/Runtime.h"
 
 void __register_exitproc(void) {}
@@ -57,36 +59,49 @@ int main()
 
 	crt_init();
 	
-	for (;;) {
-		printf("Hello world from firmware!\n");
-	}
+	if (input_init())
+		printf("Failed to initialize input system.\n");
 
-	/*
-	const volatile uint8_t* ptr = (const volatile uint8_t*)(0x10000000 + 0x10000);
-
-	for (uint32_t i = 0; i < 1024; i += 16)
-	{
-		for (uint32_t j = 0; j < 16; ++j)
-		{
-			printf("%02x ", (int)ptr[i + j]);
-		}
-		printf("  ");
-		for (uint32_t j = 0; j < 16; ++j)
-		{
-			if (isgraph(ptr[i + j]))
-				printf("%c", (int)ptr[i + j]);
-			else
-				printf(".");
-		}
-		printf("\n");	
-	}
-
-	for (;;);
-	*/
-
-	hal_sd_init(SD_MODE_SW);
+	if (rt_audio_init())
+		printf("Failed to initialize audio system.\n");
+	
+	hal_sd_init(SD_MODE_HW);
 	if (file_init())
 		printf("Failed to initialize SD cards.\n");
+
+
+	const int32_t fd = file_open("SONG", FILE_MODE_READ);
+	if (fd < 0)
+		printf("Failed to open file!\n");
+
+	const int32_t fs = file_size(fd);
+	printf("Reading music (%d bytes)...\n", fs);
+	uint16_t* ptr = (uint16_t*)malloc(fs);
+	
+	uint8_t* dst = (uint8_t*)ptr;
+	for (int32_t i = 0; i < fs; i += 512)
+	{
+		printf("... reading %d...\n", i);
+		file_read(fd, dst, 512);
+		dst += 512;
+	}
+
+	file_close(fd);
+
+	printf("Playing music...\n");
+	int32_t offset = 0;
+	for (;;)
+	{
+		//input_update();
+
+		printf("... play %d...\n", offset);
+
+		rt_audio_play_mono(&ptr[offset], 1024);
+
+		offset += 1024;
+		if (offset * 2 >= fs)
+			offset = 0;
+	}
 
 	/*
 

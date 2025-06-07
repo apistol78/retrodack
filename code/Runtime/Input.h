@@ -10,6 +10,6 @@
 
 #include <HAL/Common.h>
 
-EXTERN_C void input_init();
+EXTERN_C int32_t input_init();
 
 EXTERN_C void input_update();

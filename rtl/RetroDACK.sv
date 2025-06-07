@@ -256,9 +256,9 @@ module RetroDACK(
 	CPU #(
 		.STACK_POINTER(32'h22000000 - 4),
 		.FREQUENCY(`FREQUENCY),
-		.DCACHE_SIZE(6),
+		.DCACHE_SIZE(12),
 		.DCACHE_REGISTERED(1),
-		.ICACHE_SIZE(4),
+		.ICACHE_SIZE(12),
 		.ICACHE_REGISTERED(1)		
 	) cpu(
 		.i_reset(reset),
@@ -354,42 +354,6 @@ module RetroDACK(
 		.I2C_SDA_direction(I2C_SDA_direction),
 		.I2C_SDA_r(I2C_SDA),
 		.I2C_SDA_w(I2C_SDA_w),
-	);
-
-
-	//====================================================
-	// SD (internal)
-	wire sd_internal_select;
-	wire [1:0] sd_internal_address;
-	wire [31:0] sd_internal_wdata;
-	wire [31:0] sd_internal_rdata;
-	wire sd_internal_ready;
-
-	wire sd_internal_cmd_dir;
-	wire sd_internal_cmd_out;
-	assign SD_INTERNAL_CMD = sd_internal_cmd_dir ? sd_internal_cmd_out : 1'bz;
-
-	wire sd_internal_dat_dir;
-	wire [3:0] sd_internal_dat_out;
-	assign { SD_INTERNAL_DAT3, SD_INTERNAL_DAT2, SD_INTERNAL_DAT1, SD_INTERNAL_DAT0 } = sd_internal_dat_dir ? sd_internal_dat_out : 4'bz; 
-
-	SD sd_internal(
-		.i_reset(reset),
-		.i_clock(clock),
-		.i_request(bridge_far_request && sd_internal_select),
-		.i_rw(bridge_far_rw),
-		.i_address(sd_internal_address),
-		.i_wdata(sd_internal_wdata),
-		.o_rdata(sd_internal_rdata),
-		.o_ready(sd_internal_ready),
-
-		.SD_CLK(SD_INTERNAL_CLK),
-		.SD_CMD_dir(sd_internal_cmd_dir),
-		.SD_CMD_in(SD_INTERNAL_CMD),
-		.SD_CMD_out(sd_internal_cmd_out),
-		.SD_DAT_dir(sd_internal_dat_dir),
-		.SD_DAT_in({ SD_INTERNAL_DAT3, SD_INTERNAL_DAT2, SD_INTERNAL_DAT1, SD_INTERNAL_DAT0 }),
-		.SD_DAT_out(sd_internal_dat_out)
 	);
 
 
@@ -574,9 +538,9 @@ module RetroDACK(
 	assign i2c_address = bridge_far_address[3:2];
 	assign i2c_wdata = bridge_far_wdata;
 
-	assign sd_internal_select = bridge_far_address[27:24] == 4'h4;
-	assign sd_internal_address = bridge_far_address[3:2];
-	assign sd_internal_wdata = bridge_far_wdata;
+	assign sd_external_select = bridge_far_address[27:24] == 4'h4;
+	assign sd_external_address = bridge_far_address[3:2];
+	assign sd_external_wdata = bridge_far_wdata;
 
 	assign timer_select = bridge_far_address[27:24] == 4'h5;
 	assign timer_address = bridge_far_address[5:2];
@@ -586,10 +550,6 @@ module RetroDACK(
 	assign audio_address = bridge_far_address[5:2];
 	assign audio_wdata = bridge_far_wdata[15:0];
 
-	assign sd_external_select = bridge_far_address[27:24] == 4'h7;
-	assign sd_external_address = bridge_far_address[3:2];
-	assign sd_external_wdata = bridge_far_wdata;
-
 	assign plic_select = bridge_far_address[27:24] == 4'h8;
 	assign plic_address = bridge_far_address[23:0];
 	assign plic_wdata = bridge_far_wdata;
@@ -597,20 +557,18 @@ module RetroDACK(
 	assign bridge_far_rdata =
 		uart_select	? uart_rdata				:
 		i2c_select ? i2c_rdata					:
-		sd_internal_select ? sd_internal_rdata	:
+		sd_external_select ? sd_external_rdata	:
 		timer_select ? timer_rdata				:
 		audio_select ? audio_rdata				:
-		sd_external_select ? sd_external_rdata	:
 		plic_select ? plic_rdata				:
 		32'h00000000;
 	
 	assign bridge_far_ready =
 		uart_select	? uart_ready				:
 		i2c_select ? i2c_ready					:
-		sd_internal_select ? sd_internal_ready	:
+		sd_external_select ? sd_external_ready	:
 		timer_select ? timer_ready				:
 		audio_select ? audio_ready				:
-		sd_external_select ? sd_external_ready	:
 		plic_select ? plic_ready				:
 		1'b0;
 
