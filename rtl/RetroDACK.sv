@@ -15,7 +15,6 @@ module RetroDACK(
 );
 	wire clock;
 	wire clock_sdram;
-	wire reset = 1'b0;
 
 	assign LED_R = cpu_fault;
 	assign LED_G = !cpu_fault;
@@ -61,23 +60,15 @@ module RetroDACK(
 	);
 
 
-	/*
 	//====================================================
-	// ROM
-	wire rom_select;
-	wire [31:0] rom_address;
-	wire [31:0] rom_rdata;
-	wire rom_ready;
+	// Reset
+	wire reset;
 
-	RetroDACK_BROM rom(
+	Reset rst(
 		.i_clock(clock),
-		.i_request(bus_request && rom_select),
-		.i_address(rom_address),
-		.o_rdata(rom_rdata),
-		.o_ready(rom_ready)
+		.i_reset(uart_soft_reset),
+		.o_reset(reset)
 	);
-	*/
-
 
 	//====================================================
 	// SPI Flash
@@ -307,6 +298,7 @@ module RetroDACK(
 	wire [31:0] uart_wdata;
 	wire [31:0] uart_rdata;
 	wire uart_ready;
+	wire uart_soft_reset;
 
 	UART #(
 		.FREQUENCY(`FREQUENCY),
@@ -323,6 +315,7 @@ module RetroDACK(
 		.o_rdata(uart_rdata),
 		.o_ready(uart_ready),
 		.o_interrupt(),
+		.o_soft_reset(uart_soft_reset),
 		// ---
 		.UART_RX(UART_RX),
 		.UART_TX(UART_TX)

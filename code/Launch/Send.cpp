@@ -10,48 +10,55 @@ using namespace traktor;
 namespace
 {
 
-template < typename T >
-bool write(traktor::IStream* target, T value)
+bool writeChar(traktor::IStream* target, uint8_t v)
 {
-	return target->write(&value, sizeof(T)) == sizeof(T);
+	return target->write(&v, 1) == 1;
 }
 
-template < typename T >
-bool write(traktor::IStream* target, const T* value, int32_t count)
+uint8_t readChar(traktor::IStream* target)
 {
-	const uint8_t* wp = (const uint8_t*)value;
-	while (count > 0)
-	{
-		const int32_t nw = std::min< int32_t >(count, 256);
-		const int32_t result = target->write(wp, nw * sizeof(T));
-		if (result > 0)
-		{
-			wp += result;
-			count -= result;
-		}
-		else
-			return false;
-	}
+	uint8_t ch = 0;
+	target->read(&ch, 1);
+	return ch;
+}
+
+bool writeU8(traktor::IStream* target, uint8_t v)
+{
+	const char hex[] = "0123456789abcdef";
+	const uint8_t h = (v >> 4);
+	const uint8_t l = v & 15;
+	if (target->write(&hex[h], 1) != 1)
+		return false;
+	if (target->write(&hex[l], 1) != 1)
+		return false;
 	return true;
 }
 
-template < typename T >
-T read(traktor::IStream* target)
+bool writeU16(traktor::IStream* target, uint16_t v)
 {
-	T value = 0;
-	target->read(&value, sizeof(T));
-	return value;
+	const uint8_t h = (v >> 8);
+	const uint8_t l = v & 255;
+	if (!writeU8(target, h))
+		return false;
+	if (!writeU8(target, l))
+		return false;
+	return true;
 }
 
-template < typename T >
-int32_t read(traktor::IStream* target, T* value, int32_t count)
+bool writeU32(traktor::IStream* target, uint32_t v)
 {
-	return (int32_t)target->read(value, count * sizeof(T));
+	const uint16_t h = (v >> 16);
+	const uint16_t l = v & 65535;
+	if (!writeU16(target, h))
+		return false;
+	if (!writeU16(target, l))
+		return false;
+	return true;
 }
 
 }
 
-bool sendLine(traktor::IStream* target, uint32_t base, const uint8_t* line, uint32_t length)
+bool sendWrite(traktor::IStream* target, uint32_t base, const uint8_t* line, uint32_t length)
 {
 	uint8_t cs = 0;
 
@@ -66,16 +73,17 @@ bool sendLine(traktor::IStream* target, uint32_t base, const uint8_t* line, uint
 	for (uint32_t i = 0; i < length; ++i)
 		cs ^= line[i];
 
-	CW(write< uint8_t >(target, 0x01));
-	CW(write< uint32_t >(target, base));
-	CW(write< uint16_t >(target, (uint16_t)length));
-	CW(write< uint8_t >(target, line, length));
-	CW(write< uint8_t >(target, cs));
+	CW(writeChar(target, 'W'));
+	CW(writeU32(target, base));
+	CW(writeU16(target, (uint16_t)length));
+	for (uint32_t i = 0; i < length; ++i)
+		CW(writeU8(target, line[i]));
+	CW(writeU8(target, cs));
 
-	const uint8_t reply = read< uint8_t >(target);
-	if (reply != 0x80)
+	const uint8_t reply = readChar(target);
+	if (reply != 'O')
 	{
-		log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
+		log::error << L"Error reply, got '" << (wchar_t)reply << L"'" << Endl;
 		return false;
 	}
 
@@ -104,15 +112,15 @@ bool sendJump(traktor::IStream* target, uint32_t start, uint32_t sp)
 		cs ^= p[3];				
 	}
 
-	CW(write< uint8_t >(target, 0x03));
-	CW(write< uint32_t >(target, start));
-	CW(write< uint32_t >(target, sp));
-	CW(write< uint8_t >(target, cs));
+	CW(writeChar(target, 'J'));
+	CW(writeU32(target, start));
+	CW(writeU32(target, sp));
+	CW(writeU8(target, cs));
 
-	const uint8_t reply = read< uint8_t >(target);
-	if (reply != 0x80)
+	const uint8_t reply = readChar(target);
+	if (reply != 'O')
 	{
-		log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
+		log::error << L"Error reply, got '" << (wchar_t)reply << L"'" << Endl;
 		return false;
 	}
 

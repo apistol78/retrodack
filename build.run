@@ -28,6 +28,7 @@ local SOURCE < const > =
 	PATH_PERIFHERIALS .. "/flash/SPI_Flash.sv",
 	PATH_PERIFHERIALS .. "/misc/Bridge.sv",
 	PATH_PERIFHERIALS .. "/misc/ClockDivider.sv",
+	PATH_PERIFHERIALS .. "/misc/Reset.sv",
 	PATH_PERIFHERIALS .. "/misc/Timer.sv",
 	PATH_PERIFHERIALS .. "/sdcard/SD.sv",
 	PATH_PERIFHERIALS .. "/sdram/SDRAM_controller.sv",

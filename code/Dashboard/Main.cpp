@@ -1,10 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// #include <HAL/Audio.h>
-// #include <HAL/Video.h>
 #include <HAL/UART.h>
 
+#include "Runtime/Audio.h"
 #include "Runtime/CRT.h"
 #include "Runtime/File.h"
 #include "Runtime/Runtime.h"
@@ -13,32 +12,40 @@
 
 int main()
 {
-    //runtime_init();
-    crt_init();
+	runtime_init();
 
-    // kernel_cs_init(&lock);
-    // kernel_create_thread(&thread_1);
-    // kernel_create_thread(&thread_2);
+	const int32_t fd = file_open("SONG", FILE_MODE_READ);
+	if (fd < 0)
+		printf("Failed to open file!\n");
 
-    // for (int i = 0; i < 256; ++i)
-    // {
-    //     hal_video_set_palette(
-    //         i,
-    //         (rand() & 255) | ((rand() & 255) << 8) | ((rand() & 255) << 16)
-    //     );
-    // }
+	const int32_t fs = file_size(fd);
+	printf("Reading music (%d bytes)...\n", fs);
+	uint16_t* ptr = (uint16_t*)malloc(fs);
 	
-	// hal_video_present();
+	uint8_t* dst = (uint8_t*)ptr;
+	for (int32_t i = 0; i < fs; i += 512)
+	{
+		runtime_update();
 
-    for (;;)
-    {
-    	printf("Hello world from Dashboard!\n");
-        // hal_uart_tx_u8('A');
-        // hal_uart_tx_u8('B');
-        // hal_uart_tx_u8(13);
-        // hal_uart_tx_u8(10);
-    }
+		printf("Reading %d...\n", i);
+		file_read(fd, dst, 512);
+		dst += 512;
+	}
 
+	file_close(fd);
 
-    return 0;
+	printf("Playing music...\n");
+	int32_t offset = 0;
+	for (;;)
+	{
+		printf("... play %d...\n", offset);
+
+		rt_audio_play_mono(&ptr[offset], 1024);
+
+		offset += 1024;
+		if (offset * 2 >= fs)
+			offset = 0;
+	}
+
+	return 0;
 }

@@ -32,34 +32,11 @@ DSTATUS disk_status(BYTE pdrv)
 
 DRESULT disk_read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 {
-	// printf("disk_read %u (%d)\n", (uint32_t)sector, (int)count);
-
 	for (UINT i = 0; i < count; ++i)
 	{
 		if (hal_sd_read_block512(sector + i, buff + 512 * i, 512) != 512)
-		{
-			printf("failed to read block %d\n", sector + i);
 			return RES_ERROR;
-		}
 	}
-
-	// for (uint32_t i = 0; i < 512 * count; i += 16)
-	// {
-	// 	for (uint32_t j = 0; j < 16; ++j)
-	// 	{
-	// 		printf("%02x ", (int)buff[i + j]);
-	// 	}
-	// 	printf("  ");
-	// 	for (uint32_t j = 0; j < 16; ++j)
-	// 	{
-	// 		if (isgraph(buff[i + j]))
-	// 			printf("%c", (int)buff[i + j]);
-	// 		else
-	// 			printf(".");
-	// 	}
-	// 	printf("\n");
-	// }
-
 	return RES_OK;
 }
 
@@ -67,7 +44,7 @@ DRESULT disk_write(BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count)
 {
 	for (UINT i = 0; i < count; ++i)
 	{
-		if (hal_sd_write_block512(sector, buff + 512 * i, 512) != 512)
+		if (hal_sd_write_block512(sector + i, buff + 512 * i, 512) != 512)
 			return RES_ERROR;
 	}
 	return RES_OK;
@@ -86,7 +63,6 @@ DRESULT disk_ioctl(BYTE pdrv, BYTE cmd, void* buff)
 
 kernel_cs_t lock = { 0 };
 FATFS fsInternal;
-// FATFS fsExternal;
 FIL fps[32];
 uint32_t fpa = 0;
 
@@ -141,8 +117,6 @@ int32_t file_init()
 
 	if (f_mount(&fsInternal, "", 1) != FR_OK)
 		return 1;
-	// if (f_mount(&fsExternal, "", 1) != FR_OK)
-	// 	return 2;
 
 	return 0;
 }
@@ -288,24 +262,12 @@ int32_t file_read(int32_t fd, uint8_t* ptr, int32_t len)
 {
 	//kernel_cs_lock(&lock);
 
-	// printf("file_read %d %d\n", fd, len);
-
 	FIL* fp = file_from_index(fd);
 	if (!fp)
 	{
 		//kernel_cs_unlock(&lock);
 		return -1;
 	}
-
-	// const FFOBJID* obj = &fp->obj;
-	// printf("obj->fs %p (%p)\n", obj->fs, &fsInternal);
-	// printf("obj->fs->fs_type %d\n", (int)obj->fs->fs_type);
-	// printf("obj->fs->id %d\n", (int)obj->fs->id);
-	// printf("obj->id %d\n", (int)obj->id);
-	// printf("obj->attr %d\n", (int)obj->attr);
-	// printf("obj->stat %d\n", (int)obj->stat);
-	// printf("obj->sclust %d\n", (int)obj->sclust);
-	// printf("obj->objsize %d\n", (int)obj->objsize);
 
 	UINT br = 0;
 	FRESULT result = f_read(fp, ptr, len, &br);

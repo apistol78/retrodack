@@ -50,7 +50,7 @@ bool uploadBinary(traktor::IStream* target, const std::wstring& fileName, uint32
 
 		log::info << L"DATA " << str(L"%08x", linear) << L"..." << Endl;
 
-		if (!sendLine(target, linear, data, 16))
+		if (!sendWrite(target, linear, data, 16))
 			return false;
 
 		linear += 16;
@@ -104,7 +104,7 @@ bool uploadELF(traktor::IStream* target, const std::wstring& fileName, uint32_t 
 			{
 				const uint32_t cnt = std::min< uint32_t >(phdr[i].p_filesz - j, 1024);
 				log::info << L"TEXT " << str(L"%08x", addr + j) << L" (" << cnt << L" bytes)..." << Endl;
-				if (!sendLine(target, addr + j, pbits + j, cnt))
+				if (!sendWrite(target, addr + j, pbits + j, cnt))
 					return false;
 			}
 		}
@@ -143,110 +143,6 @@ bool uploadELF(traktor::IStream* target, const std::wstring& fileName, uint32_t 
 	return true;
 }
 
-bool uploadHEX(traktor::IStream* target, const std::wstring& fileName, uint32_t sp)
-{
-	StaticVector< uint8_t, 16 > record;
-	std::wstring tmp;
-
-	Ref< traktor::IStream > ff = FileSystem::getInstance().open(fileName, File::FmRead);
-	if (!ff)
-	{
-		log::error << L"Unable to open HEX \"" << fileName << L"\"." << Endl;
-		return false;
-	}
-
-	Ref< traktor::IStream > f = new BufferedStream(ff);
-
-	int64_t fileSize = f->available();
-
-	uint32_t segment = 0x00000000;
-	uint32_t upper = 0x00000000;
-	uint32_t start = 0xffffffff;
-	uint32_t end = 0x00000000;
-
-	StringReader sr(f, new AnsiEncoding());
-	while (sr.readLine(tmp) >= 0)
-	{
-		if (tmp.empty())
-			continue;
-
-		// Ensure start byte is correct.
-		if (tmp[0] != L':')
-			continue;
-		tmp = tmp.substr(1);
-
-		const int32_t percent = ((f->tell() * 100) / fileSize);
-
-		// Parse header.
-		const int32_t ln = parseString< int32_t >(L"0x" + tmp.substr(0, 2));
-		const int32_t type = parseString< int32_t >(L"0x" + tmp.substr(6, 2));
-		int32_t addr = parseString< int32_t >(L"0x" + tmp.substr(2, 4));
-
-		if (type == 0x00)
-		{
-			if (ln > 16)
-			{
-				log::error << L"Too long record." << Endl;
-				return false;
-			}
-
-			log::info << L"TEXT " << str(L"%08x", (upper | addr) + segment) << L" (" << percent << L"%)..." << Endl;
-
-			const uint32_t linear = (upper | addr) + segment;
-
-			// Parse record.
-			record.resize(0);
-			for (int32_t i = 8; i < 8 + ln * 2; i += 2)
-			{
-				const int32_t v = parseString< int32_t >(L"0x" + tmp.substr(i, 2));
-				record.push_back((uint8_t)v);
-			}
-
-			if (!sendLine(target, linear, record.c_ptr(), record.size()))
-				return false;
-
-			addr += record.size();
-
-			start = std::min< uint32_t >(start, linear);
-			end = std::max< uint32_t >(end, linear);
-		}
-		else if (type == 0x01)
-			break;
-		else if (type == 0x02)
-		{
-			segment = parseString< int32_t >(L"0x" + tmp.substr(8, 4));
-			segment *= 16;
-		}
-		else if (type == 0x03)
-			continue;
-		else if (type == 0x04)
-		{
-			upper = parseString< int32_t >(L"0x" + tmp.substr(8, 4));
-			upper <<= 16;
-		}
-		else if (type == 0x05)
-		{
-			const uint32_t linear = parseString< uint32_t >(L"0x" + tmp.substr(8, 8));
-			
-			if (sp != 0)
-				log::info << L"JUMP " << str(L"%08x", linear) << L" (SP: 0x" << str(L"%08x", sp) << L")..." << Endl;
-			else
-				log::info << L"JUMP " << str(L"%08x", linear) << L"..." << Endl;
-
-			if (!sendJump(target, linear, sp))
-				return false;
-
-			// Cannot load more since target is executing.
-			break;
-		}
-		else
-			log::warning << L"Unhandled HEX record type " << type << L"." << Endl;
-	}
-
-	log::info << L"HEX uploaded, adress range " << str(L"0x%08x", start) << L" - " << str(L"0x%08x", end) << L"." << Endl;
-	return true;
-}
-
 int main(int argc, const char** argv)
 {
 	CommandLine commandLine(argc, argv);
@@ -271,12 +167,13 @@ int main(int argc, const char** argv)
 
 	Ref< traktor::IStream > target = serial;
 
-	// Issue reset command.
-	// if (commandLine.hasOption(L"reset"))
-	// {
-	// 	write< uint8_t >(target, 0xff);
-	// 	ThreadManager::getInstance().getCurrentThread()->sleep(200);
-	// }
+	// Issue reset command; any data suffice.
+	if (!commandLine.hasOption(L"skip-reset"))
+	{
+		const uint8_t ch = 0xff;
+		target->write(&ch, 1);
+		ThreadManager::getInstance().getCurrentThread()->sleep(200);
+	}
 
 	// Purge incoming data.
 	for (;;)
@@ -286,8 +183,8 @@ int main(int argc, const char** argv)
 			break;
 		while (target->available() > 0)
 		{
-			uint8_t dummy;
-			if (target->read(&dummy, 1) <= 0)
+			uint8_t ch;
+			if (target->read(&ch, 1) <= 0)
 			{
 				log::error << L"Serial device error while purging." << Endl;
 				return 1;
@@ -319,6 +216,7 @@ int main(int argc, const char** argv)
 	// 	}
 	// }
 
+	log::info << L"Serial terminal:" << Endl;
 	for (;;)
 	{
 		if (target->available() > 0)
@@ -326,6 +224,9 @@ int main(int argc, const char** argv)
 			uint8_t ch;
 			if (target->read(&ch, 1) <= 0)
 				break;
+
+			// log::info << str(L"0x%02x", ch) << L" (" << (wchar_t)(isgraph(ch) ? ch : L'.') << L")" << Endl;
+
 			if (!iscntrl(ch))
 				log::info << wchar_t(ch);
 			else if (ch == '\n')
