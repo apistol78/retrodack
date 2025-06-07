@@ -19827,6 +19827,16 @@
 	)
 	(wire
 		(pts
+			(xy 351.79 358.14) (xy 355.6 358.14)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6505a820-0925-4868-9bc4-ca52947a4fd6")
+	)
+	(wire
+		(pts
 			(xy 190.5 449.58) (xy 209.55 449.58)
 		)
 		(stroke
@@ -24585,28 +24595,6 @@
 			)
 		)
 	)
-	(global_label "GPIO1"
-		(shape bidirectional)
-		(at 717.55 190.5 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "17c7f86e-947c-4068-b4a3-c110a8753ef0")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 725.5547 190.5 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-	)
 	(global_label "SVDD1"
 		(shape output)
 		(at 718.82 162.56 0)
@@ -28831,6 +28819,28 @@
 			)
 		)
 	)
+	(global_label "AUDIO_INTERRUPT"
+		(shape input)
+		(at 355.6 358.14 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "e244e79d-6c8a-441a-a39a-9f608d1e5e70")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 375.3372 358.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+	)
 	(global_label "SRAM_D1"
 		(shape bidirectional)
 		(at 71.12 325.12 180)
@@ -29218,6 +29228,28 @@
 		(uuid "f139c9ef-e438-4dd1-8d75-e39ca682f4bb")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 727.7319 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+	)
+	(global_label "AUDIO_INTERRUPT"
+		(shape output)
+		(at 717.55 190.5 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "f279f588-bb9e-495b-bd58-2892d39c546d")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 737.2872 190.5 0)
 			(effects
 				(font
 					(size 1.27 1.27)
