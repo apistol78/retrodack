@@ -18,7 +18,6 @@ local PATH_PERIFHERIALS < const > = "../klara-rv/rtl"
 local SOURCE < const > =
 {
 	PATH_SOC .. "/RetroDACK.sv",
-	-- PATH_SOC .. "/RetroDACK_BROM.sv",
 	PATH_PERIFHERIALS .. "/audio/AUDIO_controller.sv",
 	PATH_PERIFHERIALS .. "/audio/AUDIO_i2s_output.sv",
 	PATH_PERIFHERIALS .. "/block/BRAM.sv",
@@ -201,12 +200,7 @@ function main()
 	local program < const > = run.commandLine:hasOption("prog")
 	local flash < const > = run.commandLine:hasOption("flash")
 	local emulation < const > = run.commandLine:hasOption("emu")
-	local serial < const > = run.commandLine:hasOption("serial")
-
-	if serial then
-		run:execute("picocom -b 115200 --imap lfcrlf --emap lfcrlf --omap lfcrlf /dev/ttyACM0")
-		return 0
-	end
+	local launch < const > = run.commandLine:hasOption("launch")
 
 	-- Compile firmware and tools.
 	if os.identifier == "windows" then
@@ -291,7 +285,12 @@ function main()
 		end
 	end
 
-	-- Launch emulator.
+	-- Launch on target.
+	if launch then
+		run:execute("build/linux/ReleaseStatic/RetroDACK.Launch -elf=build/rv/ReleaseStatic/Dashboard")
+	end
+
+	-- Launch in emulator.
 	if emulation then
 		run:execute("build/linux/ReleaseStatic/RetroDACK.Emulator -elf=build/rv/ReleaseStatic/Dashboard")
 	end

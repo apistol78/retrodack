@@ -107,7 +107,6 @@ bool loadELF(const std::wstring& fileName, CPU& cpu, Bus& bus)
 	}
 
 	auto hdr = (const ELF32_Header*)elf.c_ptr();
-
 	if (hdr->e_machine != 0xF3)
 	{
 		log::error << L"Unable to parse ELF \"" << fileName << L"\"; incorrect machine type." << Endl;
@@ -121,9 +120,6 @@ bool loadELF(const std::wstring& fileName, CPU& cpu, Bus& bus)
 		{
 			const auto pbits = (const uint8_t*)(elf.c_ptr() + phdr[i].p_offset);
 			const uint32_t addr = phdr[i].p_paddr;
-
-			log::info << L"PT_LOAD " << str(L"0x%08x", addr) << L" - file size " << str(L"0x%08x", addr + phdr[i].p_filesz)  << L" - mem size " << str(L"0x%08x", addr + phdr[i].p_memsz) << Endl;
-
 			for (uint32_t j = 0; j < phdr[i].p_filesz; ++j)
 			{
 				busAccess.writeU8(0, addr + j, pbits[j]);
@@ -136,31 +132,13 @@ bool loadELF(const std::wstring& fileName, CPU& cpu, Bus& bus)
 	auto shdr = (const ELF32_SectionHeader*)(elf.c_ptr() + hdr->e_shoff);
 	for (uint32_t i = 0; i < hdr->e_shnum; ++i)
 	{
-		/*if (
-			shdr[i].sh_type == 0x01 ||	// SHT_PROGBITS
-			shdr[i].sh_type == 0x0e ||	// SHT_INIT_ARRAY
-			shdr[i].sh_type == 0x0f		// SHT_FINI_ARRAY
-		)
-		{
-			if ((shdr[i].sh_flags & 0x02) == 0x02)	// SHF_ALLOC
-			{
-				const auto pbits = (const uint8_t*)(elf.c_ptr() + shdr[i].sh_offset);
-				const uint32_t addr = shdr[i].sh_addr;
-
-				log::info << L"SHF_ALLOC " << str(L"0x%08x", addr) << L" - " << str(L"0x%08x", addr + shdr[i].sh_size) << Endl;
-
-				for (uint32_t j = 0; j < shdr[i].sh_size; ++j)
-					busAccess.writeU8(0, addr + j, pbits[j]);
-			}
-		}
-		else*/ if (shdr[i].sh_type == 0x02)	// SHT_SYMTAB
+		if (shdr[i].sh_type == 0x02)	// SHT_SYMTAB
 		{
 			const char* strings = (const char*)(elf.c_ptr() + shdr[shdr[i].sh_link].sh_offset);
 			auto sym = (const ELF32_Sym*)(elf.c_ptr() + shdr[i].sh_offset);
 			for (int32_t j = 0; j < shdr[i].sh_size / sizeof(ELF32_Sym); ++j)
 			{
 				const char* name = strings + sym[j].st_name;
-				// log::info << L"SHT_SYMTAB " << mbstows(name) << L" = " << str(L"0x%08x", sym[j].st_value) << Endl;
 				if (strcmp(name, "_start") == 0)
 					cpu.jump(sym[j].st_value);
 			}

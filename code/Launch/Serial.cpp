@@ -159,10 +159,9 @@ void Serial::flush()
 
 #elif defined(__LINUX__)
 
-bool Serial::open(int32_t port, const Configuration& configuration)
+bool Serial::open(const std::wstring& device, const Configuration& configuration)
 {
-	// m_fd = ::open(wstombs(str(L"/dev/ttyUSB%d", port)).c_str(), O_RDWR);
-	m_fd = ::open(wstombs(str(L"/dev/ttyACM%d", port)).c_str(), O_RDWR);
+	m_fd = ::open(wstombs(device).c_str(), O_RDWR);
 	if (m_fd < 0)
 	{
 		log::error << L"open failed" << Endl;

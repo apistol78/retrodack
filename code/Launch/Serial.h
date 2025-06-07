@@ -49,7 +49,11 @@ public:
 		DtrControl dtrControl;
 	};
 
+#if defined(_WIN32)
 	bool open(int32_t port, const Configuration& configuration);
+#else
+	bool open(const std::wstring& device, const Configuration& configuration);
+#endif
 
 	virtual void close() override final;
 

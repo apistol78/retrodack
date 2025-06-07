@@ -26,8 +26,130 @@
 #include "Runtime/Input.h"
 #include "Runtime/Runtime.h"
 
+typedef void (*call_fn_t)();
+
 void __register_exitproc(void) {}
 void __call_exitprocs(void) {}
+
+static void remote_control()
+{
+	printf("[Firmware] Waiting on UART...\n");
+	for (;;)
+	{
+		const uint8_t cmd = hal_uart_rx_u8();
+
+		// "poke"
+		if (cmd == 0x01)
+		{
+			const uint32_t addr = hal_uart_rx_u32();
+			const uint16_t nb = hal_uart_rx_u16();
+			uint8_t cs = 0;
+
+			if (nb == 0 || nb > 1024)
+			{
+				hal_uart_tx_u8(0x81);	// Invalid data.
+				continue;
+			}
+
+			// Add address to checksum.
+			const uint8_t* p = (const uint8_t*)&addr;
+			cs ^= p[0];
+			cs ^= p[1];
+			cs ^= p[2];
+			cs ^= p[3];
+
+			// Receive 
+			uint8_t r[1024];
+			for (uint16_t i = 0; i < nb; ++i)
+			{
+				const uint8_t d = hal_uart_rx_u8();
+				r[i] = d;
+				cs ^= d;
+			}
+
+			if (cs == hal_uart_rx_u8())
+			{
+				// Write data to memory.
+				for (uint16_t i = 0; i < nb; ++i)
+					*(volatile uint8_t*)(addr + i) = r[i];
+
+				hal_uart_tx_u8(0x80);
+			}
+			else
+				hal_uart_tx_u8(0x82);	// Invalid checksum.
+		}
+
+		// "peek"
+		else if (cmd == 0x02)
+		{
+			const uint32_t addr = hal_uart_rx_u32();
+			const uint16_t nb = hal_uart_rx_u16();
+
+			if (nb == 0)
+			{
+				hal_uart_tx_u8(0x81);	// Invalid data.
+				continue;
+			}
+
+			hal_uart_tx_u8(0x80);	// Ok
+
+			for (uint16_t i = 0; i < nb; ++i)
+				hal_uart_tx_u8(*(const volatile uint8_t*)(addr + i));
+		}
+
+		// "jump to"
+		else if (cmd == 0x03)
+		{
+			const uint32_t addr = hal_uart_rx_u32();
+			const uint32_t sp = hal_uart_rx_u32();
+			uint8_t cs = 0;
+
+			// Add address to checksum.
+			{
+				const uint8_t* p = (const uint8_t*)&addr;
+				cs ^= p[0];
+				cs ^= p[1];
+				cs ^= p[2];
+				cs ^= p[3];
+			}
+
+			// Add stack to checksum.
+			{
+				const uint8_t* p = (const uint8_t*)&sp;
+				cs ^= p[0];
+				cs ^= p[1];
+				cs ^= p[2];
+				cs ^= p[3];
+			}
+
+			if (cs == hal_uart_rx_u8())
+			{
+				hal_uart_tx_u8(0x80);	// Ok
+
+				// Ensure DCACHE is flushed.
+				__asm__ volatile ("fence");
+				
+				// Set initial stack pointer.
+				if (sp != 0)
+				{
+					__asm__ volatile (
+						"mv	sp, %0\n"
+						:
+						: "r" (sp)
+					);
+				}
+				
+				((call_fn_t)addr)();
+			}
+			else
+				hal_uart_tx_u8(0x82);	// Invalid checksum.
+		}
+
+		// "echo"
+		else
+			hal_uart_tx_u8(cmd);
+	}
+}
 
 int main()
 {
@@ -58,6 +180,9 @@ int main()
 	}
 
 	crt_init();
+	remote_control();
+
+/*
 	
 	if (input_init())
 		printf("Failed to initialize input system.\n");
@@ -102,6 +227,7 @@ int main()
 		if (offset * 2 >= fs)
 			offset = 0;
 	}
+*/
 
 	/*
 
@@ -114,10 +240,12 @@ int main()
 
 	*/
 
+/*
 	printf("Launching dashboard...\n");
 	const int32_t r = elf_launch("DASH");
 	printf("Failed to launch, result = %d\n", r);
 	for (;;);
+*/
 
 	return 0;
 }

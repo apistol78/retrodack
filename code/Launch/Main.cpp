@@ -25,133 +25,18 @@
 #include <Core/Thread/ThreadManager.h>
 #include <Core/Thread/Thread.h>
 
-#include <Net/Network.h>
-#include <Net/SocketAddressIPv4.h>
-#include <Net/SocketStream.h>
-#include <Net/UdpSocket.h>
-
 #include "Launch/ELF.h"
+#include "Launch/Send.h"
 #include "Launch/Serial.h"
 
 using namespace traktor;
 
-template < typename T >
-bool write(traktor::IStream* target, T value)
-{
-	return target->write(&value, sizeof(T)) == sizeof(T);
-}
-
-template < typename T >
-bool write(traktor::IStream* target, const T* value, int32_t count)
-{
-	const uint8_t* wp = (const uint8_t*)value;
-	while (count > 0)
-	{
-		const int32_t nw = std::min< int32_t >(count, 256);
-		int32_t result = target->write(wp, nw * sizeof(T));
-		if (result > 0)
-		{
-			wp += result;
-			count -= result;
-		}
-		else
-			return false;
-	}
-	return true;
-}
-
-template < typename T >
-T read(traktor::IStream* target)
-{
-	T value = 0;
-	target->read(&value, sizeof(T));
-	return value;
-}
-
-template < typename T >
-void read(traktor::IStream* target, T* value, int32_t count)
-{
-	target->read(value, count * sizeof(T));
-}
-
-bool sendLine(traktor::IStream* target, uint32_t base, const uint8_t* line, uint32_t length)
-{
-#define CW(s) { if (!(s)) return false; }
-	uint8_t cs = 0;
-
-	// Add address to checksum.
-	const uint8_t* p = (const uint8_t*)&base;
-	cs ^= p[0];
-	cs ^= p[1];
-	cs ^= p[2];
-	cs ^= p[3];
-
-	// Parse record and calculate checksum.
-	for (uint32_t i = 0; i < length; ++i)
-		cs ^= line[i];
-
-	CW(write< uint8_t >(target, 0x01));
-	CW(write< uint32_t >(target, base));
-	CW(write< uint16_t >(target, (uint16_t)length));
-	CW(write< uint8_t >(target, line, length));
-	CW(write< uint8_t >(target, cs));
-
-	const uint8_t reply = read< uint8_t >(target);
-	if (reply != 0x80)
-	{
-		log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
-		return false;
-	}
-
-#undef CW
-	return true;
-}
-
-bool sendJump(traktor::IStream* target, uint32_t start, uint32_t sp)
-{
-#define CW(s) { if (!(s)) return false; }
-	uint8_t cs = 0;
-
-	// Add address to checksum.
-	{
-		const uint8_t* p = (const uint8_t*)&start;
-		cs ^= p[0];
-		cs ^= p[1];
-		cs ^= p[2];
-		cs ^= p[3];
-	}
-
-	// Add stack to checksum.
-	{
-		const uint8_t* p = (const uint8_t*)&sp;
-		cs ^= p[0];
-		cs ^= p[1];
-		cs ^= p[2];
-		cs ^= p[3];				
-	}
-
-	CW(write< uint8_t >(target, 0x03));
-	CW(write< uint32_t >(target, start));
-	CW(write< uint32_t >(target, sp));
-	CW(write< uint8_t >(target, cs));
-
-	const uint8_t reply = read< uint8_t >(target);
-	if (reply != 0x80)
-	{
-		log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
-		return false;
-	}
-
-#undef CW
-	return true;
-}
-
-bool uploadImage(traktor::IStream* target, const std::wstring& fileName, uint32_t offset)
+bool uploadBinary(traktor::IStream* target, const std::wstring& fileName, uint32_t offset)
 {
 	Ref< traktor::IStream > f = FileSystem::getInstance().open(fileName, File::FmRead);
 	if (!f)
 	{
-		log::error << L"Unable to open image \"" << fileName << L"\"." << Endl;
+		log::error << L"Unable to open binary \"" << fileName << L"\"." << Endl;
 		return false;
 	}
 
@@ -171,7 +56,7 @@ bool uploadImage(traktor::IStream* target, const std::wstring& fileName, uint32_
 		linear += 16;
 	}
 
-	log::info << L"Image uploaded" << Endl;
+	log::info << L"Binary uploaded successfully." << Endl;
 	return true;
 }
 
@@ -199,39 +84,36 @@ bool uploadELF(traktor::IStream* target, const std::wstring& fileName, uint32_t 
 	}
 
 	auto hdr = (const ELF32_Header*)elf.c_ptr();
-
 	if (hdr->e_machine != 0xF3)
 	{
 		log::error << L"Unable to parse ELF \"" << fileName << L"\"; incorrect machine type." << Endl;
 		return false;		
 	}
 
+	auto phdr = (const ELF32_ProgramHeader*)(elf.c_ptr() + hdr->e_phoff);
+	for (uint32_t i = 0; i < hdr->e_phnum; ++i)
+	{
+		if (phdr[i].p_type == 0x01) // PT_LOAD
+		{
+			const auto pbits = (const uint8_t*)(elf.c_ptr() + phdr[i].p_offset);
+			const uint32_t addr = phdr[i].p_paddr;
+
+			log::info << L"PT_LOAD " << str(L"0x%08x", addr) << L" - file size " << str(L"0x%08x", addr + phdr[i].p_filesz)  << L" - mem size " << str(L"0x%08x", addr + phdr[i].p_memsz) << Endl;
+
+			for (uint32_t j = 0; j < phdr[i].p_filesz; j += 1024)
+			{
+				const uint32_t cnt = std::min< uint32_t >(phdr[i].p_filesz - j, 1024);
+				log::info << L"TEXT " << str(L"%08x", addr + j) << L" (" << cnt << L" bytes)..." << Endl;
+				if (!sendLine(target, addr + j, pbits + j, cnt))
+					return false;
+			}
+		}
+	}
+
 	auto shdr = (const ELF32_SectionHeader*)(elf.c_ptr() + hdr->e_shoff);
 	for (uint32_t i = 0; i < hdr->e_shnum; ++i)
 	{
-		if (
-			shdr[i].sh_type == 0x01 ||	// SHT_PROGBITS
-			shdr[i].sh_type == 0x0e ||	// SHT_INIT_ARRAY
-			shdr[i].sh_type == 0x0f		// SHT_FINI_ARRAY
-		)
-		{
-			if ((shdr[i].sh_flags & 0x02) == 0x02)	// SHF_ALLOC
-			{
-				const auto pbits = (const uint8_t*)(elf.c_ptr() + shdr[i].sh_offset);
-				const uint32_t addr = shdr[i].sh_addr;
-
-				for (uint32_t j = 0; j < shdr[i].sh_size; j += 1024)
-				{
-					const uint32_t cnt = std::min< uint32_t >(shdr[i].sh_size - j, 1024);
-					log::info << L"TEXT " << str(L"%08x", addr + j) << L" (" << cnt << L" bytes)..." << Endl;
-					if (!sendLine(target, addr + j, pbits + j, cnt))
-						return false;
-				}
-
-				last = std::max(last, addr + shdr[i].sh_size);
-			}
-		}
-		else if (shdr[i].sh_type == 0x02)	// SHT_SYMTAB
+		if (shdr[i].sh_type == 0x02)	// SHT_SYMTAB
 		{
 			const char* strings = (const char*)(elf.c_ptr() + shdr[shdr[i].sh_link].sh_offset);
 			auto sym = (const ELF32_Sym*)(elf.c_ptr() + shdr[i].sh_offset);
@@ -365,239 +247,36 @@ bool uploadHEX(traktor::IStream* target, const std::wstring& fileName, uint32_t 
 	return true;
 }
 
-bool uploadFile(traktor::IStream* target, const std::wstring& fileName)
-{
-	while (target->available() > 0)
-	{
-		uint8_t dummy;
-		target->read(&dummy, 1);
-	}
-
-	Ref< traktor::IStream > ff = FileSystem::getInstance().open(fileName, File::FmRead);
-	if (!ff)
-	{
-		log::error << L"Unable to open file \"" << fileName << L"\"." << Endl;
-		return false;
-	}
-
-	Ref< traktor::IStream > f = new BufferedStream(ff);
-
-	const int32_t avail = f->available();
-
-	uint8_t buf[1024];
-	int32_t total = 0;
-
-	for (;;)
-	{
-		int32_t nr = std::min(avail - total, 1024);
-		if (nr <= 0)
-			break;
-
-		if (f->read(buf, nr) != nr)
-			break;
-
-		log::info << str(L"%08x -> %08x", total, (total + nr) - 1) << Endl;
-
-		// Calculate checksum.
-		uint8_t cs = 0;
-		for (int32_t i = 0; i < nr; ++i)
-			cs ^= buf[i];		
-
-		write< uint32_t >(target, (uint32_t)nr);
-		write< uint8_t >(target, buf, nr);
-		write< uint8_t >(target, cs);
-
-		const uint8_t reply = read< uint8_t >(target);
-		if (reply == 0x81)
-		{
-			log::warning << L"Detected corrupt transmission; resending..." << Endl;
-
-			write< uint32_t >(target, (uint32_t)nr);
-			write< uint8_t >(target, buf, nr);
-			write< uint8_t >(target, cs);
-
-			const uint8_t replyAgain = read< uint8_t >(target);
-			if (replyAgain != 0x80)
-			{
-				log::error << L"Resend failed; aborting." << Endl;
-				return false;
-			}
-		}
-		else if (reply != 0x80)
-		{
-			log::error << L"Error reply, got " << str(L"%02x", reply) << Endl;
-			write< uint8_t >(target, (uint8_t)0x00);
-			return false;
-		}
-
-		total += nr;
-	}
-
-	write< uint32_t >(target, 0);
-
-	log::info << L"File uploaded." << Endl;
-	return true;
-}
-
-void for_each(uint32_t from, uint32_t to, uint32_t step, const std::function< void(uint32_t) >& fn)
-{
-	if (from <= to)
-	{
-		for (uint32_t addr = from; addr <= to; addr += step)
-			fn(addr);
-	}
-	else
-	{
-		for (uint32_t addr = from; addr >= to; addr -= step)
-			fn(addr);
-	}
-}
-
-bool memcheck(traktor::IStream* target, uint32_t from, uint32_t to, uint32_t step)
-{
-	uint8_t utd[64];
-	uint8_t ind[64];
-
-	uint8_t cnt = 0;
-	uint32_t error = 0;
-
-	const uint32_t nb = 64;
-	const uint32_t seed = clock();
-
-	Random rnd = Random(seed);
-	for_each(from, to, step, [&](uint32_t addr)
-	{
-		for (int32_t i = 0; i < nb; ++i)
-			utd[i] = (uint8_t)rnd.next();
-
-		log::info << L"S " << str(L"%08x", addr) << L": ";
-		for (int32_t i = 0; i < nb; ++i)
-			log::info << str(L"%02x", utd[i]) << L" ";
-		log::info << Endl;
-
-		// Write random data.
-		uint8_t cs = 0;
-
-		const uint8_t* p = (const uint8_t*)&addr;
-		cs ^= p[0];
-		cs ^= p[1];
-		cs ^= p[2];
-		cs ^= p[3];
-
-		for (int32_t i = 0; i < nb; ++i)
-			cs ^= (uint8_t)utd[i];
-
-		write< uint8_t >(target, 0x01);
-		write< uint32_t >(target, addr);
-		write< uint16_t >(target, nb);
-		write< uint8_t >(target, utd, nb);
-		write< uint8_t >(target, cs);
-
-		uint8_t reply = read< uint8_t >(target);
-		if (reply != 0x80)
-		{
-			log::error << L"Error reply (write), got " << str(L"%02x", reply) << Endl;
-			return;
-		}
-	});
-
-	rnd = Random(seed);
-	for_each(from, to, step, [&](uint32_t addr)
-	{
-		for (int32_t i = 0; i < nb; ++i)
-			utd[i] = (uint8_t)rnd.next();
-
-		// Read back data.
-		write< uint8_t >(target, 0x02);
-		write< uint32_t >(target, addr);
-		write< uint16_t >(target, nb);
-
-		uint8_t reply = read< uint8_t >(target);
-		if (reply != 0x80)
-		{
-			log::error << L"Error reply (read), got " << str(L"%02x", reply) << Endl;
-			return;
-		}
-		read< uint8_t >(target, ind, nb);
-
-		log::info << L"R " << str(L"%08x", addr) << L": ";
-		for (int32_t i = 0; i < nb; ++i)
-			log::info << str(L"%02x", ind[i]) << L" ";
-
-		if (memcmp(ind, utd, nb) != 0)
-		{
-			log::info << L"MISMATCH!";
-			error++;
-		}
-
-		log::info << Endl;
-	});
-
-	if (error > 0)
-		log::error << error << L" error(s) found." << Endl;
-	else
-		log::info << L"No errors found." << Endl;
-
-	return error == 0;
-}
-
-uint8_t echoRnd()
-{
-	uint8_t v = 0;
-	do { v = rand() & 255; } while(v == 0x01 || v == 0x02 || v == 0x03);
-	return v;
-}
-
 int main(int argc, const char** argv)
 {
 	CommandLine commandLine(argc, argv);
 
-	Ref< Serial > serial;
-	Ref< net::UdpSocket > socket;
-	Ref< traktor::IStream > target;
+	std::wstring device = L"/dev/ttyACM0";
+	if (commandLine.hasOption('d', L"device"))
+		device = commandLine.getOption('d', L"device").getInteger();
 
-	if (!commandLine.hasOption(L"udp"))
+	Serial::Configuration configuration;
+	configuration.baudRate = 115200;
+	configuration.stopBits = 1;
+	configuration.parity = Serial::Parity::No;
+	configuration.byteSize = 8;
+	configuration.dtrControl = Serial::DtrControl::Disable;
+
+	Ref< Serial > serial = new Serial();
+	if (!serial->open(device, configuration))
 	{
-		int32_t port = 0;
-		if (commandLine.hasOption('p', L"port"))
-			port = commandLine.getOption('p', L"port").getInteger();
-
-		Serial::Configuration configuration;
-		configuration.baudRate = 115200;
-		configuration.stopBits = 1;
-		configuration.parity = Serial::Parity::No;
-		configuration.byteSize = 8;
-		configuration.dtrControl = Serial::DtrControl::Disable;
-
-		serial = new Serial();
-		if (!serial->open(port, configuration))
-		{
-			log::error << L"Unable to open serial port " << port << L"." << Endl;
-			return 1;
-		}
-
-		target = serial;
+		log::error << L"Unable to open serial device " << device << L"." << Endl;
+		return 1;
 	}
-	else
-	{
-		net::Network::initialize();
 
-		socket = new net::UdpSocket();
-		if (!socket->bind(net::SocketAddressIPv4(45123)))
-		{
-			log::error << L"Unable to bind socket to port." << Endl;
-			return 1;
-		}
-
-		target = new net::SocketStream(socket, true, true, 1000);
-	}
+	Ref< traktor::IStream > target = serial;
 
 	// Issue reset command.
-	if (commandLine.hasOption(L"reset"))
-	{
-		write< uint8_t >(target, 0xff);
-		ThreadManager::getInstance().getCurrentThread()->sleep(200);
-	}
+	// if (commandLine.hasOption(L"reset"))
+	// {
+	// 	write< uint8_t >(target, 0xff);
+	// 	ThreadManager::getInstance().getCurrentThread()->sleep(200);
+	// }
 
 	// Purge incoming data.
 	for (;;)
@@ -606,23 +285,17 @@ int main(int argc, const char** argv)
 		if (target->available() == 0)
 			break;
 		while (target->available() > 0)
-			read< uint8_t >(target);
+		{
+			uint8_t dummy;
+			if (target->read(&dummy, 1) <= 0)
+			{
+				log::error << L"Serial device error while purging." << Endl;
+				return 1;
+			}
+		}
 	}
 
-	if (commandLine.hasOption(L"memcheck"))
-	{
-		const uint32_t from = commandLine.getOption(L"memcheck-from").getInteger();
-		const uint32_t to = commandLine.getOption(L"memcheck-to").getInteger();
-		
-		uint32_t step = 64;
-		if (commandLine.hasOption(L"memcheck-step"))
-			step = commandLine.getOption(L"memcheck-step").getInteger();
-
-		memcheck(target, from, to, step);
-		return 0;
-	}
-
-	uint32_t sp = 0;
+	uint32_t sp = 0x22000000 - 4;
 	if (commandLine.hasOption('s', L"stack"))
 		sp = (uint32_t)commandLine.getOption('s', L"stack").getInteger();
 
@@ -636,21 +309,23 @@ int main(int argc, const char** argv)
 		}
 	}
 
-	if (commandLine.hasOption('r', L"raw"))
-	{
-		const std::wstring file = commandLine.getOption('r', L"raw").getString();
-		if (!uploadFile(target, file))
-		{
-			log::error << L"Unable to upload file." << Endl;
-			return 1;
-		}
-	}
+	// if (commandLine.hasOption('r', L"raw"))
+	// {
+	// 	const std::wstring file = commandLine.getOption('r', L"raw").getString();
+	// 	if (!uploadBinary(target, file))
+	// 	{
+	// 		log::error << L"Unable to upload file." << Endl;
+	// 		return 1;
+	// 	}
+	// }
 
 	for (;;)
 	{
 		if (target->available() > 0)
 		{
-			const uint8_t ch = read< uint8_t >(target);
+			uint8_t ch;
+			if (target->read(&ch, 1) <= 0)
+				break;
 			if (!iscntrl(ch))
 				log::info << wchar_t(ch);
 			else if (ch == '\n')

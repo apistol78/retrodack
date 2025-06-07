@@ -311,8 +311,8 @@ module RetroDACK(
 	UART #(
 		.FREQUENCY(`FREQUENCY),
 		.BAUDRATE(115200),
-		.RX_FIFO_DEPTH(4),
-		.TX_FIFO_DEPTH(4)
+		.RX_FIFO_DEPTH(512),
+		.TX_FIFO_DEPTH(16)
 	) uart(
 		.i_reset(reset),
 		.i_clock(clock),
