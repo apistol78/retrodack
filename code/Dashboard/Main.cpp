@@ -25,8 +25,6 @@ int main()
 	uint8_t* dst = (uint8_t*)ptr;
 	for (int32_t i = 0; i < fs; i += 512)
 	{
-		runtime_update();
-
 		printf("Reading %d...\n", i);
 		file_read(fd, dst, 512);
 		dst += 512;

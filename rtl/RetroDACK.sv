@@ -164,7 +164,7 @@ module RetroDACK(
 	//====================================================
 	// CPU chip select
 	assign spif_select = bus_address[31:28] == 4'h0;
-	assign spif_address = { 4'h0, bus_address[27:0] + 28'h10000 };
+	assign spif_address = { 4'h0, bus_address[27:0] + 28'h100000 };
 
 	assign sdram_select = bus_address[31:28] == 4'h2;
 	assign sdram_address = { 4'h0, bus_address[27:0] };
@@ -242,8 +242,8 @@ module RetroDACK(
 	CPU #(
 		.STACK_POINTER(32'h22000000 - 4),
 		.FREQUENCY(`FREQUENCY),
-		.DCACHE_SIZE(13),
-		.DCACHE_REGISTERED(0),
+		.DCACHE_SIZE(12),
+		.DCACHE_REGISTERED(1),
 		.ICACHE_SIZE(12),
 		.ICACHE_REGISTERED(1)		
 	) cpu(
@@ -463,7 +463,7 @@ module RetroDACK(
 		.i_reset(reset),
 		.i_clock(clock),
 
-		.i_interrupt_0(~I2C_INTERRUPT),
+		.i_interrupt_0(0), //~I2C_INTERRUPT),
 		.i_interrupt_1(0),
 		.i_interrupt_2(0),
 		.i_interrupt_3(0),

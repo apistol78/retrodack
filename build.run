@@ -267,7 +267,7 @@ function main()
 		local xc = 0
 
 		-- Write firmware binary to target flash; this is executed in place thus need to be a flat binary.
-		local offset < const > = 0x10000
+		local offset < const > = 0x100000
 		xc = run:execute("openFPGALoader -c cmsisdap -f --vid=0x1d50 --pid=0x602b --skip-reset -o " .. string.format("0x%08x", offset) .. " ./build/rv/ReleaseStatic/Firmware.bin")
 		if xc ~= 0 then
 			stderr:printLn("openFPGALoader failed to write firmware to SPI flash; build aborted.")

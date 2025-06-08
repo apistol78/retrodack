@@ -32,7 +32,7 @@ int32_t runtime_init()
 	crt_init();
 
 	printf("** Initialize IRQ handler **\n");
-	// hal_interrupt_init();
+	hal_interrupt_init();
 	
 	// printf("** Initialize Video **\n");
 	// if (hal_video_init() != 0)
@@ -52,19 +52,11 @@ int32_t runtime_init()
 	printf("** Initialize Input **\n");
 	input_init();
 
-	// printf("** Initialize Kernel **\n");
-	// kernel_init();
+	printf("** Initialize Kernel **\n");
+	kernel_init();
 
 	printf("** Ready **\n");
     return 0;
-}
-
-void runtime_update()
-{
-	// Check if there are any data pending on the UART; if so
-	// restart device.
-	if (!hal_uart_rx_empty())
-		runtime_warm_restart();
 }
 
 void runtime_warm_restart()
