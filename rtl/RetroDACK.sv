@@ -15,6 +15,7 @@ module RetroDACK(
 );
 	wire clock;
 	wire clock_sdram;
+	wire clock_video;
 
 	assign LED_R = cpu_fault;
 	assign LED_G = !cpu_fault;
@@ -56,6 +57,18 @@ module RetroDACK(
 		.i_clk(CLOCK),
 		.o_clk1(clock),
 		.o_clk2(clock_sdram),
+		.o_clk_locked()
+	);
+
+	// 36.72 MHz
+	PLL_ECP5 #(
+		.CLKI_DIV(86),
+		.CLKFB_DIV(126),
+		.CLKOP_DIV(11),
+		.CLKOP_CPHASE(0)
+	) pll_video(
+		.i_clk(CLOCK),
+		.o_clk1(clock_video),
 		.o_clk_locked()
 	);
 
@@ -463,7 +476,7 @@ module RetroDACK(
 		.i_reset(reset),
 		.i_clock(clock),
 
-		.i_interrupt_0(0), //~I2C_INTERRUPT),
+		.i_interrupt_0(~INPUT_INTERRUPT),
 		.i_interrupt_1(0),
 		.i_interrupt_2(0),
 		.i_interrupt_3(0),
@@ -477,6 +490,89 @@ module RetroDACK(
 		.i_wdata(plic_wdata),
 		.o_rdata(plic_rdata),
 		.o_ready(plic_ready)
+	);
+
+
+	//====================================================
+	// VIDEO SIGNAL GENERATOR
+	wire vga_clock;
+	wire vga_hsync;
+	wire vga_vsync;
+	wire vga_hblank;
+	wire vga_vblank;
+	wire vga_data_enable;
+	wire [11:0] vga_pos_x;
+	wire [11:0] vga_pos_y;
+
+	VIDEO_VGA #(
+		// 720 0 20 20 40 720 0 15 15 15 0 0 0 60 0 36720000 4
+		.HLINE(720+20+40),	    // whole line
+		.HBACK(40),		        // back porch
+		.HFRONT(20),	        // front porch
+		.HPULSE(20),	        // sync pulse
+		.VLINE(720+15+15+15),    // whole frame
+		.VBACK(15),		        // back porch
+		.VFRONT(15),	        // front porch
+		.VPULSE(15),	        // sync pulse
+		.VSPOL(0),
+		.HSPOL(0)
+	) vga(
+		.i_clock(clock_video),
+		.i_clock_out(clock),
+		.o_clock(vga_clock),
+		.o_hsync(vga_hsync),
+		.o_vsync(vga_vsync),
+		.o_hblank(vga_hblank),
+		.o_vblank(vga_vblank),
+		.o_data_enable(vga_data_enable),
+		.o_pos_x(vga_pos_x),
+		.o_pos_y(vga_pos_y)
+	);
+
+
+	//====================================================
+	// VIDEO
+	wire video_select;
+	wire [31:0] video_address;
+	wire [31:0] video_wdata;
+	wire [31:0] video_rdata;
+	wire video_ready;	
+	wire [31:0] video_dac_rdata;
+
+	VIDEO_controller #(
+		.MAX_PITCH(720)
+	) video_controller(
+		.i_clock(clock),
+		
+		// CPU interface.
+		.i_cpu_request(video_select && bridge_far_request),
+		.i_cpu_rw(bridge_far_rw),
+		.i_cpu_address(video_address),
+		.i_cpu_wdata(video_wdata),
+		.o_cpu_rdata(video_rdata),
+		.o_cpu_ready(video_ready),
+		
+		// Video signal interface.
+		.i_video_hblank(vga_hblank),
+		.i_video_vblank(vga_vblank),
+		.i_video_pos_x(vga_pos_x),
+		.i_video_pos_y(vga_pos_y),
+		.o_video_rdata(video_dac_rdata),
+		
+		// Video RAM interface.
+		.o_vram_pa_request(),
+		.o_vram_pa_rw(),
+		.o_vram_pa_address(),
+		.o_vram_pa_wdata(),
+		.i_vram_pa_rdata(),
+		.i_vram_pa_ready(),
+
+		.o_vram_pb_request(),
+		.o_vram_pb_rw(),
+		.o_vram_pb_address(),
+		.o_vram_pb_wdata(),
+		.i_vram_pb_rdata(),
+		.i_vram_pb_ready()
 	);
 
 
@@ -542,6 +638,10 @@ module RetroDACK(
 	assign plic_address = bridge_far_address[23:0];
 	assign plic_wdata = bridge_far_wdata;
 
+	assign video_select = bridge_far_address[27:24] == 4'ha;
+	assign video_address = { 8'h0, bridge_far_address[23:0] };
+	assign video_wdata = bridge_far_wdata;
+
 	assign bridge_far_rdata =
 		uart_select	? uart_rdata				:
 		i2c_select ? i2c_rdata					:
@@ -549,6 +649,7 @@ module RetroDACK(
 		timer_select ? timer_rdata				:
 		audio_select ? audio_rdata				:
 		plic_select ? plic_rdata				:
+		video_select ? video_rdata				:
 		32'h00000000;
 	
 	assign bridge_far_ready =
@@ -558,6 +659,7 @@ module RetroDACK(
 		timer_select ? timer_ready				:
 		audio_select ? audio_ready				:
 		plic_select ? plic_ready				:
+		video_select ? video_ready				:
 		1'b0;
 
 

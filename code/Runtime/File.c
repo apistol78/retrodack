@@ -232,7 +232,7 @@ int32_t file_seek(int32_t fd, int32_t offset, int32_t from)
 	return ft;
 }
 
-int32_t file_write(int32_t fd, const uint8_t* ptr, int32_t len)
+int32_t file_write(int32_t fd, const void* ptr, int32_t len)
 {
 	FRESULT result;
 	UINT bw = 0;
@@ -258,7 +258,7 @@ int32_t file_write(int32_t fd, const uint8_t* ptr, int32_t len)
 	}
 }
 
-int32_t file_read(int32_t fd, uint8_t* ptr, int32_t len)
+int32_t file_read(int32_t fd, void* ptr, int32_t len)
 {
 	//kernel_cs_lock(&lock);
 

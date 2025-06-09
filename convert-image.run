@@ -2,7 +2,7 @@ import(traktor)
 
 function main()
 
-	local img = drawing.Image.loadFromFile("docs/Splash.png")
+	local img = drawing.Image.loadFromFile("docs/Splash8.png")
 	if img == nil then
 		stderr:printLn("Unable to load image.")
 		return 1

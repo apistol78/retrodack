@@ -10,6 +10,7 @@
 #include "Runtime/Input.h"
 
 #include <HAL/I2C.h>
+#include <HAL/Interrupt.h>
 #include <HAL/Timer.h>
 
 #define TRACKBALL_REG_LED_RED 0x00
@@ -39,40 +40,47 @@
 #define TRACKBALL_MSK_CTRL_FREAD 0b00000100
 #define TRACKBALL_MSK_CTRL_FWRITE 0b00001000
 
-static uint8_t s_initialized = 0;
+static void input_interrupt(uint32_t source)
+{
+	uint8_t data[5] = { 0, 0, 0, 0, 0 };
+	hal_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5);
+}
 
 int32_t input_init()
 {
-	uint8_t data[5];
-    for (int32_t i = 0; /*i < 10*/; ++i)
-    {
-        printf("[Input] Reading trackball chip id (%d)...\n", i);
+	uint8_t data[5] = { 0, 0, 0, 0, 0 };
+	uint8_t found = 0;
+
+	// Locate trackball by reading it's identification.
+	for (int32_t i = 0; i < 30; ++i)
+	{
+		printf("[Input] Reading trackball chip id (%d)...\n", i);
 		hal_i2c_read(0x0a, TRACKBALL_REG_CHIP_ID_L, data, 2);
 		if (data[0] == 0x11 && data[1] == 0xba)
-        {
-			hal_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0xff);
+		{
+			found = 1;
+			break;
+		}
+		hal_timer_wait_ms(100);
+	}
+	if (!found)
+	{
+		printf("[Input] No trackball found.\n");
+		return 1;
+	}
 
-			// i2c_read(0x0a, TRACKBALL_REG_INT, data, 1);
-			// data[0] |= TRACKBALL_MSK_INT_OUT_EN;
-			// i2c_write(0x0a, TRACKBALL_REG_INT, data[0]);
+	// Set input interrupt handler.
+	hal_interrupt_set_handler(0, input_interrupt);
 
-            s_initialized = 1;
+	// Enable interrupt pin; notify CPU everytime
+	// track ball position change.
+	hal_i2c_read(0x0a, TRACKBALL_REG_INT, data, 1);
+	data[0] |= TRACKBALL_MSK_INT_OUT_EN;
+	hal_i2c_write(0x0a, TRACKBALL_REG_INT, data[0]);
 
-            printf("[Input] Trackball initialized successfully.\n");
-            return 0;
-        }
-        hal_timer_wait_ms(100);
-    }
-    printf("[Input] No trackball found.\n");
-    return 1;
-}
+	// Turn on green backlight to indicate success.
+	hal_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0xff);
 
-void input_update()
-{
-    if (!s_initialized)
-        return;
-
-	uint8_t data[5];
-	hal_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5);
-    printf("[Input] %d, %d, %d, %d\n", data[0], data[1], data[2], data[3]);
+	printf("[Input] Trackball initialized successfully.\n");
+	return 0;
 }

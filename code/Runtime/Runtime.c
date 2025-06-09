@@ -34,15 +34,15 @@ int32_t runtime_init()
 	printf("** Initialize IRQ handler **\n");
 	hal_interrupt_init();
 	
-	// printf("** Initialize Video **\n");
-	// if (hal_video_init() != 0)
-	// 	printf("Video init failed!\n");
+	printf("** Initialize Video **\n");
+	if (hal_video_init() != 0)
+		printf("Video init failed!\n");
 
 	printf("** Initialize Audio **\n");
 	rt_audio_init();
 
 	printf("** Initialize SD card **\n");
-	if (hal_sd_init(SD_MODE_SW) != 0)
+	if (hal_sd_init(SD_MODE_SW) != 0)	// HW is only available on HW (duh), not emulator...
 		printf("SD card init failed!\n");
 
 	printf("** Initialize FS **\n");

@@ -29,9 +29,9 @@ EXTERN_C int32_t file_size(int32_t fd);
 
 EXTERN_C int32_t file_seek(int32_t file, int32_t offset, int32_t from);
 
-EXTERN_C int32_t file_write(int32_t file, const uint8_t* ptr, int32_t len);
+EXTERN_C int32_t file_write(int32_t file, const void* ptr, int32_t len);
 
-EXTERN_C int32_t file_read(int32_t file, uint8_t* ptr, int32_t len);
+EXTERN_C int32_t file_read(int32_t file, void* ptr, int32_t len);
 
 EXTERN_C int32_t file_enumerate(const char* path, void* user, fn_enum_t fnen);
 
