@@ -1,53 +1,49 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <HAL/Audio.h>
-#include <HAL/Video.h>
+#include <HAL/UART.h>
 
+#include "Runtime/Audio.h"
+#include "Runtime/CRT.h"
 #include "Runtime/File.h"
 #include "Runtime/Runtime.h"
 #include "Runtime/Kernel.h"
 
 
-void __register_exitproc(void) {}
-void __call_exitprocs(void) {}
-
 int main()
 {
 	runtime_init();
+
+	const int32_t fd = file_open("SONG", FILE_MODE_READ);
+	if (fd < 0)
+		printf("Failed to open file!\n");
+
+	const int32_t fs = file_size(fd);
+	printf("Reading music (%d bytes)...\n", fs);
+	uint16_t* ptr = (uint16_t*)malloc(fs);
 	
-	// kernel_cs_init(&lock);
-	// kernel_create_thread(&thread_1);
-	// kernel_create_thread(&thread_2);
-
-	for (int i = 0; i < 256; ++i)
+	uint8_t* dst = (uint8_t*)ptr;
+	for (int32_t i = 0; i < fs; i += 512)
 	{
-		hal_video_set_palette(
-			i,
-			(rand() & 255) | ((rand() & 255) << 8) | ((rand() & 255) << 16)
-		);
+		printf("Reading %d...\n", i);
+		file_read(fd, dst, 512);
+		dst += 512;
 	}
-
-	int32_t fd = file_open("SPLASH", FILE_MODE_READ);
-	
-	for (int i = 0; i < 256; ++i)
-	{
-		uint32_t clr;
-		file_read(fd, (uint8_t*)&clr, 4);
-		hal_video_set_palette(i, clr);
-	}
-
-	void* fb = hal_video_get_secondary_target();
-	file_read(fd, (uint8_t*)fb, 720 * 720);
 
 	file_close(fd);
 
-	hal_video_present();
-
+	printf("Playing music...\n");
+	int32_t offset = 0;
 	for (;;)
 	{
-	}
+		printf("... play %d...\n", offset);
 
+		rt_audio_play_mono(&ptr[offset], 1024);
+
+		offset += 1024;
+		if (offset * 2 >= fs)
+			offset = 0;
+	}
 
 	return 0;
 }
