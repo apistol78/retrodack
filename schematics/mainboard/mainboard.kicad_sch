@@ -34230,7 +34230,7 @@
 				)
 			)
 		)
-		(property "Footprint" "MAX:QFN50P500X500X80-33N"
+		(property "Footprint" "MAX2:QFP50P700X700X120-32N"
 			(at 80.01 97.79 0)
 			(effects
 				(font
