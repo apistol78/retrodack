@@ -49,6 +49,7 @@ local SOURCE < const > =
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_DCache_Comb.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_DCache_None.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_DCache_Reg.sv",
+	PATH_PERIFHERIALS .. "/cpu/private/CPU_DCache_WB.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_Decode.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_Defines.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_Divide.sv",
@@ -244,18 +245,22 @@ function main()
 		run:rm("build/RetroDACK.log")
 
 		-- Synthesize
+		local tmr = Timer()
 		local xc = run:execute("yosys -l build/RetroDACK.log -p \"opt; share -aggressive; synth_ecp5 -abc9 -json build/RetroDACK.json\" " .. f)
 		if xc ~= 0 then
 			stderr:printLn("yosys failed; build aborted.")
 			return 1
 		end
+		local duration_yosys = tmr.elapsedTime
 
 		-- Place and route.
+		local tmr = Timer()
 		local xc = run:execute("nextpnr-ecp5 --25k --package CABGA256 --speed 6 --timing-allow-fail --top RetroDACK --json build/RetroDACK.json --textcfg build/RetroDACK.config --lpf rtl/Constraints.lpf --report build/RetroDACK.report.json --freq 100")
 		if xc ~= 0 then
 			stderr:printLn("nextpnr-ecp5 failed; build aborted.")
 			return 1
 		end
+		local duration_nextpnr = tmr.elapsedTime
 
 		-- Create bit file.
 		local xc = run:execute("ecppack --compress --svf build/RetroDACK.svf build/RetroDACK.config build/RetroDACK.bit")
@@ -263,7 +268,10 @@ function main()
 			stderr:printLn("ecppack failed; build aborted.")
 			return 1
 		end
-	end
+	
+		stdout:printLn("yosys duration " .. string.format("%.2f", duration_yosys) .. " seconds.")
+		stdout:printLn("nextpnr-ecp5 duration " .. string.format("%.2f", duration_nextpnr) .. " seconds.")
+end
 
 	-- Program target.
 	if program then

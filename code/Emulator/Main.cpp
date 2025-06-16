@@ -59,7 +59,7 @@
 
 using namespace traktor;
 
-constexpr uint32_t fs_image_size = 4 * 1024 * 1024;
+constexpr uint32_t fs_image_size = 32 * 1024 * 1024;
 uint8_t fs_image[fs_image_size];
 
 DSTATUS disk_initialize(BYTE pdrv)
@@ -129,15 +129,16 @@ bool createFsImage()
 		if (sf)
 		{
 			char fn[512];
-			strcpy(fn, wstombs(ff->getPath().getFileNameNoExtension()).c_str());
+			strcpy(fn, wstombs(ff->getPath().getFileName()).c_str());
 
 			res = f_open(&f, fn, FA_CREATE_ALWAYS | FA_WRITE);
 			if (res)
 			{
-				log::error << L"Unable to create FS image file \"" << ff->getPath().getFileNameNoExtension() << L"\"." << Endl;
+				log::error << L"Unable to create FS image file \"" << ff->getPath().getFileName() << L"\"." << Endl;
 				return false;
 			}
 
+			int64_t size = 0;
 			for (;;)
 			{
 				const int64_t nrd = sf->read(work, sizeof(work));
@@ -147,11 +148,13 @@ bool createFsImage()
 				res = f_write(&f, work, (UINT)nrd, &bw);
 				if (res)
 					return false;
+
+				size += nrd;
 			}
 
 			f_close(&f);
 
-			log::info << L"Added \"" << ff->getPath().getFileNameNoExtension() << L"\" to FS image." << Endl;
+			log::info << L"Added \"" << ff->getPath().getFileName() << L"\" (" << size << L" bytes) to FS image." << Endl;
 		}
 	}
 
