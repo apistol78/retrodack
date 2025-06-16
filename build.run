@@ -193,9 +193,8 @@ local function buildEmulatorFS()
 	local SCRIPT_HOME < const > = fileSystem:getAbsolutePath(Path(os:getEnvironment("RUN_SCRIPT_PATH"))):normalized().pathNameOS
 
 	run:mkdir("fs")
-	run:rm(SCRIPT_HOME .. "/fs/DASH")
-	run:copy(SCRIPT_HOME .. "/build/rv/ReleaseStatic/Dashboard", SCRIPT_HOME .. "/fs/DASH")
-	run:copy(SCRIPT_HOME .. "/Splash.rd", SCRIPT_HOME .. "/fs/SPLASH")
+	run:copy(SCRIPT_HOME .. "/code/Doom/doom1.wad", SCRIPT_HOME .. "/fs/doom1.wad")
+	run:copy(SCRIPT_HOME .. "/code/Doom/doom2.wad", SCRIPT_HOME .. "/fs/doom2.wad")
 
 	return true
 end
@@ -271,7 +270,7 @@ function main()
 	
 		stdout:printLn("yosys duration " .. string.format("%.2f", duration_yosys) .. " seconds.")
 		stdout:printLn("nextpnr-ecp5 duration " .. string.format("%.2f", duration_nextpnr) .. " seconds.")
-end
+	end
 
 	-- Program target.
 	if program then
