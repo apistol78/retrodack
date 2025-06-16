@@ -1,0 +1,49 @@
+{
+    "version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "Compile",
+			"group": "build",
+			"linux": {
+				"command": ". ${workspaceRoot}/3rdp/oss-cad-suite-build/oss-cad-suite/environment;${workspaceRoot}/../traktor/bin/linux/releasestatic/Traktor.Run.App ${workspaceRoot}/build.run;",
+				"problemMatcher": [
+					"$gcc"
+				]
+			},
+		},
+		{
+			"type": "shell",
+			"label": "Compile+Synthesize",
+			"group": "build",
+			"linux": {
+				"command": ". ${workspaceRoot}/3rdp/oss-cad-suite-build/oss-cad-suite/environment;${workspaceRoot}/../traktor/bin/linux/releasestatic/Traktor.Run.App ${workspaceRoot}/build.run --synth;",
+				"problemMatcher": [
+					"$gcc"
+				]
+			},
+		},
+		{
+			"type": "shell",
+			"label": "Compile+Synthesize+Program",
+			"group": "build",
+			"linux": {
+				"command": ". ${workspaceRoot}/3rdp/oss-cad-suite-build/oss-cad-suite/environment;${workspaceRoot}/../traktor/bin/linux/releasestatic/Traktor.Run.App ${workspaceRoot}/build.run --synth --prog;",
+				"problemMatcher": [
+					"$gcc"
+				]
+			},
+		},
+		{
+			"type": "shell",
+			"label": "Compile+Synthesize+Flash",
+			"group": "build",
+			"linux": {
+				"command": ". ${workspaceRoot}/3rdp/oss-cad-suite-build/oss-cad-suite/environment;${workspaceRoot}/../traktor/bin/linux/releasestatic/Traktor.Run.App ${workspaceRoot}/build.run --synth --prog --flash;",
+				"problemMatcher": [
+					"$gcc"
+				]
+			},
+		},
+	]
+}

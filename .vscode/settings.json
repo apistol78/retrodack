@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "*.run": "lua",
+        "cmath": "cpp",
+        "fstream": "cpp",
+        "functional": "cpp",
+        "sstream": "cpp",
+        "regex": "cpp"
+    }
+}
