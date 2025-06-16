@@ -45,6 +45,7 @@
 #include <Emulator/CPU/Bus.h>
 #include <Emulator/CPU/CPU.h>
 #include <Emulator/Devices/Audio.h>
+#include <Emulator/Devices/I2C.h>
 #include <Emulator/Devices/Memory.h>
 #include <Emulator/Devices/PLIC.h>
 #include <Emulator/Devices/SD.h>
@@ -215,11 +216,10 @@ int main(int argc, const char** argv)
 
 	// Create emulation devices.
 	Memory rom(0x00100000);
-    // Memory ram(0x00010000);
-	Memory sdram(0x02000000);
+ 	Memory sdram(0x02000000);
 	Video video(720, 720);
 	UART uart;
-	Unknown i2c;
+	I2C i2c;
 	SD sd(fs_image, fs_image_size);
 	::Timer tmr;
 	PLIC plic;
@@ -227,8 +227,7 @@ int main(int argc, const char** argv)
 
 	Bus bus;
 	bus.map(0x00000000, 0x00000000 + rom.getCapacity(), false, false, &rom);
-    // bus.map(0x10000000, 0x10000000 + ram.getCapacity(), false, false, &ram);
-	bus.map(0x20000000, 0x20000000 + sdram.getCapacity(), true, false, &sdram);
+ 	bus.map(0x20000000, 0x20000000 + sdram.getCapacity(), true, false, &sdram);
 	bus.map(0x51000000, 0x51000100, false, false, &uart);
 	bus.map(0x53000000, 0x53000100, false, false, &i2c);
 	bus.map(0x54000000, 0x54000100, false, true, &sd);
@@ -245,8 +244,8 @@ int main(int argc, const char** argv)
 			os = new FileOutputStream(f, new Utf8Encoding());
 	}
 
-    CPU cpu(&bus, os, false);
-    cpu.setSP(0x22000000 - 4);
+	CPU cpu(&bus, os, false);
+	cpu.setSP(0x22000000 - 4);
 
 	tmr.setCallback([&](){ cpu.interrupt(TIMER); });
 
@@ -261,7 +260,7 @@ int main(int argc, const char** argv)
 			return 1;
 		}
 	}
-    
+	
 	if (cmdLine.hasOption(L'h', L"hex"))
 	{
 		sdram.setReadOnly(true);
@@ -278,8 +277,8 @@ int main(int argc, const char** argv)
 		sdram.setReadOnly(false);
 	}
 
-    rom.setReadOnly(true);
-    
+	rom.setReadOnly(true);
+	
 
 	// Create user interface.
 	Ref< ui::Form > form = new ui::Form();
@@ -295,11 +294,11 @@ int main(int argc, const char** argv)
 
 
 	traktor::Timer timer;
-    while (g_going)
-    {
+	while (g_going)
+	{
 		for (int32_t i = 0; i < 100 && g_going; ++i)
 		{
-        	if (!cpu.tick(10000) || bus.error())
+			if (!cpu.tick(10000) || bus.error())
 			{
 				g_going = false;
 				break;
@@ -330,7 +329,7 @@ int main(int argc, const char** argv)
 			timer.reset();
 			// plic.raise(0);
 		}			
-    }
+	}
 
 	if (form)
 	{
@@ -338,5 +337,5 @@ int main(int argc, const char** argv)
 		form = nullptr;
 	}
 
-    return 0;
+	return 0;
 }
