@@ -361,7 +361,7 @@ void W_ReadLump(unsigned int lump, void *dest)
 		 c, l->size, lump);	
     }
 
-    I_EndRead ();
+    // I_EndRead ();
 }
 
 
