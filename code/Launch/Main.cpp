@@ -152,7 +152,7 @@ int main(int argc, const char** argv)
 		device = commandLine.getOption('d', L"device").getInteger();
 
 	Serial::Configuration configuration;
-	configuration.baudRate = 115200;
+	configuration.baudRate = 230400; //115200;
 	configuration.stopBits = 1;
 	configuration.parity = Serial::Parity::No;
 	configuration.byteSize = 8;
@@ -172,7 +172,8 @@ int main(int argc, const char** argv)
 	{
 		const uint8_t ch = 0xff;
 		target->write(&ch, 1);
-		ThreadManager::getInstance().getCurrentThread()->sleep(200);
+		target->write(&ch, 1);
+		ThreadManager::getInstance().getCurrentThread()->sleep(500);
 	}
 
 	// Purge incoming data.

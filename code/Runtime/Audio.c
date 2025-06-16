@@ -25,8 +25,8 @@ int32_t rt_audio_init()
 	hal_i2c_write(TLV320_ADDR, 0x01, 0x01);
 	hal_timer_wait_ms(200);
 
-	// Program clock settings (PLL_clkin = MCLK, codec_clkin = PLL_CLK).
-	hal_i2c_write(TLV320_ADDR, 0x04, 0x03);
+	// Program clock settings.
+	hal_i2c_write(TLV320_ADDR, 0x04, 0x03);	// (PLL_clkin = MCLK, codec_clkin = PLL_CLK).
 	hal_i2c_write(TLV320_ADDR, 0x06, 0x08);
 	hal_i2c_write(TLV320_ADDR, 0x07, 0x00);
 	hal_i2c_write(TLV320_ADDR, 0x08, 0x00);
@@ -59,7 +59,7 @@ int32_t rt_audio_init()
 	// Set register page 1
 	hal_i2c_write(TLV320_ADDR, 0x00, 0x01);
 
-	// Program common-mode volate (default 1.35V).
+	// Program common-mode voltage (default 1.35V).
 	hal_i2c_write(TLV320_ADDR, 0x1f, 0x04);
 
 	// Program headphone depop settings
@@ -71,7 +71,8 @@ int32_t rt_audio_init()
 	// Unmute and set gain of output driver.
 	hal_i2c_write(TLV320_ADDR, 0x28, 0x06);
 	hal_i2c_write(TLV320_ADDR, 0x29, 0x06);
-	hal_i2c_write(TLV320_ADDR, 0x2a, 0x1c);
+	hal_i2c_write(TLV320_ADDR, 0x2a, 0x1c);	// 24dB D-class amp gain
+	//hal_i2c_write(TLV320_ADDR, 0x2a, 0x14);		// 18dB D-class amp gain
 	hal_i2c_write(TLV320_ADDR, 0x1f, 0xc2);
 	hal_i2c_write(TLV320_ADDR, 0x20, 0x86);
 	hal_i2c_write(TLV320_ADDR, 0x24, 0x92);
@@ -83,8 +84,10 @@ int32_t rt_audio_init()
 
 	// Power up DAC and set digital gain.
 	hal_i2c_write(TLV320_ADDR, 0x3f, 0xd4);
-	hal_i2c_write(TLV320_ADDR, 0x41, 0xd4);
-	hal_i2c_write(TLV320_ADDR, 0x42, 0xd4);
+
+	const int8_t vol = -16;
+	hal_i2c_write(TLV320_ADDR, 0x41, *(uint8_t*)&vol);
+	hal_i2c_write(TLV320_ADDR, 0x42, *(uint8_t*)&vol);
 
 	// Unmute digital volume control.
 	hal_i2c_write(TLV320_ADDR, 0x40, 0x00);
@@ -100,9 +103,9 @@ int32_t rt_audio_init()
 
 void rt_audio_set_volume(uint8_t volume)
 {
-	hal_i2c_write(TLV320_ADDR, 0x41, 0x00);
-	hal_i2c_write(TLV320_ADDR, 0x42, 0x00);
-	hal_i2c_write(TLV320_ADDR, 0x40, 0x00);
+	// hal_i2c_write(TLV320_ADDR, 0x41, 0x00);
+	// hal_i2c_write(TLV320_ADDR, 0x42, 0x00);
+	// hal_i2c_write(TLV320_ADDR, 0x40, 0x00);
 }
 
 uint32_t rt_audio_get_queued()

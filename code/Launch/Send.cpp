@@ -83,7 +83,7 @@ bool sendWrite(traktor::IStream* target, uint32_t base, const uint8_t* line, uin
 	const uint8_t reply = readChar(target);
 	if (reply != 'O')
 	{
-		log::error << L"Error reply, got '" << (wchar_t)reply << L"'" << Endl;
+		log::error << L"Error reply, got " << str(L"0x%02x", reply) << Endl;
 		return false;
 	}
 
@@ -120,7 +120,7 @@ bool sendJump(traktor::IStream* target, uint32_t start, uint32_t sp)
 	const uint8_t reply = readChar(target);
 	if (reply != 'O')
 	{
-		log::error << L"Error reply, got '" << (wchar_t)reply << L"'" << Endl;
+		log::error << L"Error reply, got " << str(L"0x%02x", reply) << Endl;
 		return false;
 	}
 

@@ -69,6 +69,7 @@ module RetroDACK(
 	) pll_video(
 		.i_clk(CLOCK),
 		.o_clk1(clock_video),
+		.o_clk2(),
 		.o_clk_locked()
 	);
 
@@ -310,9 +311,9 @@ module RetroDACK(
 
 	UART #(
 		.FREQUENCY(`FREQUENCY),
-		.BAUDRATE(115200),
-		.RX_FIFO_DEPTH(512),
-		.TX_FIFO_DEPTH(16)
+		.BAUDRATE(230400), // 115200),
+		.RX_FIFO_DEPTH(1024),
+		.TX_FIFO_DEPTH(64)
 	) uart(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -476,7 +477,7 @@ module RetroDACK(
 		.i_reset(reset),
 		.i_clock(clock),
 
-		.i_interrupt_0(~INPUT_INTERRUPT),
+		.i_interrupt_0(0), // ~INPUT_INTERRUPT),
 		.i_interrupt_1(0),
 		.i_interrupt_2(0),
 		.i_interrupt_3(0),
@@ -501,8 +502,8 @@ module RetroDACK(
 	wire vga_hblank;
 	wire vga_vblank;
 	wire vga_data_enable;
-	wire [11:0] vga_pos_x;
-	wire [11:0] vga_pos_y;
+	wire [10:0] vga_pos_x;
+	wire [10:0] vga_pos_y;
 
 	VIDEO_VGA #(
 		// 720 0 20 20 40 720 0 15 15 15 0 0 0 60 0 36720000 4
@@ -529,7 +530,7 @@ module RetroDACK(
 		.o_pos_y(vga_pos_y)
 	);
 
-
+/*
 	//====================================================
 	// VIDEO
 	wire video_select;
@@ -564,17 +565,17 @@ module RetroDACK(
 		.o_vram_pa_rw(),
 		.o_vram_pa_address(),
 		.o_vram_pa_wdata(),
-		.i_vram_pa_rdata(),
-		.i_vram_pa_ready(),
+		.i_vram_pa_rdata(0),
+		.i_vram_pa_ready(1'b1),
 
 		.o_vram_pb_request(),
 		.o_vram_pb_rw(),
 		.o_vram_pb_address(),
 		.o_vram_pb_wdata(),
-		.i_vram_pb_rdata(),
-		.i_vram_pb_ready()
+		.i_vram_pb_rdata(0),
+		.i_vram_pb_ready(1'b1)
 	);
-
+*/
 
 	//====================================================
 	// Bridge
@@ -638,9 +639,9 @@ module RetroDACK(
 	assign plic_address = bridge_far_address[23:0];
 	assign plic_wdata = bridge_far_wdata;
 
-	assign video_select = bridge_far_address[27:24] == 4'ha;
-	assign video_address = { 8'h0, bridge_far_address[23:0] };
-	assign video_wdata = bridge_far_wdata;
+	// assign video_select = bridge_far_address[27:24] == 4'ha;
+	// assign video_address = { 8'h0, bridge_far_address[23:0] };
+	// assign video_wdata = bridge_far_wdata;
 
 	assign bridge_far_rdata =
 		uart_select	? uart_rdata				:
@@ -649,7 +650,7 @@ module RetroDACK(
 		timer_select ? timer_rdata				:
 		audio_select ? audio_rdata				:
 		plic_select ? plic_rdata				:
-		video_select ? video_rdata				:
+		//video_select ? video_rdata				:
 		32'h00000000;
 	
 	assign bridge_far_ready =
@@ -659,7 +660,7 @@ module RetroDACK(
 		timer_select ? timer_ready				:
 		audio_select ? audio_ready				:
 		plic_select ? plic_ready				:
-		video_select ? video_ready				:
+		//video_select ? video_ready				:
 		1'b0;
 
 

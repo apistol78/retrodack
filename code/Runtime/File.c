@@ -32,21 +32,33 @@ DSTATUS disk_status(BYTE pdrv)
 
 DRESULT disk_read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 {
+	kernel_enter_critical();
 	for (UINT i = 0; i < count; ++i)
 	{
-		if (hal_sd_read_block512(sector + i, buff + 512 * i, 512) != 512)
+		if (hal_sd_read_block512(sector + i, buff, 512) != 512)
+		{
+			kernel_leave_critical();
 			return RES_ERROR;
+		}
+		buff += 512;
 	}
+	kernel_leave_critical();
 	return RES_OK;
 }
 
 DRESULT disk_write(BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count)
 {
+	kernel_enter_critical();
 	for (UINT i = 0; i < count; ++i)
 	{
-		if (hal_sd_write_block512(sector + i, buff + 512 * i, 512) != 512)
+		if (hal_sd_write_block512(sector + i, buff, 512) != 512)
+		{
+			kernel_leave_critical();
 			return RES_ERROR;
+		}
+		buff += 512;
 	}
+	kernel_leave_critical();
 	return RES_OK;
 }
 
