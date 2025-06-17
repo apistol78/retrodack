@@ -13,8 +13,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <HAL/Audio.h>
-#include <HAL/I2C.h>
 #include <HAL/SD.h>
 #include <HAL/Timer.h>
 #include <HAL/UART.h>
@@ -23,8 +21,9 @@
 #include "Runtime/CRT.h"
 #include "Runtime/ELF.h"
 #include "Runtime/File.h"
-#include "Runtime/Input.h"
 #include "Runtime/Runtime.h"
+#include "Runtime/Kernel.h"
+#include "Runtime/Video.h"
 
 typedef void (*call_fn_t)();
 
@@ -189,7 +188,38 @@ int main()
 		memset(dest, 0, len);
 	}
 
-	crt_init();
+	//crt_init();
+	runtime_init();
+
+	// Load splash screen.
+	const int32_t fd = file_open("splash", FILE_MODE_READ);
+	if (fd >= 0)
+	{
+		for (int i = 0; i < 256; ++i)
+		{
+			static uint32_t pal;
+			file_read(fd, &pal, 4);
+			rt_video_set_palette(i, pal);
+		}
+
+		void* fb = hal_video_get_secondary_target();
+		if (fb)
+		{
+			file_read(fd, fb, 720 * 720);
+			rt_video_present();
+		}
+
+		file_close(fd);
+	}
+
+	// Try to execute BOOT executable from SD
+	// card, if available.
+	{
+		const int32_t r = rt_elf_launch("doom");
+		printf("No exectuable (error: %d)\n", r);
+	}
+
+	// No BOOT executable; enter remote control mode.
 	remote_control();
 
 	return 0;

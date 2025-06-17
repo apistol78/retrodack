@@ -50,7 +50,7 @@ int32_t runtime_init()
 		printf("FS init failed!\n");
 
 	printf("** Initialize Input **\n");
-	input_init();
+	rt_input_init();
 
 	printf("** Initialize Kernel **\n");
 	kernel_init();

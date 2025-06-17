@@ -11,12 +11,13 @@
 
 #include "Runtime/ELF.h"
 #include "Runtime/File.h"
+#include "Runtime/Video.h"
 
 typedef void (*call_fn_t)();
 
-int32_t elf_launch(const char* filename)
+int32_t rt_elf_launch(const char* filename)
 {
-	uint8_t tmp[8000];
+	uint8_t tmp[256];
 	ELF32_Header hdr;
 	ELF32_ProgramHeader phdr;
 	ELF32_SectionHeader shdr;
@@ -68,11 +69,10 @@ int32_t elf_launch(const char* filename)
 				file_read(fd, &sym, sizeof(sym));
 
 				if (sym.st_size >= sizeof(tmp))
-					return 4;
+					continue;
 
 				file_seek(fd, shdr_link.sh_offset + sym.st_name, 0);
 				file_read(fd, tmp, sym.st_size);
-
 				tmp[sym.st_size] = 0;
 
 				if (strcmp(tmp, "_start") == 0)
@@ -88,8 +88,13 @@ int32_t elf_launch(const char* filename)
 
 	if (jstart != 0)
 	{
+		rt_video_set_palette(0, 0x000000);
+		rt_video_clear(0);
+		rt_video_present();
+
 		const uint32_t sp = 0x22000000 - 4;
 		__asm__ volatile (
+			"fence			\n"
 			"fence			\n"
 			"mv		sp, %0	\n"
 			:

@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <HAL/UART.h>
+#include <HAL/Audio.h>
+#include <HAL/Video.h>
+#include <HAL/Timer.h>
 
 #include "Runtime/Audio.h"
 #include "Runtime/CRT.h"
@@ -13,27 +15,39 @@
 int main()
 {
 	runtime_init();
-
-	const int32_t fd = file_open("SONG", FILE_MODE_READ);
-	if (fd < 0)
-		printf("Failed to open file!\n");
-
-	const int32_t fs = file_size(fd);
-	printf("Reading music (%d bytes)...\n", fs);
-	uint16_t* ptr = (uint16_t*)malloc(fs);
 	
-	uint8_t* dst = (uint8_t*)ptr;
-	for (int32_t i = 0; i < fs; i += 512)
-	{
-		printf("Reading %d...\n", i);
-		file_read(fd, dst, 512);
-		dst += 512;
-	}
+	// kernel_cs_init(&lock);
+	// kernel_create_thread(&thread_1);
+	// kernel_create_thread(&thread_2);
 
+	const int32_t fd = file_open("SPLASH", FILE_MODE_READ);
+	
+	uint8_t pal[256 * 4];
+	file_read(fd, pal, 256 * 4);
+
+	for (int i = 0; i < 256; ++i)
+		hal_video_set_palette(i, 0);
+
+	void* fb = hal_video_get_secondary_target();
+	file_read(fd, fb, 720 * 720);
 	file_close(fd);
 
-	printf("Playing music...\n");
-	int32_t offset = 0;
+	hal_video_present();
+
+
+	uint8_t out[256 * 4];
+	for (int i = 0; i < 256; ++i)
+	{
+		for (int j = 0; j < 256 * 4; ++j)
+			out[j] = (pal[j] * i) >> 8;
+		
+		for (int j = 0; j < 256; ++j)
+			hal_video_set_palette(j, *(uint32_t*)&out[j * 4]);
+
+		hal_timer_wait_ms(30);
+	}
+
+
 	for (;;)
 	{
 		printf("... play %d...\n", offset);

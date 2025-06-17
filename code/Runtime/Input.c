@@ -46,13 +46,13 @@ static void input_interrupt(uint32_t source)
 	hal_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5);
 }
 
-int32_t input_init()
+int32_t rt_input_init()
 {
 	uint8_t data[5] = { 0, 0, 0, 0, 0 };
 	uint8_t found = 0;
 
 	// Locate trackball by reading it's identification.
-	for (int32_t i = 0; i < 30; ++i)
+	for (int32_t i = 0; i < 4; ++i)
 	{
 		printf("[Input] Reading trackball chip id (%d)...\n", i);
 		hal_i2c_read(0x0a, TRACKBALL_REG_CHIP_ID_L, data, 2);
@@ -82,5 +82,22 @@ int32_t input_init()
 	hal_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0xff);
 
 	printf("[Input] Trackball initialized successfully.\n");
+	return 0;
+}
+
+void rt_input_get_absolute_position(int32_t* pos)
+{
+	pos[0] = 0;
+	pos[1] = 0;
+}
+
+void rt_input_get_delta_position(int32_t* pos)
+{
+	pos[0] = 0;
+	pos[1] = 0;
+}
+
+uint32_t rt_input_get_state()
+{
 	return 0;
 }

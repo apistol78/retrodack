@@ -60,8 +60,7 @@
 
 using namespace traktor;
 
-constexpr uint32_t fs_image_size = 32 * 1024 * 1024;
-uint8_t fs_image[fs_image_size];
+AlignedVector< uint8_t > fs_image;
 
 DSTATUS disk_initialize(BYTE pdrv)
 {
@@ -101,7 +100,7 @@ DRESULT disk_ioctl(BYTE pdrv, BYTE cmd, void* buff)
 	else if (cmd == GET_BLOCK_SIZE)
 		*(DWORD*)buff = 512;
 	else if (cmd == GET_SECTOR_COUNT)
-		*(DWORD*)buff = fs_image_size / 512;
+		*(DWORD*)buff = fs_image.size() / 512;
 	return RES_OK;
 }
 
@@ -113,7 +112,17 @@ bool createFsImage()
 	FIL f;
 	UINT bw;
 
-	std::memset(fs_image, 0, fs_image_size);
+	uint64_t imageSize = 0;
+	for (auto ff : FileSystem::getInstance().find(L"fs/*.*"))
+	{
+		if (ff->isDirectory())
+			continue;
+
+		imageSize += ff->getSize();
+	}	
+
+	fs_image.resize(imageSize + 1 * 1024 * 1024, 0);
+	log::info << L"FS image size " << fs_image.size() << L" bytes." << Endl;
 
 	res = f_mkfs("", NULL, work, sizeof(work));
 	if (res) return false;
@@ -220,7 +229,7 @@ int main(int argc, const char** argv)
 	Video video(720, 720);
 	UART uart;
 	I2C i2c;
-	SD sd(fs_image, fs_image_size);
+	SD sd(fs_image.ptr(), fs_image.size());
 	::Timer tmr;
 	PLIC plic;
 	Audio audio;

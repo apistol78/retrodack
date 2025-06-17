@@ -74,4 +74,4 @@ typedef struct
 } ELF32_Sym;
 #pragma pack()
 
-EXTERN_C int32_t elf_launch(const char* filename);
+EXTERN_C int32_t rt_elf_launch(const char* filename);
