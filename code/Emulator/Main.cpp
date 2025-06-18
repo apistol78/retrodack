@@ -56,6 +56,7 @@
 #include "Emulator/FileSystemImage.h"
 #include "Emulator/LoadELF.h"
 #include "Emulator/LoadHEX.h"
+#include "Emulator/TrackBallDevice.h"
 
 using namespace traktor;
 
@@ -121,6 +122,9 @@ int main(int argc, const char** argv)
 	::Timer tmr;
 	PLIC plic;
 	Audio audio;
+
+	TrackBallDevice tb;
+	i2c.addSlave(0x0a, &tb);
 
 	Bus bus;
 	bus.map(0x00000000, 0x00000000 + rom.getCapacity(), false, false, &rom);
