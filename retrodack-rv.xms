@@ -745,5 +745,300 @@
 				</item>
 			</dependencies>
 		</item>
+		<item type="traktor.sb.Project" version="1">
+			<enable>true</enable>
+			<name>ScummRV</name>
+			<sourcePath>code/ScummRV</sourcePath>
+			<configurations>
+				<item type="traktor.sb.Configuration" version="5">
+					<name>DebugStatic</name>
+					<targetFormat>TfExecutableConsole</targetFormat>
+					<targetProfile>TpDebug</targetProfile>
+					<precompiledHeader/>
+					<includePaths>
+						<item>code/ScummRV</item>
+						<item>code/ScummRV/base</item>
+						<item>code/ScummRV/common</item>
+						<item>code/ScummRV/gui</item>
+						<item>code/ScummRV/sound</item>
+						<item>code/ScummRV/backends/rv</item>
+					</includePaths>
+					<definitions>
+						<item>_DEBUG</item>
+						<item>NONSTANDARD_PORT</item>
+						<item>SCUMM_NEED_ALIGNMENT</item>
+						<item>DISABLE_DEBUGGER</item>
+						<item>DISABLE_ADLIB</item>
+						<item>ENGINE_SCUMM5</item>
+						<item>ENGINE_SCUMM6</item>
+						<item>SINGLEGAME</item>
+						<item>GAME_ATLANTIS</item>
+						<item>DISABLE_SIMON</item>
+						<item>DISABLE_SKY</item>
+						<item>DISABLE_SWORD1</item>
+						<item>DISABLE_SWORD2</item>
+						<item>DISABLE_QUEEN</item>
+						<item>__RV__</item>
+					</definitions>
+					<libraryPaths/>
+					<libraries/>
+					<warningLevel>WlCompilerDefault</warningLevel>
+					<additionalCompilerOptions/>
+					<additionalLinkerOptions>-T$(MAKE_HOME)/code/Runtime/Link.ld</additionalLinkerOptions>
+					<debugExecutable/>
+					<debugArguments/>
+					<debugEnvironment/>
+					<debugWorkingDirectory/>
+					<aggregationItems/>
+					<consumerLibraryPath/>
+				</item>
+				<item type="traktor.sb.Configuration" version="5">
+					<name>ReleaseStatic</name>
+					<targetFormat>TfExecutableConsole</targetFormat>
+					<targetProfile>TpRelease</targetProfile>
+					<precompiledHeader/>
+					<includePaths>
+						<item>code/ScummRV</item>
+						<item>code/ScummRV/base</item>
+						<item>code/ScummRV/common</item>
+						<item>code/ScummRV/gui</item>
+						<item>code/ScummRV/sound</item>
+						<item>code/ScummRV/backends/rv</item>
+					</includePaths>
+					<definitions>
+						<item>NDEBUG</item>
+						<item>NONSTANDARD_PORT</item>
+						<item>SCUMM_NEED_ALIGNMENT</item>
+						<item>DISABLE_DEBUGGER</item>
+						<item>DISABLE_ADLIB</item>
+						<item>ENGINE_SCUMM5</item>
+						<item>ENGINE_SCUMM6</item>
+						<item>SINGLEGAME</item>
+						<item>GAME_ATLANTIS</item>
+						<item>DISABLE_SIMON</item>
+						<item>DISABLE_SKY</item>
+						<item>DISABLE_SWORD1</item>
+						<item>DISABLE_SWORD2</item>
+						<item>DISABLE_QUEEN</item>
+						<item>__RV__</item>
+					</definitions>
+					<libraryPaths/>
+					<libraries/>
+					<warningLevel>WlCompilerDefault</warningLevel>
+					<additionalCompilerOptions/>
+					<additionalLinkerOptions>-T$(MAKE_HOME)/code/Runtime/Link.ld</additionalLinkerOptions>
+					<debugExecutable/>
+					<debugArguments/>
+					<debugEnvironment/>
+					<debugWorkingDirectory/>
+					<aggregationItems/>
+					<consumerLibraryPath/>
+				</item>
+			</configurations>
+			<items>
+				<item type="traktor.sb.Filter">
+					<name>backends</name>
+					<items>
+						<item type="traktor.sb.Filter">
+							<name>rv</name>
+							<items>
+								<item type="traktor.sb.File" version="1">
+									<fileName>backends/rv/*.cpp</fileName>
+									<excludeFilter/>
+									<items/>
+								</item>
+								<item type="traktor.sb.File" version="1">
+									<fileName>backends/rv/*.h</fileName>
+									<excludeFilter/>
+									<items/>
+								</item>
+							</items>
+						</item>
+						<item type="traktor.sb.Filter">
+							<name>fs</name>
+							<items>
+								<item type="traktor.sb.Filter">
+									<name>rv</name>
+									<items>
+										<item type="traktor.sb.File" version="1">
+											<fileName>backends/fs/rv/*.cpp</fileName>
+											<excludeFilter/>
+											<items/>
+										</item>
+										<item type="traktor.sb.File" version="1">
+											<fileName>backends/fs/rv/*.h</fileName>
+											<excludeFilter/>
+											<items/>
+										</item>
+									</items>
+								</item>
+								<item type="traktor.sb.File" version="1">
+									<fileName>backends/fs/*.cpp</fileName>
+									<excludeFilter/>
+									<items/>
+								</item>
+								<item type="traktor.sb.File" version="1">
+									<fileName>backends/fs/*.h</fileName>
+									<excludeFilter/>
+									<items/>
+								</item>
+							</items>
+						</item>
+						<item type="traktor.sb.Filter">
+							<name>midi</name>
+							<items>
+								<item type="traktor.sb.File" version="1">
+									<fileName>backends/midi/*.cpp</fileName>
+									<excludeFilter/>
+									<items/>
+								</item>
+								<item type="traktor.sb.File" version="1">
+									<fileName>backends/midi/*.h</fileName>
+									<excludeFilter/>
+									<items/>
+								</item>
+							</items>
+						</item>
+						<item type="traktor.sb.File" version="1">
+							<fileName>backends/*.cpp</fileName>
+							<excludeFilter/>
+							<items/>
+						</item>
+						<item type="traktor.sb.File" version="1">
+							<fileName>backends/*.h</fileName>
+							<excludeFilter/>
+							<items/>
+						</item>
+					</items>
+				</item>
+				<item type="traktor.sb.Filter">
+					<name>base</name>
+					<items>
+						<item type="traktor.sb.File" version="1">
+							<fileName>base/*.cpp</fileName>
+							<excludeFilter/>
+							<items/>
+						</item>
+						<item type="traktor.sb.File" version="1">
+							<fileName>base/*.h</fileName>
+							<excludeFilter/>
+							<items/>
+						</item>
+					</items>
+				</item>
+				<item type="traktor.sb.Filter">
+					<name>common</name>
+					<items>
+						<item type="traktor.sb.File" version="1">
+							<fileName>common/*.cpp</fileName>
+							<excludeFilter/>
+							<items/>
+						</item>
+						<item type="traktor.sb.File" version="1">
+							<fileName>common/*.h</fileName>
+							<excludeFilter/>
+							<items/>
+						</item>
+					</items>
+				</item>
+				<item type="traktor.sb.Filter">
+					<name>gui</name>
+					<items>
+						<item type="traktor.sb.File" version="1">
+							<fileName>gui/*.cpp</fileName>
+							<excludeFilter/>
+							<items/>
+						</item>
+						<item type="traktor.sb.File" version="1">
+							<fileName>gui/*.h</fileName>
+							<excludeFilter/>
+							<items/>
+						</item>
+					</items>
+				</item>
+				<item type="traktor.sb.Filter">
+					<name>scumm</name>
+					<items>
+						<item type="traktor.sb.Filter">
+							<name>imuse_digi</name>
+							<items>
+								<item type="traktor.sb.File" version="1">
+									<fileName>scumm/imuse_digi/*.cpp</fileName>
+									<excludeFilter/>
+									<items/>
+								</item>
+								<item type="traktor.sb.File" version="1">
+									<fileName>scumm/imuse_digi/*.h</fileName>
+									<excludeFilter/>
+									<items/>
+								</item>
+							</items>
+						</item>
+						<item type="traktor.sb.Filter">
+							<name>insane</name>
+							<items>
+								<item type="traktor.sb.File" version="1">
+									<fileName>scumm/insane/*.cpp</fileName>
+									<excludeFilter/>
+									<items/>
+								</item>
+								<item type="traktor.sb.File" version="1">
+									<fileName>scumm/insane/*.h</fileName>
+									<excludeFilter/>
+									<items/>
+								</item>
+							</items>
+						</item>
+						<item type="traktor.sb.Filter">
+							<name>smush</name>
+							<items>
+								<item type="traktor.sb.File" version="1">
+									<fileName>scumm/smush/*.cpp</fileName>
+									<excludeFilter/>
+									<items/>
+								</item>
+								<item type="traktor.sb.File" version="1">
+									<fileName>scumm/smush/*.h</fileName>
+									<excludeFilter/>
+									<items/>
+								</item>
+							</items>
+						</item>
+						<item type="traktor.sb.File" version="1">
+							<fileName>scumm/*.cpp</fileName>
+							<excludeFilter>resource_converter.*</excludeFilter>
+							<items/>
+						</item>
+						<item type="traktor.sb.File" version="1">
+							<fileName>scumm/*.h</fileName>
+							<excludeFilter/>
+							<items/>
+						</item>
+					</items>
+				</item>
+				<item type="traktor.sb.Filter">
+					<name>sound</name>
+					<items>
+						<item type="traktor.sb.File" version="1">
+							<fileName>sound/*.cpp</fileName>
+							<excludeFilter/>
+							<items/>
+						</item>
+						<item type="traktor.sb.File" version="1">
+							<fileName>sound/*.h</fileName>
+							<excludeFilter/>
+							<items/>
+						</item>
+					</items>
+				</item>
+			</items>
+			<dependencies>
+				<item type="traktor.sb.ProjectDependency" version="3">
+					<inheritIncludePaths>true</inheritIncludePaths>
+					<link>LnkYes</link>
+					<project ref="/object/projects/item"/>
+				</item>
+			</dependencies>
+		</item>
 	</projects>
 </object>
