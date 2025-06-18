@@ -23,6 +23,8 @@
 #include <Core/Misc/CommandLine.h>
 #include <Core/Misc/TString.h>
 #include <Core/Timer/Timer.h>
+#include <Core/Thread/ThreadManager.h>
+#include <Core/Thread/Thread.h>
 #include <Drawing/Image.h>
 #include <Ui/Application.h>
 #include <Ui/Bitmap.h>
@@ -127,7 +129,7 @@ int main(int argc, const char** argv)
 	bus.map(0x53000000, 0x53000100, false, false, &i2c);
 	bus.map(0x54000000, 0x54000100, false, true, &sd);
 	bus.map(0x55000000, 0x55000100, false, true, &tmr);
-	bus.map(0x56000000, 0x56000100, false, true, &audio);
+	bus.map(0x56000000, 0x56000100, false, false, &audio);
 	bus.map(0x58000000, 0x58004000, false, false, &plic);
 	bus.map(0x5a000000, 0x5b000000, false, false, &video);
 
@@ -188,18 +190,19 @@ int main(int argc, const char** argv)
 	form->show();
 
 
+	Thread* th = ThreadManager::getInstance().create([&]()
+	{
+		while(!th->stopped())
+		{
+			if (!cpu.tick(10000) || bus.error())
+				break;
+		}
+	});
+	th->start();
+
 	traktor::Timer timer;
 	while (g_going)
 	{
-		for (int32_t i = 0; i < 100 && g_going; ++i)
-		{
-			if (!cpu.tick(10000) || bus.error())
-			{
-				g_going = false;
-				break;
-			}
-		}
-
 		if (!ui::Application::getInstance()->process())
 			break;
 
@@ -210,7 +213,7 @@ int main(int argc, const char** argv)
 			{
 				if (uiImage)
 				{
-					ui::Size sz = uiImage->getSize(form);
+					const ui::Size sz = uiImage->getSize(form);
 					if (sz.cx != videoImage->getWidth() || sz.cy != videoImage->getHeight())
 					{
 						uiImage->destroy();
@@ -222,9 +225,11 @@ int main(int argc, const char** argv)
 				image->setImage(uiImage);
 			}
 			timer.reset();
-			// plic.raise(0);
 		}			
 	}
+
+	th->stop();
+	ThreadManager::getInstance().destroy(th);
 
 	if (form)
 	{
