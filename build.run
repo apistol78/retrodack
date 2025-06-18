@@ -194,10 +194,11 @@ local function buildEmulatorFS()
 
 	run:mkdir(SCRIPT_HOME .. "/fs")
 	run:rm(SCRIPT_HOME .. "/fs/*.*")
-	run:copy(SCRIPT_HOME .. "/build/rv/ReleaseStatic/Dashboard", SCRIPT_HOME .. "/fs/dash")
-	run:copy(SCRIPT_HOME .. "/build/rv/ReleaseStatic/Doom", SCRIPT_HOME .. "/fs/doom")
-	run:copy(SCRIPT_HOME .. "/code/Doom/doom1.wad", SCRIPT_HOME .. "/fs/doom1.wad")
-	run:copy(SCRIPT_HOME .. "/code/Doom/doom2.wad", SCRIPT_HOME .. "/fs/doom2.wad")
+	run:replace(SCRIPT_HOME .. "/build/rv/ReleaseStatic/Dashboard", SCRIPT_HOME .. "/fs/dash")
+	run:replace(SCRIPT_HOME .. "/build/rv/ReleaseStatic/Doom", SCRIPT_HOME .. "/fs/doom")
+	run:replace(SCRIPT_HOME .. "/code/Doom/doom1.wad", SCRIPT_HOME .. "/fs/doom1.wad")
+	run:replace(SCRIPT_HOME .. "/code/Doom/doom2.wad", SCRIPT_HOME .. "/fs/doom2.wad")
+	run:replace(SCRIPT_HOME .. "/build/rv/ReleaseStatic/ScummRV", SCRIPT_HOME .. "/fs/scummrv")
 
 	-- Convert splash screen into RAW image.
 	local img = drawing.Image.loadFromFile(SCRIPT_HOME .. "/docs/Splash8.png")

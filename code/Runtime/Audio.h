@@ -14,6 +14,8 @@ EXTERN_C int32_t rt_audio_init();
 
 EXTERN_C void rt_audio_set_volume(uint8_t volume);
 
+EXTERN_C void rt_audio_set_playback_rate(uint32_t rate);
+
 EXTERN_C uint32_t rt_audio_get_queued();
 
 EXTERN_C void rt_audio_play_mono(const int16_t* samples, uint32_t nsamples);

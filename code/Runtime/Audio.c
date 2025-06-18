@@ -108,6 +108,11 @@ void rt_audio_set_volume(uint8_t volume)
 	// hal_i2c_write(TLV320_ADDR, 0x40, 0x00);
 }
 
+void rt_audio_set_playback_rate(uint32_t rate)
+{
+	hal_audio_set_playback_rate(rate);
+}
+
 uint32_t rt_audio_get_queued()
 {
 	return hal_audio_get_queued();
