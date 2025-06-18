@@ -14,10 +14,6 @@
 #include <cmath>
 #include <cstring>
 
-// FatFS
-#include <ff.h>
-#include <diskio.h>
-
 // Traktor
 #include <Core/Io/FileOutputStream.h>
 #include <Core/Io/FileSystem.h>
@@ -55,122 +51,11 @@
 #include <Emulator/Devices/Unknown.h>
 
 //
+#include "Emulator/FileSystemImage.h"
 #include "Emulator/LoadELF.h"
 #include "Emulator/LoadHEX.h"
 
 using namespace traktor;
-
-AlignedVector< uint8_t > fs_image;
-
-DSTATUS disk_initialize(BYTE pdrv)
-{
-	//log::info << L"disk_initialize" << Endl;
-	return 0;
-}
-
-DSTATUS disk_status(BYTE pdrv)
-{
-	//log::info << L"disk_status" << Endl;
-	return 0;
-}
-
-DRESULT disk_read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
-{
-	//log::info << L"disk_read, sector " << sector << L", count " << count << Endl;
-	const uint32_t offset = sector * 512;
-	const uint32_t size = count * 512;
-	std::memcpy(buff, &fs_image[offset], size);
-	return RES_OK;
-}
-
-DRESULT disk_write(BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count)
-{
-	//log::info << L"disk_write, sector " << sector << L", count " << count << Endl;
-	const uint32_t offset = sector * 512;
-	const uint32_t size = count * 512;
-	std::memcpy(&fs_image[offset], buff, size);
-	return RES_OK;
-}
-
-DRESULT disk_ioctl(BYTE pdrv, BYTE cmd, void* buff)
-{
-	//log::info << L"disk_ioctl" << Endl;
-	if (cmd == GET_SECTOR_SIZE)
-		*(WORD*)buff = 512;
-	else if (cmd == GET_BLOCK_SIZE)
-		*(DWORD*)buff = 512;
-	else if (cmd == GET_SECTOR_COUNT)
-		*(DWORD*)buff = fs_image.size() / 512;
-	return RES_OK;
-}
-
-bool createFsImage()
-{
-	BYTE work[FF_MAX_SS];
-	FRESULT res;
-	FATFS fs;
-	FIL f;
-	UINT bw;
-
-	uint64_t imageSize = 0;
-	for (auto ff : FileSystem::getInstance().find(L"fs/*.*"))
-	{
-		if (ff->isDirectory())
-			continue;
-
-		imageSize += ff->getSize();
-	}	
-
-	fs_image.resize(imageSize + 1 * 1024 * 1024, 0);
-	log::info << L"FS image size " << fs_image.size() << L" bytes." << Endl;
-
-	res = f_mkfs("", NULL, work, sizeof(work));
-	if (res) return false;
-
-	res = f_mount(&fs, "", 0);
-	if (res) return false;
-
-	for (auto ff : FileSystem::getInstance().find(L"fs/*.*"))
-	{
-		if (ff->isDirectory())
-			continue;
-
-		Ref< traktor::IStream > sf = FileSystem::getInstance().open(ff->getPath(), File::FmRead);
-		if (sf)
-		{
-			char fn[512];
-			strcpy(fn, wstombs(ff->getPath().getFileName()).c_str());
-
-			res = f_open(&f, fn, FA_CREATE_ALWAYS | FA_WRITE);
-			if (res)
-			{
-				log::error << L"Unable to create FS image file \"" << ff->getPath().getFileName() << L"\"." << Endl;
-				return false;
-			}
-
-			int64_t size = 0;
-			for (;;)
-			{
-				const int64_t nrd = sf->read(work, sizeof(work));
-				if (nrd <= 0)
-					break;
-
-				res = f_write(&f, work, (UINT)nrd, &bw);
-				if (res)
-					return false;
-
-				size += nrd;
-			}
-
-			f_close(&f);
-
-			log::info << L"Added \"" << ff->getPath().getFileName() << L"\" (" << size << L" bytes) to FS image." << Endl;
-		}
-	}
-
-	f_unmount("");
-	return true;
-}
 
 bool g_going = true;
 
@@ -217,7 +102,8 @@ int main(int argc, const char** argv)
 #endif
 
 	// Create file system from files.
-	if (!createFsImage())
+	Ref< FileSystemImage > fsi = FileSystemImage::createFromDirectory(L"fs");
+	if (!fsi)
 	{
 		log::error << L"Unable to create in-memory file system!" << Endl;
 		return 1;
@@ -229,7 +115,7 @@ int main(int argc, const char** argv)
 	Video video(720, 720);
 	UART uart;
 	I2C i2c;
-	SD sd(fs_image.ptr(), fs_image.size());
+	SD sd(fsi->ptr(), fsi->size());
 	::Timer tmr;
 	PLIC plic;
 	Audio audio;
