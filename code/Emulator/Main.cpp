@@ -130,11 +130,11 @@ int main(int argc, const char** argv)
 	bus.map(0x00000000, 0x00000000 + rom.getCapacity(), false, false, &rom);
  	bus.map(0x20000000, 0x20000000 + sdram.getCapacity(), true, false, &sdram);
 	bus.map(0x51000000, 0x51000100, false, false, &uart);
-	bus.map(0x53000000, 0x53000100, false, false, &i2c);
+	bus.map(0x53000000, 0x53000100, false, true, &i2c);
 	bus.map(0x54000000, 0x54000100, false, true, &sd);
 	bus.map(0x55000000, 0x55000100, false, true, &tmr);
-	bus.map(0x56000000, 0x56000100, false, false, &audio);
-	bus.map(0x58000000, 0x58004000, false, false, &plic);
+	bus.map(0x56000000, 0x56000100, false, true, &audio);
+	bus.map(0x58000000, 0x58ffffff, false, true, &plic);
 	bus.map(0x5a000000, 0x5b000000, false, false, &video);
 
 	Ref< OutputStream > os = nullptr;	
@@ -149,6 +149,8 @@ int main(int argc, const char** argv)
 	cpu.setSP(0x22000000 - 4);
 
 	tmr.setCallback([&](){ cpu.interrupt(TIMER); });
+	tb.setCallback([&](){ plic.raise(0); }); // Input interrupt
+	audio.setCallback([&]() { /*plic.raise(1);*/ }); // Audio interrupt
 
 	if (cmdLine.hasOption(L'e', L"elf"))
 	{
@@ -183,7 +185,7 @@ int main(int argc, const char** argv)
 
 	// Create user interface.
 	Ref< ui::Form > form = new ui::Form();
-	form->create(L"RetroDACK", 720_ut, 720_ut, ui::Form::WsDefault, new ui::FloodLayout());
+	form->create(L"RetroDACK", 360_ut, 360_ut, ui::Form::WsDefault, new ui::FloodLayout());
 
 	Ref< ui::Bitmap > uiImage = new ui::Bitmap(720, 720);
 	
@@ -192,6 +194,23 @@ int main(int argc, const char** argv)
 
 	form->update();
 	form->show();
+
+
+	ui::Point mousePosition(0, 0);
+
+	image->addEventHandler< ui::MouseButtonDownEvent >([&](ui::MouseButtonDownEvent* event) {
+		if (event->getButton() == ui::MbtLeft)
+			tb.setButton(true);
+	});
+	image->addEventHandler< ui::MouseButtonUpEvent >([&](ui::MouseButtonUpEvent* event) {
+		if (event->getButton() == ui::MbtLeft)
+			tb.setButton(false);
+	});
+	image->addEventHandler< ui::MouseMoveEvent >([&](ui::MouseMoveEvent* event) {
+		const auto d = event->getPosition() - mousePosition;
+		mousePosition = event->getPosition();
+		tb.accumulateMovement(d.cx, d.cy);
+	});
 
 
 	Thread* th = ThreadManager::getInstance().create([&]()

@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <HAL/Interrupt.h>
+
 #include "Runtime/ELF.h"
 #include "Runtime/File.h"
 #include "Runtime/Video.h"
@@ -91,6 +93,10 @@ int32_t rt_elf_launch(const char* filename)
 		rt_video_set_palette(0, 0x000000);
 		rt_video_clear(0);
 		rt_video_present();
+
+		// Disable interrupts; assumed to be reinitialized
+		// by executable.
+		hal_interrupt_disable();
 
 		const uint32_t sp = 0x22000000 - 4;
 		__asm__ volatile (

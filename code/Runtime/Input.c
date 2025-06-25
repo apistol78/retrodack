@@ -40,10 +40,38 @@
 #define TRACKBALL_MSK_CTRL_FREAD 0b00000100
 #define TRACKBALL_MSK_CTRL_FWRITE 0b00001000
 
+static int32_t s_absX = 0;
+static int32_t s_absY = 0;
+static int32_t s_deltaX = 0;
+static int32_t s_deltaY = 0;
+static int32_t s_pressed = 0;
+
 static void input_interrupt(uint32_t source)
 {
 	uint8_t data[5] = { 0, 0, 0, 0, 0 };
 	hal_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5);
+
+	s_absX -= data[0];
+	s_absX += data[1];
+	s_absY -= data[2];
+	s_absY += data[3];
+
+	if (s_absX < 0)
+		s_absX = 0;
+	else if (s_absX > 719)
+		s_absX = 719;
+
+	if (s_absY < 0)
+		s_absY = 0;
+	else if (s_absY > 719)
+		s_absY = 719;
+
+	s_deltaX -= data[0];
+	s_deltaX += data[1];
+	s_deltaY -= data[2];
+	s_deltaY += data[3];
+
+	s_pressed = data[4];
 }
 
 int32_t rt_input_init()
@@ -70,7 +98,7 @@ int32_t rt_input_init()
 	}
 
 	// Set input interrupt handler.
-	hal_interrupt_set_handler(0, input_interrupt);
+	hal_interrupt_set_handler(IRQ_SOURCE_PLIC_0, input_interrupt);
 
 	// Enable interrupt pin; notify CPU everytime
 	// track ball position change.
@@ -87,17 +115,19 @@ int32_t rt_input_init()
 
 void rt_input_get_absolute_position(int32_t* pos)
 {
-	pos[0] = 0;
-	pos[1] = 0;
+	pos[0] = s_absX;
+	pos[1] = s_absY;
 }
 
 void rt_input_get_delta_position(int32_t* pos)
 {
-	pos[0] = 0;
-	pos[1] = 0;
+	pos[0] = s_deltaX;
+	pos[1] = s_deltaY;
+	s_deltaX = 0;
+	s_deltaY = 0;
 }
 
 uint32_t rt_input_get_state()
 {
-	return 0;
+	return (uint32_t)s_pressed;
 }
