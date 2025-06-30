@@ -232,7 +232,6 @@ bool Serial::open(const std::wstring& device, const Configuration& configuration
 		return false;
 	}
 
-	log::info << L"Serial opened succcessfully." << Endl;
 	return true;
 }
 

@@ -47,21 +47,21 @@ uint32_t DG_GetTicksMs()
 
 int DG_GetKey(int* pressed, unsigned char* doomKey)
 {
-	static uint8_t lst = 0;
-	const uint8_t st = (uint8_t)rt_input_get_state();
+	// static uint8_t lst = 0;
+	// const uint8_t st = (uint8_t)rt_input_get_state();
 
-	if (st != 0)
-	{
-		*doomKey = KEY_ENTER;
-		if (lst != st)
-			*pressed = 1;
-		else
-			*pressed = 0;
+	// if (st != 0)
+	// {
+	// 	*doomKey = KEY_ENTER;
+	// 	if (lst != st)
+	// 		*pressed = 1;
+	// 	else
+	// 		*pressed = 0;
 
-		lst = st;
-		return 1;
-	}
-	lst = st;
+	// 	lst = st;
+	// 	return 1;
+	// }
+	// lst = st;
 
 	// uint8_t ikc;
 	// uint8_t im;

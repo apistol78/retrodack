@@ -16780,6 +16780,16 @@
 		)
 		(uuid "250b9efa-98e3-4136-8318-3995ee836e16")
 	)
+	(text "CE2 if U4 is NOT inverted! Symbol incorrect!"
+		(exclude_from_sim no)
+		(at 86.106 341.376 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "32cc5c5a-7f53-4306-9498-7c63ebc5726e")
+	)
 	(text "Trackball I2C address 0x0A"
 		(exclude_from_sim no)
 		(at 748.284 374.396 0)
@@ -16984,6 +16994,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "1e9413c2-bcde-4f5e-99ba-9f18ea280041")
+	)
+	(junction
+		(at 57.15 299.72)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "1ea11734-80c0-438d-b0c2-7cc6121dfeb5")
 	)
 	(junction
 		(at 363.22 232.41)
@@ -17394,12 +17410,6 @@
 		(uuid "ad4e6897-5822-40cc-8885-f42973b0bc3c")
 	)
 	(junction
-		(at 306.07 40.64)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "aed3736b-cab6-46b7-8e3e-cb6733ce7abb")
-	)
-	(junction
 		(at 721.36 297.18)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -17632,12 +17642,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "fb074ec4-6851-4e23-9832-1f5f2fa670ba")
-	)
-	(junction
-		(at 306.07 54.61)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "fb6875c2-77f5-4e31-9fc8-caa785184a0e")
 	)
 	(junction
 		(at 254 40.64)
@@ -18539,6 +18543,16 @@
 	)
 	(wire
 		(pts
+			(xy 57.15 304.8) (xy 73.66 304.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0fdf02da-d3d6-4feb-95d8-51661abb426e")
+	)
+	(wire
+		(pts
 			(xy 121.92 453.39) (xy 121.92 455.93)
 		)
 		(stroke
@@ -18556,16 +18570,6 @@
 			(type default)
 		)
 		(uuid "0ffdcb44-30ff-45c6-9fc4-101eed3bb830")
-	)
-	(wire
-		(pts
-			(xy 281.94 40.64) (xy 306.07 40.64)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1037318d-a64d-4412-a08c-56c46bcf196b")
 	)
 	(wire
 		(pts
@@ -18976,16 +18980,6 @@
 			(type default)
 		)
 		(uuid "21119ec1-1f5e-4b3f-b6d7-b7271ae2359b")
-	)
-	(wire
-		(pts
-			(xy 71.12 304.8) (xy 73.66 304.8)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "220c993b-6ce0-439a-bb4a-03b9de9e10ae")
 	)
 	(wire
 		(pts
@@ -19529,7 +19523,7 @@
 	)
 	(wire
 		(pts
-			(xy 48.26 299.72) (xy 73.66 299.72)
+			(xy 48.26 299.72) (xy 57.15 299.72)
 		)
 		(stroke
 			(width 0)
@@ -19846,16 +19840,6 @@
 			(type default)
 		)
 		(uuid "44b0840c-86c1-4c51-b9e5-a67e28820e3b")
-	)
-	(wire
-		(pts
-			(xy 306.07 40.64) (xy 306.07 43.18)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "44b85e81-34d8-4185-9ea7-870ed104e121")
 	)
 	(wire
 		(pts
@@ -20509,6 +20493,16 @@
 	)
 	(wire
 		(pts
+			(xy 57.15 304.8) (xy 57.15 299.72)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5e403eb4-7d7f-49b8-aad5-add70e744323")
+	)
+	(wire
+		(pts
 			(xy 396.24 369.57) (xy 397.51 369.57)
 		)
 		(stroke
@@ -20909,7 +20903,7 @@
 	)
 	(wire
 		(pts
-			(xy 297.18 54.61) (xy 306.07 54.61)
+			(xy 297.18 54.61) (xy 308.61 54.61)
 		)
 		(stroke
 			(width 0)
@@ -22229,16 +22223,6 @@
 	)
 	(wire
 		(pts
-			(xy 306.07 50.8) (xy 306.07 54.61)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "9a35bf2c-c314-4d1a-bbd7-4facdc2bf059")
-	)
-	(wire
-		(pts
 			(xy 712.47 114.3) (xy 702.31 114.3)
 		)
 		(stroke
@@ -22306,6 +22290,16 @@
 			(type default)
 		)
 		(uuid "9f0b7e66-a801-4f18-b9ce-3d0094487e88")
+	)
+	(wire
+		(pts
+			(xy 57.15 299.72) (xy 73.66 299.72)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9f14956b-fc47-426a-9c6c-083d3832aad3")
 	)
 	(wire
 		(pts
@@ -23949,7 +23943,7 @@
 	)
 	(wire
 		(pts
-			(xy 306.07 40.64) (xy 323.85 40.64)
+			(xy 281.94 40.64) (xy 323.85 40.64)
 		)
 		(stroke
 			(width 0)
@@ -24156,16 +24150,6 @@
 			(type default)
 		)
 		(uuid "e04aad68-99a0-4e26-8db7-67fc9d53b064")
-	)
-	(wire
-		(pts
-			(xy 306.07 54.61) (xy 308.61 54.61)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e069c03b-8782-4866-892d-eac9d6e2a56f")
 	)
 	(wire
 		(pts
@@ -35481,73 +35465,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R")
-		(at 306.07 46.99 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "68e4aa1e-83b9-476b-92d9-8060118163e0")
-		(property "Reference" "R29"
-			(at 303.784 46.99 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "10k"
-			(at 306.07 46.99 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
-			(at 307.848 46.99 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 306.07 46.99 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Resistor"
-			(at 306.07 46.99 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "8468c0f9-de5b-4757-adc0-b4a5fdcceafb")
-		)
-		(pin "2"
-			(uuid "95dc6fa7-8f86-46c8-918d-59347066cdcd")
-		)
-		(instances
-			(project "mainboard"
-				(path "/cefc859f-34fb-418b-9c7c-f7e62c11b64f"
-					(reference "R29")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:C_Polarized")
 		(at 430.53 39.37 0)
 		(unit 1)
@@ -37671,72 +37588,6 @@
 			(project "mainboard"
 				(path "/cefc859f-34fb-418b-9c7c-f7e62c11b64f"
 					(reference "C37")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:GND")
-		(at 71.12 304.8 270)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "8406b0c5-545d-48e1-9402-701666e76b86")
-		(property "Reference" "#PWR048"
-			(at 64.77 304.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 67.31 304.8001 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" ""
-			(at 71.12 304.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 71.12 304.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 71.12 304.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "463f6046-8e55-4900-9b25-4d6081681ab2")
-		)
-		(instances
-			(project "mainboard"
-				(path "/cefc859f-34fb-418b-9c7c-f7e62c11b64f"
-					(reference "#PWR048")
 					(unit 1)
 				)
 			)

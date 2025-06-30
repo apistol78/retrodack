@@ -7,28 +7,54 @@ function main()
 	local FILES =
 	{
 		"pin-clock.csv",
-		-- "pin-lcd.csv",
+		"pin-lcd.csv",
 		"pin-uart.csv",
 		"pin-i2c.csv",
 		"pin-i2s.csv",
 		"pin-sd.csv",
-		-- "pin-usb-hci.csv",
+		"pin-usb-hci.csv",
+		"pin-sram.csv",
 		"pin-sdram.csv",
 		"pin-spi-flash.csv",
 	}
 
 	local first = true
+	local indexed = {}
 
 	for _, f in ipairs(FILES) do
 		local csv = CSV.load("docs/" .. f)
 		for _, r in pairs(csv.rows) do
 			local name = csv:getValue(r, "Signal")
 			local direction = csv:getValue(r, "Direction")
-
-			if not first then stdout:printLn(",") end
-			stdout:print(direction .. " " .. name)
-			first = false
+			local iname, idx = name:match("^(.+)%[(%d+)%]$")
+			if idx == nil then
+				if not first then stdout:printLn(",") end
+				stdout:print(direction .. " " .. name)
+				first = false
+			else
+				idx = tonumber(idx)
+				if indexed[iname] == nil then
+					indexed[iname] = {}
+					indexed[iname].direction = direction
+				end
+				if indexed[iname].from ~= nil then
+					indexed[iname].from = math.min(indexed[iname].from, idx)
+				else
+					indexed[iname].from = idx
+				end
+				if indexed[iname].to ~= nil then
+					indexed[iname].to = math.max(indexed[iname].to, idx)
+				else
+					indexed[iname].to = idx
+				end
+			end
 		end
+	end
+
+	for iname, tbl in pairs(indexed) do
+		if not first then stdout:printLn(",") end
+		stdout:print(tbl.direction .. " [" .. tbl.to .. ":" .. tbl.from .. "] " .. iname)
+		first = false
 	end
 
 	stdout:printLn("")

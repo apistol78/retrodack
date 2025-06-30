@@ -9,6 +9,8 @@
 
 `timescale 1ns/1ns
 
+`define FREQUENCY 100_000_000
+
 (* top *)
 module RetroDACK(
 	`include "RetroDACK_IO.sv"
@@ -16,62 +18,43 @@ module RetroDACK(
 	wire clock;
 	wire clock_sdram;
 	wire clock_video;
+	wire clock_locked;
 
 	assign LED_R = cpu_fault;
 	assign LED_G = !cpu_fault;
-	assign LED_B = 1'b0;
+	assign LED_B = 1'b0; // SD_EXTERNAL_CARD;
 
-	// CLK need to be tunneled through a primitive
-	// since it's not accessible as a user pin.
-	wire FLASH_CLK;
-	wire tristate = 1'b0;
-	USRMCLK u1 (.USRMCLKI(FLASH_CLK), .USRMCLKTS(tristate));
-
-	/*
-	// 125 MHz
-	`define FREQUENCY 125_000_000
-	PLL_ECP5 #(
-		.CLKI_DIV(1),
-		.CLKFB_DIV(5),
-		.CLKOP_DIV(5),
-		.CLKOP_CPHASE(0)
-	) pll(
-		.i_clk(CLOCK),
-		.o_clk1(clock),
-		.o_clk2(),
-		.o_clk_locked()
-	);
-	*/
+	// Input CLOCK is 25 MHz
 
 	// 100 MHz
 	// 100 MHz (7000 ps phase shift)
-	`define FREQUENCY 100_000_000
+	// 33.3 MHz
+	wire pll_locked;
 	PLL_ECP5 #(
 		.CLKI_DIV(1),
 		.CLKFB_DIV(4),
 		.CLKOP_DIV(6),
 		.CLKOP_CPHASE(0),
 		.CLKOS_DIV(6),
-		.CLKOS_CPHASE(5)
+		.CLKOS_CPHASE(5),
+		.CLKOS2_DIV(6*3),
+		.CLKOS2_CPHASE(0)
 	) pll(
 		.i_clk(CLOCK),
 		.o_clk1(clock),
 		.o_clk2(clock_sdram),
-		.o_clk_locked()
+		.o_clk3(clock_video),
+		.o_clk_locked(pll_locked)
 	);
 
-	// 36.72 MHz
-	PLL_ECP5 #(
-		.CLKI_DIV(86),
-		.CLKFB_DIV(126),
-		.CLKOP_DIV(11),
-		.CLKOP_CPHASE(0)
-	) pll_video(
-		.i_clk(CLOCK),
-		.o_clk1(clock_video),
-		.o_clk2(),
-		.o_clk_locked()
-	);
+	assign clock_locked = pll_locked;
+
+
+	// CLK need to be tunneled through a primitive
+	// since it's not accessible as a user pin.
+	wire FLASH_CLK;
+	wire tristate = 1'b0;
+	USRMCLK u1 (.USRMCLKI(FLASH_CLK), .USRMCLKTS(tristate));
 
 
 	//====================================================
@@ -80,7 +63,7 @@ module RetroDACK(
 
 	Reset rst(
 		.i_clock(clock),
-		.i_reset(uart_soft_reset),
+		.i_reset(uart_soft_reset || !clock_locked),
 		.o_reset(reset)
 	);
 
@@ -114,36 +97,12 @@ module RetroDACK(
 	wire [31:0] sdram_rdata;
 	wire sdram_ready;
 
-	wire [1:0] it_sdram_dqm;
-	wire [1:0] it_sdram_ba;
-	wire [12:0] it_sdram_addr;
 	logic [15:0] it_sdram_data_r;
 	wire [15:0] it_sdram_data_w;
 	wire it_sdram_data_rw;
 
-	assign SDRAM_DQM0 = it_sdram_dqm[0];
-	assign SDRAM_DQM1 = it_sdram_dqm[1];
-	assign SDRAM_BA0 = it_sdram_ba[0];
-	assign SDRAM_BA1 = it_sdram_ba[1];
-	assign SDRAM_A0 = it_sdram_addr[0];
-	assign SDRAM_A1 = it_sdram_addr[1];
-	assign SDRAM_A2 = it_sdram_addr[2];
-	assign SDRAM_A3 = it_sdram_addr[3];
-	assign SDRAM_A4 = it_sdram_addr[4];
-	assign SDRAM_A5 = it_sdram_addr[5];
-	assign SDRAM_A6 = it_sdram_addr[6];
-	assign SDRAM_A7 = it_sdram_addr[7];
-	assign SDRAM_A8 = it_sdram_addr[8];
-	assign SDRAM_A9 = it_sdram_addr[9];
-	assign SDRAM_A10 = it_sdram_addr[10];
-	assign SDRAM_A11 = it_sdram_addr[11];
-	assign SDRAM_A12 = it_sdram_addr[12];
-
-	assign 
-		{ SDRAM_DQ0, SDRAM_DQ1, SDRAM_DQ2, SDRAM_DQ3, SDRAM_DQ4, SDRAM_DQ5, SDRAM_DQ6, SDRAM_DQ7, SDRAM_DQ8, SDRAM_DQ9, SDRAM_DQ10, SDRAM_DQ11, SDRAM_DQ12, SDRAM_DQ13, SDRAM_DQ14, SDRAM_DQ15 } =
-		it_sdram_data_rw ? it_sdram_data_w : 16'hz;
-
-	assign it_sdram_data_r = { SDRAM_DQ0, SDRAM_DQ1, SDRAM_DQ2, SDRAM_DQ3, SDRAM_DQ4, SDRAM_DQ5, SDRAM_DQ6, SDRAM_DQ7, SDRAM_DQ8, SDRAM_DQ9, SDRAM_DQ10, SDRAM_DQ11, SDRAM_DQ12, SDRAM_DQ13, SDRAM_DQ14, SDRAM_DQ15 };
+	assign SDRAM_DQ = it_sdram_data_rw ? it_sdram_data_w : 16'hz;
+	assign it_sdram_data_r = SDRAM_DQ;
 
     SDRAM_controller #(
         .FREQUENCY(`FREQUENCY),
@@ -166,9 +125,9 @@ module RetroDACK(
 	    .sdram_cs_n(SDRAM_CE_n),
 	    .sdram_ras_n(SDRAM_RAS_n),
 	    .sdram_we_n(SDRAM_WE_n),
-	    .sdram_dqm(it_sdram_dqm),
-	    .sdram_bs(it_sdram_ba),
-	    .sdram_addr(it_sdram_addr),
+	    .sdram_dqm(SDRAM_DQM),
+	    .sdram_bs(SDRAM_BA),
+	    .sdram_addr(SDRAM_A),
 		.sdram_rdata(it_sdram_data_r),
 		.sdram_wdata(it_sdram_data_w),
 		.sdram_data_rw(it_sdram_data_rw)
@@ -311,7 +270,7 @@ module RetroDACK(
 
 	UART #(
 		.FREQUENCY(`FREQUENCY),
-		.BAUDRATE(230400), // 115200),
+		.BAUDRATE(115200),
 		.RX_FIFO_DEPTH(1024),
 		.TX_FIFO_DEPTH(64)
 	) uart(
@@ -495,50 +454,160 @@ module RetroDACK(
 
 
 	//====================================================
+	// VIDEO MEMORY
+
+	wire video_sram_request;
+	// wire video_sram_select;
+	wire video_sram_rw;
+	wire [31:0] video_sram_address;
+	wire [31:0] video_sram_wdata;
+	wire [31:0] video_sram_rdata;
+	wire video_sram_ready;
+
+	wire [15:0] video_sram_sram_d_w;
+	wire [15:0] video_sram_sram_d_r;
+	wire video_sram_sram_d_rw;
+
+	/*
+	genvar i;
+	generate
+		for (i = 0; i < 16; i = i + 1) begin
+			TRELLIS_IO #(
+				.DIR("BIDIR")
+			) iobuf_inst (
+				.B(SRAM_D[i]),
+				.I(video_sram_sram_d_w[i]),
+				.O(video_sram_sram_d_r[i]),
+				.T(~video_sram_sram_d_rw)	// T == 1 => high impedance
+			);
+		end
+	endgenerate
+	*/
+
+	assign SRAM_D = video_sram_sram_d_rw ? video_sram_sram_d_w : 16'hz;
+	assign video_sram_sram_d_r = SRAM_D;
+
+	SRAM_controller #(
+		.FREQUENCY(`FREQUENCY),
+		.SRAM_ADDRESS_WIDTH(20)
+	) video_sram(
+		.i_reset(reset),
+		.i_clock(clock),
+		
+		.i_request(video_sram_request),
+		.i_rw(video_sram_rw),
+
+		.i_address(video_sram_address),
+		.i_wdata(video_sram_wdata),
+		.o_rdata(video_sram_rdata),
+		.o_ready(video_sram_ready),
+
+		.SRAM_A(SRAM_A),
+		.SRAM_D_w(video_sram_sram_d_w),
+		.SRAM_D_r(video_sram_sram_d_r),
+		.SRAM_D_rw(video_sram_sram_d_rw),
+
+		.SRAM_CE_n(),
+		.SRAM_OE_n(SRAM_OE),
+		.SRAM_WE_n(SRAM_WE),
+		.SRAM_LB_n(),
+		.SRAM_UB_n()
+	);
+
+
+	//====================================================
+	// VIDEO MEMORY PORT
+	wire vram_pa_request;
+	wire vram_pa_rw;
+	wire [31:0] vram_pa_address;
+	wire [31:0] vram_pa_wdata;
+	wire [31:0] vram_pa_rdata;
+	wire vram_pa_ready;
+
+	wire vram_pb_request;
+	wire vram_pb_rw;
+	wire [31:0] vram_pb_address;
+	wire [31:0] vram_pb_wdata;
+	wire [31:0] vram_pb_rdata;
+	wire vram_pb_ready;
+
+	DualPort vram_bus(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		.o_bus_rw(video_sram_rw),
+		.o_bus_request(video_sram_request),
+		.i_bus_ready(video_sram_ready),
+		.o_bus_address(video_sram_address),
+		.i_bus_rdata(video_sram_rdata),
+		.o_bus_wdata(video_sram_wdata),
+
+		// Video output access.
+		.i_pb_rw(vram_pb_rw),
+		.i_pb_request(vram_pb_request),
+		.o_pb_ready(vram_pb_ready),
+		.i_pb_address(vram_pb_address),
+		.o_pb_rdata(vram_pb_rdata),
+		.i_pb_wdata(vram_pb_wdata),
+
+		// Video CPU access.
+		.i_pc_rw(vram_pa_rw),
+		.i_pc_request(vram_pa_request),
+		.o_pc_ready(vram_pa_ready),
+		.i_pc_address(vram_pa_address),
+		.o_pc_rdata(vram_pa_rdata),
+		.i_pc_wdata(vram_pa_wdata)
+	);
+
+
+	//====================================================
 	// VIDEO SIGNAL GENERATOR
-	wire vga_clock;
-	wire vga_hsync;
-	wire vga_vsync;
 	wire vga_hblank;
 	wire vga_vblank;
-	wire vga_data_enable;
 	wire [10:0] vga_pos_x;
 	wire [10:0] vga_pos_y;
+	wire [31:0] video_dac_rdata;
+
+	assign LCD_BACKLIGHT_CTRL = 1'b1;
+	
+	assign LCD_R = video_dac_rdata[7:0+2];
+	assign LCD_G = video_dac_rdata[15:8+2];
+	assign LCD_B = video_dac_rdata[23:16+2];
 
 	VIDEO_VGA #(
 		// 720 0 20 20 40 720 0 15 15 15 0 0 0 60 0 36720000 4
-		.HLINE(720+20+40),	    // whole line
-		.HBACK(40),		        // back porch
-		.HFRONT(20),	        // front porch
-		.HPULSE(20),	        // sync pulse
-		.VLINE(720+15+15+15),    // whole frame
-		.VBACK(15),		        // back porch
-		.VFRONT(15),	        // front porch
-		.VPULSE(15),	        // sync pulse
+		.USE_CLOCK_OUT(0),
+		.HLINE(720),	// horizontal pixels
+		.HBACK(40),		// back porch
+		.HFRONT(20),	// front porch
+		.HPULSE(20),	// sync pulse
+		.VLINE(720),	// vertical lines
+		.VBACK(15),		// back porch
+		.VFRONT(15),	// front porch
+		.VPULSE(15),	// sync pulse
 		.VSPOL(0),
 		.HSPOL(0)
 	) vga(
 		.i_clock(clock_video),
 		.i_clock_out(clock),
-		.o_clock(vga_clock),
-		.o_hsync(vga_hsync),
-		.o_vsync(vga_vsync),
+		.o_clock(LCD_CLK),
+		.o_hsync(LCD_HSYNC),
+		.o_vsync(LCD_VSYNC),
 		.o_hblank(vga_hblank),
 		.o_vblank(vga_vblank),
-		.o_data_enable(vga_data_enable),
+		.o_data_enable(LCD_ENABLE),
 		.o_pos_x(vga_pos_x),
 		.o_pos_y(vga_pos_y)
 	);
 
-/*
+
 	//====================================================
-	// VIDEO
+	// VIDEO CONTROLLER
 	wire video_select;
 	wire [31:0] video_address;
 	wire [31:0] video_wdata;
 	wire [31:0] video_rdata;
 	wire video_ready;	
-	wire [31:0] video_dac_rdata;
 
 	VIDEO_controller #(
 		.MAX_PITCH(720)
@@ -561,21 +630,21 @@ module RetroDACK(
 		.o_video_rdata(video_dac_rdata),
 		
 		// Video RAM interface.
-		.o_vram_pa_request(),
-		.o_vram_pa_rw(),
-		.o_vram_pa_address(),
-		.o_vram_pa_wdata(),
-		.i_vram_pa_rdata(0),
-		.i_vram_pa_ready(1'b1),
+		.o_vram_pa_request(vram_pa_request),
+		.o_vram_pa_rw(vram_pa_rw),
+		.o_vram_pa_address(vram_pa_address),
+		.o_vram_pa_wdata(vram_pa_wdata),
+		.i_vram_pa_rdata(vram_pa_rdata),
+		.i_vram_pa_ready(vram_pa_ready),
 
-		.o_vram_pb_request(),
-		.o_vram_pb_rw(),
-		.o_vram_pb_address(),
-		.o_vram_pb_wdata(),
-		.i_vram_pb_rdata(0),
-		.i_vram_pb_ready(1'b1)
+		.o_vram_pb_request(vram_pb_request),
+		.o_vram_pb_rw(vram_pb_rw),
+		.o_vram_pb_address(vram_pb_address),
+		.o_vram_pb_wdata(vram_pb_wdata),
+		.i_vram_pb_rdata(vram_pb_rdata),
+		.i_vram_pb_ready(vram_pb_ready)
 	);
-*/
+
 
 	//====================================================
 	// Bridge
@@ -639,9 +708,9 @@ module RetroDACK(
 	assign plic_address = bridge_far_address[23:0];
 	assign plic_wdata = bridge_far_wdata;
 
-	// assign video_select = bridge_far_address[27:24] == 4'ha;
-	// assign video_address = { 8'h0, bridge_far_address[23:0] };
-	// assign video_wdata = bridge_far_wdata;
+	assign video_select = bridge_far_address[27:24] == 4'ha;
+	assign video_address = { 8'h0, bridge_far_address[23:0] };
+	assign video_wdata = bridge_far_wdata;
 
 	assign bridge_far_rdata =
 		uart_select	? uart_rdata				:
@@ -650,7 +719,7 @@ module RetroDACK(
 		timer_select ? timer_rdata				:
 		audio_select ? audio_rdata				:
 		plic_select ? plic_rdata				:
-		//video_select ? video_rdata				:
+		video_select ? video_rdata				:
 		32'h00000000;
 	
 	assign bridge_far_ready =
@@ -660,7 +729,7 @@ module RetroDACK(
 		timer_select ? timer_ready				:
 		audio_select ? audio_ready				:
 		plic_select ? plic_ready				:
-		//video_select ? video_ready				:
+		video_select ? video_ready				:
 		1'b0;
 
 

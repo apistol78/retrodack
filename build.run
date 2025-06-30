@@ -18,6 +18,9 @@ local PATH_PERIFHERIALS < const > = "../klara-rv/rtl"
 local SOURCE < const > =
 {
 	PATH_SOC .. "/RetroDACK.sv",
+	-- PATH_SOC .. "/RetroDACK_VGA.sv",
+	-- PATH_SOC .. "/RetroDACK_SRAM.sv",
+	-- Library
 	PATH_PERIFHERIALS .. "/audio/AUDIO_controller.sv",
 	PATH_PERIFHERIALS .. "/audio/AUDIO_i2s_output.sv",
 	PATH_PERIFHERIALS .. "/block/BRAM.sv",
@@ -28,11 +31,13 @@ local SOURCE < const > =
 	PATH_PERIFHERIALS .. "/flash/SPI_Flash.sv",
 	PATH_PERIFHERIALS .. "/misc/Bridge.sv",
 	PATH_PERIFHERIALS .. "/misc/ClockDivider.sv",
+	PATH_PERIFHERIALS .. "/misc/DualPort.sv",
 	PATH_PERIFHERIALS .. "/misc/Reset.sv",
 	PATH_PERIFHERIALS .. "/misc/Timer.sv",
 	PATH_PERIFHERIALS .. "/misc/WriteBuffer.sv",
 	PATH_PERIFHERIALS .. "/sdcard/SD.sv",
 	PATH_PERIFHERIALS .. "/sdram/SDRAM_controller.sv",
+	PATH_PERIFHERIALS .. "/sram/SRAM_controller.sv",
 	PATH_PERIFHERIALS .. "/uart/UART.sv",
 	PATH_PERIFHERIALS .. "/uart/UART_RX.sv",
 	PATH_PERIFHERIALS .. "/uart/UART_TX.sv",
@@ -267,31 +272,45 @@ local function buildEmulatorFS()
 end
 
 function main()
+	local compile < const > = run.commandLine:hasOption("compile")
 	local synthesize < const > = run.commandLine:hasOption("synth")
-	local program < const > = run.commandLine:hasOption("prog")
 	local flash < const > = run.commandLine:hasOption("flash")
+	local program < const > = run.commandLine:hasOption("prog") or flash
 	local emulation < const > = run.commandLine:hasOption("emu")
 	local launch < const > = run.commandLine:hasOption("launch")
 
-	-- Compile firmware and tools.
-	if os.identifier == "windows" then
-		if not buildHostWin64() then return 1 end
-	else
-		if not buildRV() then return 1 end
-		if not buildHostLinux() then return 1 end
-	end
+	local rtl < const > = "RetroDACK"
+	-- local rtl < const > = "RetroDACK_VGA"
+	-- local rtl < const > = "RetroDACK_SRAM"
+	local flash_fw < const > = true
 
-	-- Build filesystem folder for emulator.
-	if not buildEmulatorFS() then return 1 end
+	-- Compile firmware and tools.
+	if compile then
+		if os.identifier == "windows" then
+			if not buildHostWin64() then return 1 end
+		else
+			if not buildRV() then return 1 end
+			if not buildHostLinux() then return 1 end
+		end
+
+		-- Build filesystem folder for emulator.
+		if not buildEmulatorFS() then return 1 end
+	end
 
 	-- Synthesize system.
 	if synthesize then
 
 		-- Create constraints.
+		stdout:printLn("==============================")
+		stdout:printLn("Generating constraints...")
+		stdout:printLn("==============================")
 		run:run("./generate-constraints.run", "rtl/Constraints.lpf")
 		run:run("./generate-top-io.run", "rtl/RetroDACK_IO.sv")
 
 		-- Convert all source files into Verilog.
+		stdout:printLn("==============================")
+		stdout:printLn("Generating verilog...")
+		stdout:printLn("==============================")
 		local f = ""
 		for _, sv in ipairs(SOURCE) do
 			local v = sv2v(
@@ -306,13 +325,16 @@ function main()
 		stdout:printLn(f)
 
 		-- Ensure old bit file is removed.
-		run:rm("build/RetroDACK.bit")
-		run:rm("build/RetroDACK.json")
-		run:rm("build/RetroDACK.log")
+		run:rm("build/" .. rtl .. ".bit")
+		run:rm("build/" .. rtl .. ".json")
+		run:rm("build/" .. rtl .. ".log")
 
 		-- Synthesize
+		stdout:printLn("==============================")
+		stdout:printLn("Synthesize...")
+		stdout:printLn("==============================")
 		local tmr = Timer()
-		local xc = run:execute("yosys -l build/RetroDACK.log -p \"opt; share -aggressive; synth_ecp5 -abc9 -json build/RetroDACK.json\" " .. f)
+		local xc = run:execute("yosys -l build/" .. rtl .. ".log -p \"opt; share -aggressive; synth_ecp5 -abc9 -json build/" .. rtl .. ".json\" " .. f)
 		if xc ~= 0 then
 			stderr:printLn("yosys failed; build aborted.")
 			return 1
@@ -320,8 +342,11 @@ function main()
 		local duration_yosys = tmr.elapsedTime
 
 		-- Place and route.
+		stdout:printLn("==============================")
+		stdout:printLn("Place and route...")
+		stdout:printLn("==============================")
 		local tmr = Timer()
-		local xc = run:execute("nextpnr-ecp5 --25k --package CABGA256 --speed 6 --timing-allow-fail --top RetroDACK --json build/RetroDACK.json --textcfg build/RetroDACK.config --lpf rtl/Constraints.lpf --report build/RetroDACK.report.json --freq 100")
+		local xc = run:execute("nextpnr-ecp5 --25k --package CABGA256 --speed 6 --timing-allow-fail --top " .. rtl .. " --json build/" .. rtl .. ".json --textcfg build/" .. rtl .. ".config --lpf rtl/Constraints.lpf --report build/" .. rtl .. ".report.json --freq 100")
 		if xc ~= 0 then
 			stderr:printLn("nextpnr-ecp5 failed; build aborted.")
 			return 1
@@ -329,7 +354,10 @@ function main()
 		local duration_nextpnr = tmr.elapsedTime
 
 		-- Create bit file.
-		local xc = run:execute("ecppack --compress --svf build/RetroDACK.svf build/RetroDACK.config build/RetroDACK.bit")
+		stdout:printLn("==============================")
+		stdout:printLn("Generating bit file...")
+		stdout:printLn("==============================")
+		local xc = run:execute("ecppack --compress --svf build/" .. rtl .. ".svf build/" .. rtl .. ".config build/" .. rtl .. ".bit")
 		if xc ~= 0 then
 			stderr:printLn("ecppack failed; build aborted.")
 			return 1
@@ -344,18 +372,29 @@ function main()
 		local xc = 0
 
 		-- Write firmware binary to target flash; this is executed in place thus need to be a flat binary.
-		local offset < const > = 0x100000
-		xc = run:execute("openFPGALoader -c cmsisdap -f --vid=0x1d50 --pid=0x602b --skip-reset -o " .. string.format("0x%08x", offset) .. " ./build/rv/ReleaseStatic/Firmware.bin")
-		if xc ~= 0 then
-			stderr:printLn("openFPGALoader failed to write firmware to SPI flash; build aborted.")
-			return 1
+		if flash_fw then
+			stdout:printLn("==============================")
+			stdout:printLn("Flashing firmware...")
+			stdout:printLn("==============================")
+			local offset < const > = 0x100000
+			xc = run:execute("openFPGALoader -c cmsisdap -f --vid=0x1d50 --pid=0x602b --skip-reset -o " .. string.format("0x%08x", offset) .. " ./build/rv/ReleaseStatic/Firmware.bin")
+			if xc ~= 0 then
+				stderr:printLn("openFPGALoader failed to write firmware to SPI flash; build aborted.")
+				return 1
+			end
 		end
 
 		-- Write FPGA bitstream, either to SRAM or to target flash.
 		if flash then
-			xc = run:execute("openFPGALoader -c cmsisdap -f --vid=0x1d50 --pid=0x602b ./build/RetroDACK.bit")
+			stdout:printLn("==============================")
+			stdout:printLn("Flashing bit file...")
+			stdout:printLn("==============================")
+			xc = run:execute("openFPGALoader -c cmsisdap -f --vid=0x1d50 --pid=0x602b ./build/" .. rtl .. ".bit")
 		else
-			xc = run:execute("openFPGALoader -c cmsisdap --vid=0x1d50 --pid=0x602b ./build/RetroDACK.bit")
+			stdout:printLn("==============================")
+			stdout:printLn("Uploading bit file to SRAM...")
+			stdout:printLn("==============================")
+			xc = run:execute("openFPGALoader -c cmsisdap --vid=0x1d50 --pid=0x602b ./build/" .. rtl .. ".bit")
 		end
 		if xc ~= 0 then
 			stderr:printLn("openFPGALoader failed to write bitstream to target; build aborted.")

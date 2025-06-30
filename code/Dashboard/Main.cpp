@@ -20,6 +20,15 @@ int main()
 	// kernel_create_thread(&thread_1);
 	// kernel_create_thread(&thread_2);
 
+
+
+	printf("enum disk...\n");
+	file_enumerate("", 0, [](void* user, const char* filename, uint32_t size, uint8_t directory){
+		printf("\"%s\"\n", filename);
+	});
+
+
+/*
 	const int32_t fd = file_open("SPLASH", FILE_MODE_READ);
 	
 	uint8_t pal[256 * 4];
@@ -34,7 +43,6 @@ int main()
 
 	hal_video_present();
 
-
 	uint8_t out[256 * 4];
 	for (int i = 0; i < 256; ++i)
 	{
@@ -46,17 +54,34 @@ int main()
 
 		hal_timer_wait_ms(30);
 	}
+*/
 
 
-	for (;;)
+	hal_video_set_palette(0, 0x00000000);
+	hal_video_set_palette(1, 0xffffffff);
+	
+	for (int i = 0;; ++i)
 	{
-		printf("... play %d...\n", offset);
+		volatile uint32_t* fb = (volatile uint32_t*)hal_video_get_secondary_target();
+		for (int32_t i = 0; i < 720 * 720 / 4; ++i)
+		{
+			fb[i] = 0x00010001;
+		}
+		hal_video_present();
+	}
 
-		rt_audio_play_mono(&ptr[offset], 1024);
 
-		offset += 1024;
-		if (offset * 2 >= fs)
-			offset = 0;
+
+	for (int32_t i = 0;; ++i)
+	{
+		// printf("... play %d...\n", offset);
+
+		// printf("playing %d...\n", i);
+		// rt_audio_play_mono(ptr, 1024);
+
+		// offset += 1024;
+		// if (offset * 2 >= fs)
+		// 	offset = 0;
 	}
 
 	return 0;

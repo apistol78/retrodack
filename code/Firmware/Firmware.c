@@ -188,36 +188,16 @@ int main()
 		memset(dest, 0, len);
 	}
 
-	//crt_init();
-	runtime_init();
+	// runtime_init();
 
-	// Load splash screen.
-	const int32_t fd = file_open("splash", FILE_MODE_READ);
-	if (fd >= 0)
-	{
-		for (int i = 0; i < 256; ++i)
-		{
-			static uint32_t pal;
-			file_read(fd, &pal, 4);
-			rt_video_set_palette(i, pal);
-		}
-
-		void* fb = hal_video_get_secondary_target();
-		if (fb)
-		{
-			file_read(fd, fb, 720 * 720);
-			rt_video_present();
-		}
-
-		file_close(fd);
-	}
-
+	/*
 	// Try to execute BOOT executable from SD
 	// card, if available.
 	{
 		const int32_t r = rt_elf_launch("doom");
 		printf("No exectuable (error: %d)\n", r);
 	}
+	*/
 
 	// No BOOT executable; enter remote control mode.
 	remote_control();

@@ -1,5 +1,5 @@
 SODIMM,Designator,FPGA,Signal,Direction
-,PB13A,R8,I2S_SDOUT,output
-,PT11A,C4,I2S_LRCK,output
-,PL2C,C3,I2S_SCLK,output
-,PL5C,E3,I2S_MCLK,output
+70,PR17C,J13,I2S_SDOUT,output
+66,PR29A,K13,I2S_SCLK,output
+68,PR20C,J14,I2S_LRCK,output
+64,PR20D,K14,I2S_MCLK,output
