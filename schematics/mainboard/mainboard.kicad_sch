@@ -4225,23 +4225,25 @@
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(property "Reference" "J"
-				(at -11.938 19.304 0)
+			(property "Reference" "J1"
+				(at 2.1433 22.86 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(justify left)
 				)
 			)
 			(property "Value" "SD_Card_Receptacle"
-				(at 10.922 -19.558 0)
+				(at 2.1433 20.32 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(justify left)
 				)
 			)
-			(property "Footprint" ""
+			(property "Footprint" "DM1AA-SF-PEJ(82):RetroDACK SD_Hirose_DM1AA_SF_PEJ82"
 				(at 8.89 -3.302 0)
 				(effects
 					(font
@@ -4260,6 +4262,15 @@
 				)
 			)
 			(property "Description" "SD card receptacle"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "LCSC" "C506790"
 				(at 0 0 0)
 				(effects
 					(font
@@ -4627,6 +4638,24 @@
 						)
 					)
 					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 15.24 12.7 180)
+					(length 2.54)
+					(name "CARD_DETECT"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "14"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -17092,6 +17121,12 @@
 		(uuid "45553c0c-9bf4-4fdd-afba-e5794c55da98")
 	)
 	(junction
+		(at 307.34 40.64)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "45591ffb-ab67-4b96-a5ff-dca4b2998703")
+	)
+	(junction
 		(at 635 367.03)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -22223,6 +22258,16 @@
 	)
 	(wire
 		(pts
+			(xy 297.18 52.07) (xy 307.34 52.07)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9a62e02c-53f6-4c93-86bb-6bbc0eff2fd8")
+	)
+	(wire
+		(pts
 			(xy 712.47 114.3) (xy 702.31 114.3)
 		)
 		(stroke
@@ -23843,6 +23888,16 @@
 	)
 	(wire
 		(pts
+			(xy 307.34 40.64) (xy 323.85 40.64)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d6d93b9a-f89d-4f54-a717-0bdc17c042ca")
+	)
+	(wire
+		(pts
 			(xy 396.24 285.75) (xy 400.05 285.75)
 		)
 		(stroke
@@ -23943,7 +23998,7 @@
 	)
 	(wire
 		(pts
-			(xy 281.94 40.64) (xy 323.85 40.64)
+			(xy 281.94 40.64) (xy 307.34 40.64)
 		)
 		(stroke
 			(width 0)
@@ -24790,6 +24845,16 @@
 			(type default)
 		)
 		(uuid "f706cda5-bcf9-4ac8-97ba-e1f67d228fb8")
+	)
+	(wire
+		(pts
+			(xy 307.34 52.07) (xy 307.34 40.64)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f7ad9a3f-022a-4291-8eee-a79efdda86ec")
 	)
 	(wire
 		(pts
@@ -40269,6 +40334,9 @@
 		)
 		(pin "9"
 			(uuid "36564826-54ee-412b-800e-464a38faecd7")
+		)
+		(pin "14"
+			(uuid "f217c018-a6ef-416f-b8e3-c4e50151009c")
 		)
 		(instances
 			(project ""

@@ -22,8 +22,8 @@
       "keepouts": false,
       "lockedItems": false,
       "otherItems": false,
-      "pads": true,
-      "text": false,
+      "pads": false,
+      "text": true,
       "tracks": false,
       "vias": false,
       "zones": false

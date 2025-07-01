@@ -17677,15 +17677,6 @@
 			(pintype "output")
 			(uuid "d7ff64c2-ed6e-44dd-8919-14c3f49cc58b")
 		)
-		(pad "10" smd rect
-			(at -13.6 8 270)
-			(size 2 1)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(net 132 "SD_CARD")
-			(pinfunction "CARD_DETECT")
-			(pintype "output")
-			(uuid "83e98523-6a9e-4408-9f04-c789d339b3d8")
-		)
 		(pad "11" smd rect
 			(at -13.6 5.4 270)
 			(size 2 1)
@@ -17711,7 +17702,7 @@
 			(net 119 "GND")
 			(pinfunction "SHELL1")
 			(pintype "passive")
-			(uuid "87768ab5-4479-478f-8482-ecd81c70d73e")
+			(uuid "0f5c3651-379b-4d0f-a9f6-2e233f23edeb")
 		)
 		(pad "13" smd rect
 			(at 14.5 -8.2 270)
@@ -17729,7 +17720,16 @@
 			(net 119 "GND")
 			(pinfunction "SHELL2")
 			(pintype "passive")
-			(uuid "18a3c001-93a9-4569-92fa-2d5c83c8fe6e")
+			(uuid "4e70bd0e-bd5e-402e-9944-fce3388e7fcd")
+		)
+		(pad "14" smd rect
+			(at -13.6 8 270)
+			(size 2 1)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(net 257 "3V3_LCD")
+			(pinfunction "CARD_DETECT")
+			(pintype "input")
+			(uuid "83e98523-6a9e-4408-9f04-c789d339b3d8")
 		)
 		(embedded_fonts no)
 		(model "C:/private/retrodack/schematics/libraries/DM1AA-SF-PEJ(82)/DM1AA-SF-PEJ(82).pretty/RetroDACK SD_Hirose_DM1AA_SF_PEJ82.step"
@@ -33685,7 +33685,7 @@
 			(justify left bottom)
 		)
 	)
-	(gr_text "Revision 1"
+	(gr_text "Revision 2"
 		(at 174.63841 178.6 0)
 		(layer "F.SilkS")
 		(uuid "b0ab2cc7-fda6-4474-9977-643d16253c0a")
@@ -33782,7 +33782,7 @@
 		)
 	)
 	(gr_text "SD_CARD pad should connect to 5V0 since it's a switch"
-		(at 95.7 121.3 0)
+		(at 57.25 113.3 0)
 		(layer "Cmts.User")
 		(uuid "2f2b0b0a-f4d7-4323-9238-c04602cc57ba")
 		(effects
@@ -67754,6 +67754,14 @@
 		(uuid "11010097-36ee-42d4-9d90-59a7a5f48f9f")
 	)
 	(segment
+		(start 113.5 121.9)
+		(end 113.5 117.55)
+		(width 0.3)
+		(layer "F.Cu")
+		(net 257)
+		(uuid "1e2e48f3-2f74-4b0a-af72-0ef0031b6f9e")
+	)
+	(segment
 		(start 140.05 135.05)
 		(end 141.9125 136.9125)
 		(width 0.4)
@@ -67800,6 +67808,14 @@
 		(layer "F.Cu")
 		(net 257)
 		(uuid "3b9a6e9c-c881-41e8-9d49-f2e1c83aaaf7")
+	)
+	(segment
+		(start 114.45 116.6)
+		(end 117.1 116.6)
+		(width 0.3)
+		(layer "F.Cu")
+		(net 257)
+		(uuid "3c7eb760-0a08-4881-9b9f-a97dbaf4fae8")
 	)
 	(segment
 		(start 126.55 110.45)
@@ -67906,6 +67922,14 @@
 		(uuid "a67d70a6-76f4-4418-b744-5e32c2da1844")
 	)
 	(segment
+		(start 113.5 117.55)
+		(end 114.45 116.6)
+		(width 0.3)
+		(layer "F.Cu")
+		(net 257)
+		(uuid "a6fb3bb4-95ff-41ad-baca-6cbfa9541aaf")
+	)
+	(segment
 		(start 145.6 105.766)
 		(end 145.6 101.2)
 		(width 0.3)
@@ -67978,12 +68002,28 @@
 		(uuid "de338341-4fef-4757-9674-9915bc18afab")
 	)
 	(segment
+		(start 118 115.7)
+		(end 118 112.8)
+		(width 0.3)
+		(layer "F.Cu")
+		(net 257)
+		(uuid "e6069944-57a5-4102-bdf3-c9cce7ab7fe6")
+	)
+	(segment
 		(start 185.75 102.95)
 		(end 184 101.2)
 		(width 0.4)
 		(layer "F.Cu")
 		(net 257)
 		(uuid "e6f85310-e9ec-4f9d-9021-2515a980da2e")
+	)
+	(segment
+		(start 117.1 116.6)
+		(end 118 115.7)
+		(width 0.3)
+		(layer "F.Cu")
+		(net 257)
+		(uuid "e723bf83-2487-47ed-9053-d923f675bf49")
 	)
 	(segment
 		(start 126.8 113.6)
