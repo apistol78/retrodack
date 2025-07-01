@@ -14,10 +14,13 @@
 #define RT_INPUT_BUTTON_B	(1 << 1)
 #define RT_INPUT_BUTTON_C	(1 << 2)
 #define RT_INPUT_BUTTON_D	(1 << 3)
-#define RT_INPUT_DPAD_N		(1 << 4)
-#define RT_INPUT_DPAD_S		(1 << 5)
-#define RT_INPUT_DPAD_E		(1 << 6)
-#define RT_INPUT_DPAD_W		(1 << 7)
+#define RT_INPUT_BUTTON_S1	(1 << 4)
+#define RT_INPUT_BUTTON_S2	(1 << 5)
+#define RT_INPUT_DPAD_N		(1 << 6)
+#define RT_INPUT_DPAD_S		(1 << 7)
+#define RT_INPUT_DPAD_E		(1 << 8)
+#define RT_INPUT_DPAD_W		(1 << 9)
+#define RT_INPUT_TB		    (1 << 10)
 
 EXTERN_C int32_t rt_input_init();
 

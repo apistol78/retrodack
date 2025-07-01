@@ -6,7 +6,7 @@
 			"label": "Compile",
 			"group": "build",
 			"linux": {
-				"command": ". ${workspaceRoot}/3rdp/oss-cad-suite-build/oss-cad-suite/environment;${workspaceRoot}/../traktor/bin/linux/releasestatic/Traktor.Run.App ${workspaceRoot}/build.run;",
+				"command": ". ${workspaceRoot}/3rdp/oss-cad-suite-build/oss-cad-suite/environment;${workspaceRoot}/../traktor/bin/linux/releasestatic/Traktor.Run.App ${workspaceRoot}/build.run --compile;",
 				"problemMatcher": [
 					"$gcc"
 				]
@@ -17,7 +17,7 @@
 			"label": "Compile+Synthesize",
 			"group": "build",
 			"linux": {
-				"command": ". ${workspaceRoot}/3rdp/oss-cad-suite-build/oss-cad-suite/environment;${workspaceRoot}/../traktor/bin/linux/releasestatic/Traktor.Run.App ${workspaceRoot}/build.run --synth;",
+				"command": ". ${workspaceRoot}/3rdp/oss-cad-suite-build/oss-cad-suite/environment;${workspaceRoot}/../traktor/bin/linux/releasestatic/Traktor.Run.App ${workspaceRoot}/build.run --compile --synth;",
 				"problemMatcher": [
 					"$gcc"
 				]
@@ -28,7 +28,7 @@
 			"label": "Compile+Synthesize+Program",
 			"group": "build",
 			"linux": {
-				"command": ". ${workspaceRoot}/3rdp/oss-cad-suite-build/oss-cad-suite/environment;${workspaceRoot}/../traktor/bin/linux/releasestatic/Traktor.Run.App ${workspaceRoot}/build.run --synth --prog;",
+				"command": ". ${workspaceRoot}/3rdp/oss-cad-suite-build/oss-cad-suite/environment;${workspaceRoot}/../traktor/bin/linux/releasestatic/Traktor.Run.App ${workspaceRoot}/build.run --compile --synth --prog;",
 				"problemMatcher": [
 					"$gcc"
 				]
@@ -39,7 +39,7 @@
 			"label": "Compile+Synthesize+Flash",
 			"group": "build",
 			"linux": {
-				"command": ". ${workspaceRoot}/3rdp/oss-cad-suite-build/oss-cad-suite/environment;${workspaceRoot}/../traktor/bin/linux/releasestatic/Traktor.Run.App ${workspaceRoot}/build.run --synth --prog --flash;",
+				"command": ". ${workspaceRoot}/3rdp/oss-cad-suite-build/oss-cad-suite/environment;${workspaceRoot}/../traktor/bin/linux/releasestatic/Traktor.Run.App ${workspaceRoot}/build.run --compile --synth --prog --flash;",
 				"problemMatcher": [
 					"$gcc"
 				]

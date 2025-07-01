@@ -188,16 +188,14 @@ int main()
 		memset(dest, 0, len);
 	}
 
-	// runtime_init();
+	runtime_init();
 
-	/*
 	// Try to execute BOOT executable from SD
 	// card, if available.
 	{
 		const int32_t r = rt_elf_launch("doom");
 		printf("No exectuable (error: %d)\n", r);
 	}
-	*/
 
 	// No BOOT executable; enter remote control mode.
 	remote_control();

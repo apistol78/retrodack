@@ -44,9 +44,9 @@ static int32_t s_absX = 0;
 static int32_t s_absY = 0;
 static int32_t s_deltaX = 0;
 static int32_t s_deltaY = 0;
-static int32_t s_pressed = 0;
+static uint32_t s_pressed = 0;
 
-static void input_interrupt(uint32_t source)
+static void tb_input_interrupt(uint32_t source)
 {
 	uint8_t data[5] = { 0, 0, 0, 0, 0 };
 	hal_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5);
@@ -71,7 +71,30 @@ static void input_interrupt(uint32_t source)
 	s_deltaY -= data[2];
 	s_deltaY += data[3];
 
-	s_pressed = data[4];
+	if (data[4])
+		s_pressed |= RT_INPUT_TB;
+	else
+		s_pressed &= ~RT_INPUT_TB;
+}
+
+static void gpio_input_interrupt(uint32_t source)
+{
+	uint8_t data[2] = { 0, 0 };
+	hal_i2c_read(0x0a, 0x00, data, 2);
+
+#define S(dn, bit, mask) \
+	if (data[dn] & bit) { s_pressed |= mask; } else { s_pressed &= ~mask; }
+
+	S(0, 1, RT_INPUT_BUTTON_A);
+	S(0, 2, RT_INPUT_BUTTON_B);
+	S(0, 4, RT_INPUT_BUTTON_C);
+	S(0, 8, RT_INPUT_BUTTON_D);
+	S(0, 16, RT_INPUT_BUTTON_S1);
+	S(0, 32, RT_INPUT_BUTTON_S2);
+	S(0, 64, RT_INPUT_DPAD_N);
+	S(0, 128, RT_INPUT_DPAD_S);
+	S(1, 1, RT_INPUT_DPAD_E);
+	S(1, 2, RT_INPUT_DPAD_W);
 }
 
 int32_t rt_input_init()
@@ -97,8 +120,9 @@ int32_t rt_input_init()
 		return 1;
 	}
 
-	// Set input interrupt handler.
-	hal_interrupt_set_handler(IRQ_SOURCE_PLIC_0, input_interrupt);
+	// Set input interrupt handlers.
+	hal_interrupt_set_handler(IRQ_SOURCE_PLIC_0, tb_input_interrupt);
+	hal_interrupt_set_handler(IRQ_SOURCE_PLIC_1, gpio_input_interrupt);
 
 	// Enable interrupt pin; notify CPU everytime
 	// track ball position change.
@@ -129,5 +153,5 @@ void rt_input_get_delta_position(int32_t* pos)
 
 uint32_t rt_input_get_state()
 {
-	return (uint32_t)s_pressed;
+	return s_pressed;
 }

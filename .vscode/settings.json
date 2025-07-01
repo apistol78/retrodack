@@ -5,6 +5,17 @@
         "fstream": "cpp",
         "functional": "cpp",
         "sstream": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "optional": "cpp",
+        "ratio": "cpp",
+        "system_error": "cpp",
+        "array": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp",
+        "variant": "cpp",
+        "istream": "cpp",
+        "ostream": "cpp",
+        "compare": "cpp"
     }
 }

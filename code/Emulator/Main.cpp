@@ -54,6 +54,7 @@
 
 //
 #include "Emulator/FileSystemImage.h"
+#include "Emulator/GPIOExtender.h"
 #include "Emulator/LoadELF.h"
 #include "Emulator/LoadHEX.h"
 #include "Emulator/TrackBallDevice.h"
@@ -126,6 +127,9 @@ int main(int argc, const char** argv)
 	TrackBallDevice tb;
 	i2c.addSlave(0x0a, &tb);
 
+	GPIOExtender gpio;
+	i2c.addSlave(0x40, &gpio);
+
 	Bus bus;
 	bus.map(0x00000000, 0x00000000 + rom.getCapacity(), false, false, &rom);
  	bus.map(0x20000000, 0x20000000 + sdram.getCapacity(), true, false, &sdram);
@@ -150,7 +154,8 @@ int main(int argc, const char** argv)
 
 	tmr.setCallback([&](){ cpu.interrupt(TIMER); });
 	tb.setCallback([&](){ plic.raise(0); }); // Input interrupt
-	audio.setCallback([&]() { /*plic.raise(1);*/ }); // Audio interrupt
+	gpio.setCallback([&](){ plic.raise(1); }); // GPIO interrupt
+	audio.setCallback([&]() { plic.raise(2); }); // Audio interrupt
 
 	if (cmdLine.hasOption(L'e', L"elf"))
 	{
@@ -211,7 +216,79 @@ int main(int argc, const char** argv)
 		mousePosition = event->getPosition();
 		tb.accumulateMovement(d.cx, d.cy);
 	});
+	image->addEventHandler< ui::KeyDownEvent >([&](ui::KeyDownEvent* event) {
+		switch (event->getVirtualKey())
+		{
+		case ui::Vk1:
+			gpio.setInputBit(0, true);
+			break;
+		case ui::Vk2:
+			gpio.setInputBit(1, true);
+			break;
+		case ui::Vk3:
+			gpio.setInputBit(2, true);
+			break;
+		case ui::Vk4:
+			gpio.setInputBit(3, true);
+			break;
+		case ui::Vk5:
+			gpio.setInputBit(4, true);
+			break;
+		case ui::Vk6:
+			gpio.setInputBit(5, true);
+			break;
+		case ui::VkW:
+			gpio.setInputBit(6, true);
+			break;
+		case ui::VkS:
+			gpio.setInputBit(7, true);
+			break;
+		case ui::VkD:
+			gpio.setInputBit(8, true);
+			break;
+		case ui::VkA:
+			gpio.setInputBit(9, true);
+			break;
+		}
+	});
+	image->addEventHandler< ui::KeyUpEvent >([&](ui::KeyUpEvent* event){
+		if (event->isRepeat())
+			return;
 
+		switch (event->getVirtualKey())
+		{
+		case ui::Vk1:
+			gpio.setInputBit(0, false);
+			break;
+		case ui::Vk2:
+			gpio.setInputBit(1, false);
+			break;
+		case ui::Vk3:
+			gpio.setInputBit(2, false);
+			break;
+		case ui::Vk4:
+			gpio.setInputBit(3, false);
+			break;
+		case ui::Vk5:
+			gpio.setInputBit(4, false);
+			break;
+		case ui::Vk6:
+			gpio.setInputBit(5, false);
+			break;
+		case ui::VkW:
+			gpio.setInputBit(6, false);
+			break;
+		case ui::VkS:
+			gpio.setInputBit(7, false);
+			break;
+		case ui::VkD:
+			gpio.setInputBit(8, false);
+			break;
+		case ui::VkA:
+			gpio.setInputBit(9, false);
+			break;
+		}
+	});
 
 	Thread* th = ThreadManager::getInstance().create([&]()
 	{

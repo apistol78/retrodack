@@ -7,7 +7,7 @@
 			"type": "cppdbg",
 			"program": "${workspaceRoot}/build/linux/ReleaseStatic/RetroDACK.Emulator",
 			"args": [
-				"--elf=${workspaceRoot}/build/rv/ReleaseStatic/Doom"
+				"--elf=${workspaceRoot}/build/rv/ReleaseStatic/Firmware"
 			],
 			"stopAtEntry": false,
 			"cwd": "${workspaceRoot}",

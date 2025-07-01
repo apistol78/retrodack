@@ -42,7 +42,7 @@ int32_t runtime_init()
 	rt_audio_init();
 
 	printf("** Initialize SD card **\n");
-	if (hal_sd_init(SD_MODE_HW) != 0)	// HW is only available on HW (duh), not emulator...
+	if (hal_sd_init(SD_MODE_SW) != 0)	// HW is only available on HW (duh), not emulator...
 		printf("SD card init failed!\n");
 
 	printf("** Initialize FS **\n");
