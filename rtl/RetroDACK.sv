@@ -170,7 +170,7 @@ module RetroDACK(
 	wire [31:0] bus_wdata;
 
 	CPU_BusMux #(
-		.REGISTERED(1)
+		.REGISTERED(0)
 	) bus(
 		.i_reset(reset),
 		.i_clock(clock),
