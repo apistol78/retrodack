@@ -3577,7 +3577,7 @@
 				)
 			)
 		)
-		(property "Footprint" "MEMBRANE:MEMBRANE_A"
+		(property "Footprint" "Button_Switch_THT:SW_PUSH_6mm_H7.3mm"
 			(at 81.28 114.3 0)
 			(effects
 				(font
@@ -3645,7 +3645,7 @@
 				)
 			)
 		)
-		(property "Footprint" "MEMBRANE:MEMBRANE_A"
+		(property "Footprint" "Button_Switch_THT:SW_PUSH_6mm_H7.3mm"
 			(at 81.28 134.62 0)
 			(effects
 				(font
@@ -3777,7 +3777,7 @@
 				)
 			)
 		)
-		(property "Footprint" "MEMBRANE:MEMBRANE_A"
+		(property "Footprint" "Button_Switch_THT:SW_PUSH_6mm_H7.3mm"
 			(at 81.28 71.12 0)
 			(effects
 				(font
@@ -4310,7 +4310,7 @@
 				)
 			)
 		)
-		(property "Footprint" "MEMBRANE:MEMBRANE_A"
+		(property "Footprint" "Button_Switch_THT:SW_PUSH_6mm_H7.3mm"
 			(at 81.28 50.8 0)
 			(effects
 				(font
@@ -4572,7 +4572,7 @@
 				)
 			)
 		)
-		(property "Footprint" "MEMBRANE:MEMBRANE_A"
+		(property "Footprint" "Button_Switch_THT:SW_PUSH_6mm_H7.3mm"
 			(at 81.28 124.46 0)
 			(effects
 				(font
@@ -4640,7 +4640,7 @@
 				)
 			)
 		)
-		(property "Footprint" "MEMBRANE:MEMBRANE_A"
+		(property "Footprint" "Button_Switch_THT:SW_PUSH_6mm_H7.3mm"
 			(at 81.28 60.96 0)
 			(effects
 				(font
@@ -4904,7 +4904,7 @@
 				)
 			)
 		)
-		(property "Footprint" "MEMBRANE:MEMBRANE_A"
+		(property "Footprint" "Button_Switch_THT:SW_PUSH_6mm_H7.3mm"
 			(at 81.28 81.28 0)
 			(effects
 				(font
@@ -5036,7 +5036,7 @@
 				)
 			)
 		)
-		(property "Footprint" "MEMBRANE:MEMBRANE_A"
+		(property "Footprint" "Button_Switch_THT:SW_PUSH_6mm_H7.3mm"
 			(at 81.28 104.14 0)
 			(effects
 				(font
