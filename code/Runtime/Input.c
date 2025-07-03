@@ -80,7 +80,7 @@ static void tb_input_interrupt(uint32_t source)
 static void gpio_input_interrupt(uint32_t source)
 {
 	uint8_t data[2] = { 0, 0 };
-	hal_i2c_read(0x0a, 0x00, data, 2);
+	hal_i2c_read(0x40, 0x00, data, 2);
 
 #define S(dn, bit, mask) \
 	if (data[dn] & bit) { s_pressed |= mask; } else { s_pressed &= ~mask; }

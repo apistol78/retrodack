@@ -41,7 +41,7 @@ int main(int argc, char **argv)
 {
     // save arguments
 
-    static const char* a[] = { "doom", "-iwad", "doom2.wad" };
+    static const char* a[] = { "doom", "-iwad", "doom1.wad" };
 
     myargc = 3; // argc;
     myargv = (char**)a; // argv;

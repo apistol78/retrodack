@@ -21,7 +21,7 @@ module RetroDACK(
 	wire clock_locked;
 
 	assign LED_R = cpu_fault;
-	assign LED_G = !cpu_fault;
+	assign LED_G = ~cpu_fault;
 	assign LED_B = 1'b0; // SD_EXTERNAL_CARD;
 
 	// Input CLOCK is 25 MHz
@@ -332,7 +332,7 @@ module RetroDACK(
 
 	wire sd_external_dat_dir;
 	wire [3:0] sd_external_dat_out;
-	assign { SD_EXTERNAL_DAT3, SD_EXTERNAL_DAT2, SD_EXTERNAL_DAT1, SD_EXTERNAL_DAT0 } = sd_external_dat_dir ? sd_external_dat_out : 4'bz; 
+	assign SD_EXTERNAL_DAT = sd_external_dat_dir ? sd_external_dat_out : 4'bz; 
 
 	SD sd_external(
 		.i_reset(reset),
@@ -349,7 +349,7 @@ module RetroDACK(
 		.SD_CMD_in(SD_EXTERNAL_CMD),
 		.SD_CMD_out(sd_external_cmd_out),
 		.SD_DAT_dir(sd_external_dat_dir),
-		.SD_DAT_in({ SD_EXTERNAL_DAT3, SD_EXTERNAL_DAT2, SD_EXTERNAL_DAT1, SD_EXTERNAL_DAT0 }),
+		.SD_DAT_in(SD_EXTERNAL_DAT),
 		.SD_DAT_out(sd_external_dat_out)
 	);
 
@@ -432,14 +432,19 @@ module RetroDACK(
 	wire [31:0] plic_rdata;
 	wire plic_ready;
 
+	bit [1:0] tbi = 2'b00;
+	always_ff @(posedge clock) begin
+		tbi <= { tbi[0], ~KEYPAD_INTERRUPT };
+	end
+
 	CPU_PLIC plic(
 		.i_reset(reset),
 		.i_clock(clock),
 
-		.i_interrupt_0(0), // ~INPUT_INTERRUPT),
-		.i_interrupt_1(0),
-		.i_interrupt_2(0),
-		.i_interrupt_3(0),
+		.i_interrupt_0(0), // ~TRACKBALL_INTERRUPT),
+		.i_interrupt_1(tbi == 2'b01),
+		.i_interrupt_2(0),	// LCD_TOUCH_INTERRUPT
+		.i_interrupt_3(0),	// AUDIO_INTERRUPT
 
 		.i_interrupt_enable(1'b1),
 		.o_interrupt(cpu_external_interrupt),
@@ -467,22 +472,6 @@ module RetroDACK(
 	wire [15:0] video_sram_sram_d_w;
 	wire [15:0] video_sram_sram_d_r;
 	wire video_sram_sram_d_rw;
-
-	/*
-	genvar i;
-	generate
-		for (i = 0; i < 16; i = i + 1) begin
-			TRELLIS_IO #(
-				.DIR("BIDIR")
-			) iobuf_inst (
-				.B(SRAM_D[i]),
-				.I(video_sram_sram_d_w[i]),
-				.O(video_sram_sram_d_r[i]),
-				.T(~video_sram_sram_d_rw)	// T == 1 => high impedance
-			);
-		end
-	endgenerate
-	*/
 
 	assign SRAM_D = video_sram_sram_d_rw ? video_sram_sram_d_w : 16'hz;
 	assign video_sram_sram_d_r = SRAM_D;

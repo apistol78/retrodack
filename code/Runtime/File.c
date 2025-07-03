@@ -135,17 +135,17 @@ int32_t file_init()
 
 int32_t file_open(const char* name, int32_t mode)
 {
-	//kernel_cs_lock(&lock);
+	kernel_cs_lock(&lock);
 
 	FIL* fp = file_alloc();
 	if (!fp)
 	{
 		printf("unable to alloc file pointer!\n");
-		//kernel_cs_unlock(&lock);
+		kernel_cs_unlock(&lock);
 		return 0;
 	}
 
-	// printf("file_open %s...\n", name);
+	printf("file_open %s...\n", name);
 
 	FRESULT r = FR_INVALID_PARAMETER;
 	if (mode == FILE_MODE_READ)
@@ -153,7 +153,7 @@ int32_t file_open(const char* name, int32_t mode)
 		if ((r = f_open(fp, name, FA_READ)) == FR_OK)
 		{
 			const int32_t index = file_index(fp);
-			//kernel_cs_unlock(&lock);
+			kernel_cs_unlock(&lock);
 			return index;
 		}
 	}
@@ -162,21 +162,21 @@ int32_t file_open(const char* name, int32_t mode)
 		if ((r = f_open(fp, name, FA_CREATE_ALWAYS | FA_WRITE)) == FR_OK)
 		{
 			const int32_t index = file_index(fp);
-			//kernel_cs_unlock(&lock);
+			kernel_cs_unlock(&lock);
 			return index;
 		}
 	}
 
 	file_free(fp);
-	printf("failed to open file!\n");
+	printf("failed to open file %s!\n", name);
 
-	//kernel_cs_unlock(&lock);
+	kernel_cs_unlock(&lock);
 	return 0;
 }
 
 void file_close(int32_t fd)
 {
-	//kernel_cs_lock(&lock);
+	kernel_cs_lock(&lock);
 
 	FIL* fp = file_from_index(fd);
 	if (fp)
@@ -185,18 +185,18 @@ void file_close(int32_t fd)
 		file_free(fp);
 	}
 
-	//kernel_cs_unlock(&lock);
+	kernel_cs_unlock(&lock);
 }
 
 int32_t file_size(int32_t fd)
 {
 	int32_t fs = -1;
 
-	//kernel_cs_lock(&lock);
+	kernel_cs_lock(&lock);
 	FIL* fp = file_from_index(fd);
 	if (fp)
 		fs = f_size(fp);
-	//kernel_cs_unlock(&lock);
+	kernel_cs_unlock(&lock);
 
 	return fs;
 }
@@ -205,12 +205,12 @@ int32_t file_seek(int32_t fd, int32_t offset, int32_t from)
 {
 	FRESULT result = FR_INVALID_PARAMETER;
 
-	//kernel_cs_lock(&lock);
+	kernel_cs_lock(&lock);
 
 	FIL* fp = file_from_index(fd);
 	if (!fp)
 	{
-		//kernel_cs_unlock(&lock);
+		kernel_cs_unlock(&lock);
 		return -1;
 	}
 
@@ -240,7 +240,7 @@ int32_t file_seek(int32_t fd, int32_t offset, int32_t from)
 	if (result == FR_OK)
 		ft = f_tell(fp);
 
-	//kernel_cs_unlock(&lock);
+	kernel_cs_unlock(&lock);
 	return ft;
 }
 
@@ -272,12 +272,12 @@ int32_t file_write(int32_t fd, const void* ptr, int32_t len)
 
 int32_t file_read(int32_t fd, void* ptr, int32_t len)
 {
-	//kernel_cs_lock(&lock);
+	kernel_cs_lock(&lock);
 
 	FIL* fp = file_from_index(fd);
 	if (!fp)
 	{
-		//kernel_cs_unlock(&lock);
+		kernel_cs_unlock(&lock);
 		return -1;
 	}
 
@@ -285,12 +285,12 @@ int32_t file_read(int32_t fd, void* ptr, int32_t len)
 	FRESULT result = f_read(fp, ptr, len, &br);
 	if (result == FR_OK)
 	{
-		//kernel_cs_unlock(&lock);
+		kernel_cs_unlock(&lock);
 		return (int32_t)br;
 	}
 	else
 	{
-		//kernel_cs_unlock(&lock);
+		kernel_cs_unlock(&lock);
 		printf("f_read failed, FRESULT %d\n", (int32_t)result);
 		return -2;
 	}

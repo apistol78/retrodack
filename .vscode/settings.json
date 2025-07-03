@@ -16,6 +16,7 @@
         "variant": "cpp",
         "istream": "cpp",
         "ostream": "cpp",
-        "compare": "cpp"
+        "compare": "cpp",
+        "cstdint": "cpp"
     }
 }

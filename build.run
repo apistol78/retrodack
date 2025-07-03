@@ -126,6 +126,7 @@ local function buildRV()
 
 	-- Create dump files of dashboard.
 	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Dashboard", "build/rv/ReleaseStatic/Dashboard.dump")
+	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Doom", "build/rv/ReleaseStatic/Doom.dump")
 
 	return true
 end
