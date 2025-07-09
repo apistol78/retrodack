@@ -61,6 +61,7 @@ bool writeU32(traktor::IStream* target, uint32_t v)
 bool sendWrite(traktor::IStream* target, uint32_t base, const uint8_t* line, uint32_t length)
 {
 	uint8_t cs = 0;
+	uint8_t reply;
 
 	// Add address to checksum.
 	const uint8_t* p = (const uint8_t*)&base;
@@ -73,21 +74,24 @@ bool sendWrite(traktor::IStream* target, uint32_t base, const uint8_t* line, uin
 	for (uint32_t i = 0; i < length; ++i)
 		cs ^= line[i];
 
-	CW(writeChar(target, 'W'));
-	CW(writeU32(target, base));
-	CW(writeU16(target, (uint16_t)length));
-	for (uint32_t i = 0; i < length; ++i)
-		CW(writeU8(target, line[i]));
-	CW(writeU8(target, cs));
-
-	const uint8_t reply = readChar(target);
-	if (reply != 'O')
+	for (int32_t tr = 0; tr < 4; ++tr)
 	{
-		log::error << L"Error reply, got " << str(L"0x%02x", reply) << Endl;
-		return false;
+		CW(writeChar(target, 'W'));
+		CW(writeU32(target, base));
+		CW(writeU16(target, (uint16_t)length));
+		for (uint32_t i = 0; i < length; ++i)
+			CW(writeU8(target, line[i]));
+		CW(writeU8(target, cs));
+
+		reply = readChar(target);
+		if (reply == 'O')
+			return true;
+
+		log::warning << L"Error reply, trying again..." << Endl;
 	}
 
-	return true;
+	log::error << L"Error reply, got " << str(L"0x%02x", reply) << Endl;
+	return false;
 }
 
 bool sendJump(traktor::IStream* target, uint32_t start, uint32_t sp)
