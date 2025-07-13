@@ -10,8 +10,24 @@
 
 #include "Runtime/Timer.h"
 
-uint32_t rt_timer_get_ms() { return hal_timer_get_ms(); }
+static uint32_t s_base = 0;
 
-uint64_t rt_timer_get_cycles() { return hal_timer_get_cycles(); }
+void rt_timer_init()
+{
+    s_base = hal_timer_get_ms();
+}
 
-void rt_timer_wait_ms(uint32_t ms) { hal_timer_wait_ms(ms); }
+uint32_t rt_timer_get_ms()
+{
+    return hal_timer_get_ms() - s_base;
+}
+
+uint64_t rt_timer_get_cycles()
+{
+    return hal_timer_get_cycles();
+}
+
+void rt_timer_wait_ms(uint32_t ms)
+{
+    hal_timer_wait_ms(ms);
+}

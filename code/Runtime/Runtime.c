@@ -20,6 +20,7 @@
 #include "Runtime/Input.h"
 #include "Runtime/Kernel.h"
 #include "Runtime/Runtime.h"
+#include "Runtime/Timer.h"
 
 // Needed by custom printf implementation.
 void _putchar(char character)
@@ -30,6 +31,9 @@ void _putchar(char character)
 int32_t runtime_init()
 {
 	crt_init();
+
+	printf("** Initialize Timer **\n");
+	rt_timer_init();
 
 	printf("** Initialize IRQ handler **\n");
 	hal_interrupt_init();

@@ -10,6 +10,8 @@
 
 #include <HAL/Timer.h>
 
+EXTERN_C void rt_timer_init();
+
 EXTERN_C uint32_t rt_timer_get_ms();
 
 EXTERN_C uint64_t rt_timer_get_cycles();
