@@ -8,10 +8,10 @@
 #include <Core/Misc/String.h>
 #include <Core/Misc/TString.h>
 
-#include <Emulator/CPU/Bus.h>
-#include <Emulator/CPU/BusAccess.h>
-#include <Emulator/CPU/CPU.h>
-#include <Emulator/CPU/DCache.h>
+#include <Emulator2/CPU/Bus.h>
+#include <Emulator2/CPU/ICPU.h>
+#include <Emulator2/CPU/HL/BusAccess.h>
+#include <Emulator2/CPU/HL/DCache.h>
 
 #include "Emulator/LoadELF.h"
 
@@ -81,7 +81,7 @@ struct ELF32_Sym
 };
 #pragma pack()
 
-bool loadELF(const std::wstring& fileName, CPU& cpu, Bus& bus)
+bool loadELF(const std::wstring& fileName, ICPU& cpu, Bus& bus)
 {
 	AlignedVector< uint8_t > elf;
 

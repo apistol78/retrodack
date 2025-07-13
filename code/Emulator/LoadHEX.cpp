@@ -6,16 +6,16 @@
 #include <Core/Log/Log.h>
 #include <Core/Misc/String.h>
 
-#include <Emulator/CPU/Bus.h>
-#include <Emulator/CPU/BusAccess.h>
-#include <Emulator/CPU/CPU.h>
-#include <Emulator/CPU/DCache.h>
+#include <Emulator2/CPU/Bus.h>
+#include <Emulator2/CPU/ICPU.h>
+#include <Emulator2/CPU/HL/BusAccess.h>
+#include <Emulator2/CPU/HL/DCache.h>
 
 #include "Emulator/LoadHEX.h"
 
 using namespace traktor;
 
-bool loadHEX(const std::wstring& fileName, CPU& cpu, Bus& bus)
+bool loadHEX(const std::wstring& fileName, ICPU& cpu, Bus& bus)
 {
 	std::wstring tmp;
 

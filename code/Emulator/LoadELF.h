@@ -3,6 +3,6 @@
 #include <string>
 
 class Bus;
-class CPU;
+class ICPU;
 
-bool loadELF(const std::wstring& fileName, CPU& cpu, Bus& bus);
+bool loadELF(const std::wstring& fileName, ICPU& cpu, Bus& bus);

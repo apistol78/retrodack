@@ -21,6 +21,7 @@
 #include <Core/Io/Utf8Encoding.h>
 #include <Core/Log/Log.h>
 #include <Core/Misc/CommandLine.h>
+#include <Core/Misc/String.h>
 #include <Core/Misc/TString.h>
 #include <Core/Timer/Timer.h>
 #include <Core/Thread/ThreadManager.h>
@@ -40,17 +41,19 @@
 #endif
 
 // Klara-RV
-#include <Emulator/CPU/Bus.h>
-#include <Emulator/CPU/CPU.h>
-#include <Emulator/Devices/Audio.h>
-#include <Emulator/Devices/I2C.h>
-#include <Emulator/Devices/Memory.h>
-#include <Emulator/Devices/PLIC.h>
-#include <Emulator/Devices/SD.h>
-#include <Emulator/Devices/Timer.h>
-#include <Emulator/Devices/UART.h>
-#include <Emulator/Devices/Video.h>
-#include <Emulator/Devices/Unknown.h>
+#include <Emulator2/CPU/Bus.h>
+#include <Emulator2/CPU/Helpers.h>
+#include <Emulator2/CPU/GL/CPU_gate.h>
+#include <Emulator2/CPU/HL/CPU_hl.h>
+#include <Emulator2/Devices/Audio.h>
+#include <Emulator2/Devices/I2C.h>
+#include <Emulator2/Devices/Memory.h>
+#include <Emulator2/Devices/PLIC.h>
+#include <Emulator2/Devices/SD.h>
+#include <Emulator2/Devices/Timer.h>
+#include <Emulator2/Devices/UART.h>
+#include <Emulator2/Devices/Video.h>
+#include <Emulator2/Devices/Unknown.h>
 
 //
 #include "Emulator/FileSystemImage.h"
@@ -149,10 +152,25 @@ int main(int argc, const char** argv)
 			os = new FileOutputStream(f, new Utf8Encoding());
 	}
 
-	CPU cpu(&bus, os, false);
-	cpu.setSP(0x22000000 - 4);
+	Ref< ICPU > cpu;
+	std::wstring trace;
 
-	tmr.setCallback([&](){ cpu.interrupt(TIMER); });
+	if (cmdLine.hasOption(L"hl"))
+	{
+		log::info << L"Using high level CPU emulation." << Endl;
+		cpu = new CPU_hl(&bus, os, false);
+		// trace = L"RD_h.trace";
+	}
+	else
+	{
+		log::info << L"Using gate level CPU emulation." << Endl;
+		cpu = new CPU_gate(&bus, nullptr);
+		// trace = L"RD_g.trace";
+	}
+
+	cpu->setSP(0x22000000 - 4);
+
+	tmr.setCallback([&](){ cpu->interrupt(TIMER); });
 	tb.setCallback([&](){ plic.raise(0); }); // Input interrupt
 	gpio.setCallback([&](){ plic.raise(1); }); // GPIO interrupt
 	audio.setCallback([&]() { plic.raise(2); }); // Audio interrupt
@@ -160,7 +178,7 @@ int main(int argc, const char** argv)
 	if (cmdLine.hasOption(L'e', L"elf"))
 	{
 		const std::wstring fileName = cmdLine.getOption(L'e', L"elf").getString();
-		if (!loadELF(fileName, cpu, bus))
+		if (!loadELF(fileName, *cpu, bus))
 			return 1;
 		if (bus.error())
 		{
@@ -174,7 +192,7 @@ int main(int argc, const char** argv)
 		sdram.setReadOnly(true);
 
 		const std::wstring fileName = cmdLine.getOption(L'h', L"hex").getString();
-		if (!loadHEX(fileName, cpu, bus))
+		if (!loadHEX(fileName, *cpu, bus))
 			return 1;
 		if (bus.error())
 		{
@@ -290,12 +308,37 @@ int main(int argc, const char** argv)
 		}
 	});
 
+	if (!trace.empty())
+	{
+		Ref< IStream > f = FileSystem::getInstance().open(trace, File::FmWrite);
+		if (f)
+			os = new FileOutputStream(f, new Utf8Encoding()); 
+	}
+
 	Thread* th = ThreadManager::getInstance().create([&]()
 	{
 		while(!th->stopped())
 		{
-			if (!cpu.tick(10000) || bus.error())
+			if (!cpu->tick((os != nullptr) ? 1 : 10000) || bus.error())
+			{
+				log::error << L"CPU tick failed at PC " << str(L"%08x", cpu->getPC()) << Endl;
+
+				log::info << str(L"%-5S", L"PC") << L" : " << str(L"%08x", cpu->getPC()) << Endl;
+				log::info << L"---" << Endl;
+
+				for (uint32_t i = 0; i < 32; ++i)
+					log::info << str(L"%-5S", getRegisterName(i)) << L" : " << str(L"%08x", cpu->getRegister(i)) << Endl;
+
 				break;
+			}
+
+			if (os)
+			{
+				(*os) << str(L"%08x", cpu->getPC());
+				for (uint32_t i = 0; i < 32; ++i)
+					(*os) << L":" << str(L"%08x", cpu->getRegister(i));
+				(*os) << Endl;
+			}
 		}
 	});
 	th->start();

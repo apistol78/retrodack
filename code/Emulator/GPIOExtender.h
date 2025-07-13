@@ -2,7 +2,7 @@
 
 #include <functional>
 
-#include <Emulator/Devices/I2C.h>
+#include <Emulator2/Devices/I2C.h>
 
 class GPIOExtender : public I2C::ISlave
 {
@@ -13,7 +13,7 @@ public:
 
 	virtual void read(uint8_t controlAddr, uint8_t length, uint8_t* outData) override final;
 
-	virtual bool tick(CPU* cpu) override final;
+	virtual bool tick(ICPU* cpu) override final;
 
 	void setCallback(const std::function< void() >& fn);
 

@@ -30,7 +30,7 @@ void TrackBallDevice::read(uint8_t controlAddr, uint8_t length, uint8_t* outData
 	}
 }
 
-bool TrackBallDevice::tick(CPU* cpu)
+bool TrackBallDevice::tick(ICPU* cpu)
 {
 	if (m_trig)
 	{

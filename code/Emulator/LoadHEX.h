@@ -3,6 +3,6 @@
 #include <string>
 
 class Bus;
-class CPU;
+class ICPU;
 
-bool loadHEX(const std::wstring& fileName, CPU& cpu, Bus& bus);
+bool loadHEX(const std::wstring& fileName, ICPU& cpu, Bus& bus);

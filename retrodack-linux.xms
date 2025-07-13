@@ -291,13 +291,7 @@
 					<inheritIncludePaths>true</inheritIncludePaths>
 					<link>LnkYes</link>
 					<solutionFileName>../klara-rv/klara-rv-linux.xms</solutionFileName>
-					<projectName>KlaraRV.CPU</projectName>
-				</item>
-				<item type="traktor.sb.ExternalDependency" version="3">
-					<inheritIncludePaths>true</inheritIncludePaths>
-					<link>LnkYes</link>
-					<solutionFileName>../klara-rv/klara-rv-linux.xms</solutionFileName>
-					<projectName>KlaraRV.Devices</projectName>
+					<projectName>KlaraRV.Emulator2</projectName>
 				</item>
 			</dependencies>
 		</item>

@@ -19,7 +19,7 @@ void GPIOExtender::read(uint8_t controlAddr, uint8_t length, uint8_t* outData)
 	}
 }
 
-bool GPIOExtender::tick(CPU* cpu)
+bool GPIOExtender::tick(ICPU* cpu)
 {
 	if (m_trig)
 	{
