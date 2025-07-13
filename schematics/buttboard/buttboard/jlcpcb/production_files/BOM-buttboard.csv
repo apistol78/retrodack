@@ -1,0 +1,13 @@
+Comment,Designator,Footprint,LCSC,Quantity
+527461671,J5,CON_527461671_MOL,C3169781,1
+Conn_01x05,J1,PinHeader_1x05_P2.54mm_Vertical,,1
+D,SW8,SW_PUSH_6mm_H7.3mm,,1
+A,SW9,SW_PUSH_6mm_H7.3mm,,1
+W,SW4,SW_PUSH_6mm_H7.3mm,,1
+A,SW5,SW_PUSH_6mm_H7.3mm,,1
+B,SW6,SW_PUSH_6mm_H7.3mm,,1
+C,SW7,SW_PUSH_6mm_H7.3mm,,1
+B,SW10,SW_PUSH_6mm_H7.3mm,,1
+N,SW1,SW_PUSH_6mm_H7.3mm,,1
+E,SW3,SW_PUSH_6mm_H7.3mm,,1
+S,SW2,SW_PUSH_6mm_H7.3mm,,1

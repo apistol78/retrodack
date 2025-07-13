@@ -1,0 +1,13 @@
+Designator,Val,Package,Mid X,Mid Y,Rotation,Layer
+J1,Conn_01x05,PinHeader_1x05_P2.54mm_Vertical,152.5,-99.0,90.0,top
+J5,527461671,CON_527461671_MOL,181.624999,-103.0,90.0,top
+SW1,N,SW_PUSH_6mm_H7.3mm,131.0,-64.5,0.0,top
+SW10,B,SW_PUSH_6mm_H7.3mm,180.0,-128.5,0.0,top
+SW2,S,SW_PUSH_6mm_H7.3mm,131.0,-87.5,0.0,top
+SW3,E,SW_PUSH_6mm_H7.3mm,142.5,-76.0,0.0,top
+SW4,W,SW_PUSH_6mm_H7.3mm,119.5,-76.0,0.0,top
+SW5,A,SW_PUSH_6mm_H7.3mm,174.0,-64.5,0.0,top
+SW6,B,SW_PUSH_6mm_H7.3mm,162.5,-76.0,0.0,top
+SW7,C,SW_PUSH_6mm_H7.3mm,185.5,-76.0,0.0,top
+SW8,D,SW_PUSH_6mm_H7.3mm,174.0,-87.5,0.0,top
+SW9,A,SW_PUSH_6mm_H7.3mm,125.0,-128.5,0.0,top
