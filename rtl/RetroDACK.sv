@@ -97,7 +97,7 @@ module RetroDACK(
 	wire [31:0] sdram_rdata;
 	wire sdram_ready;
 
-	logic [15:0] it_sdram_data_r;
+	bit [15:0] it_sdram_data_r;
 	wire [15:0] it_sdram_data_w;
 	wire it_sdram_data_rw;
 

@@ -127,6 +127,7 @@ local function buildRV()
 	-- Create dump files of dashboard.
 	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Dashboard", "build/rv/ReleaseStatic/Dashboard.dump")
 	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Doom", "build/rv/ReleaseStatic/Doom.dump")
+	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/ScummRV", "build/rv/ReleaseStatic/ScummRV.dump")
 
 	return true
 end
@@ -205,6 +206,7 @@ local function buildEmulatorFS()
 	run:replace(SCRIPT_HOME .. "/code/Doom/doom1.wad", SCRIPT_HOME .. "/fs/doom1.wad")
 	run:replace(SCRIPT_HOME .. "/code/Doom/doom2.wad", SCRIPT_HOME .. "/fs/doom2.wad")
 	run:replace(SCRIPT_HOME .. "/build/rv/ReleaseStatic/ScummRV", SCRIPT_HOME .. "/fs/scummrv")
+	run:replace(SCRIPT_HOME .. "/3rdp/pocketmod/songs/elysium.mod", SCRIPT_HOME .. "/fs/song.mod")
 
 	-- Convert splash screen into RAW image.
 	local img = drawing.Image.loadFromFile(SCRIPT_HOME .. "/docs/Splash8.png")
@@ -335,7 +337,16 @@ function main()
 		stdout:printLn("Synthesize...")
 		stdout:printLn("==============================")
 		local tmr = Timer()
-		local xc = run:execute("yosys -l build/" .. rtl .. ".log -p \"opt; share -aggressive; synth_ecp5 -abc9 -json build/" .. rtl .. ".json\" " .. f)
+		--local xc = run:execute("yosys -l build/" .. rtl .. ".log -p \"opt; share -aggressive; synth_ecp5 -abc9 -json build/" .. rtl .. ".json\" " .. f)
+		local xc = run:execute(
+			"yosys -l build/" .. rtl .. ".log " ..
+			"-p \"" ..
+				"read_verilog -noautowire " .. f .. "; " ..
+				"opt; "..
+				"share -aggressive; " ..
+				"synth_ecp5 -abc9 -json build/" .. rtl .. ".json; " ..
+			"\""
+		)
 		if xc ~= 0 then
 			stderr:printLn("yosys failed; build aborted.")
 			return 1

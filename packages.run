@@ -59,5 +59,10 @@ PACKAGES =
 			run:execute(UNZIP .. " -qq talkie.zip")
 		end,
 	},
+	{
+		type = "GIT",
+		name = "pocketmod",
+		url = "https://github.com/rombankzero/pocketmod.git"
+	},
 }
 
