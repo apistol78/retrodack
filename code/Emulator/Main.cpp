@@ -164,7 +164,12 @@ int main(int argc, const char** argv)
 	else
 	{
 		log::info << L"Using gate level CPU emulation." << Endl;
-		cpu = new CPU_gate(&bus, nullptr);
+
+		if (cmdLine.hasOption(L"fst"))
+			cpu = new CPU_gate(&bus, "CPU_gate.fst");
+		else
+			cpu = new CPU_gate(&bus, nullptr);
+
 		// trace = L"RD_g.trace";
 	}
 

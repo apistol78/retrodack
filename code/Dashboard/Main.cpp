@@ -1,9 +1,9 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <HAL/Audio.h>
 #include <HAL/Video.h>
-#include <HAL/Timer.h>
 #include <HAL/SD.h>
 #include <HAL/I2C.h>
 #include <HAL/Interrupt.h>
@@ -23,11 +23,87 @@ static void gpio_input_interrupt(uint32_t source)
 	++s_count;
 }
 
+extern "C" uint32_t __umodsi3 (uint32_t a, uint32_t b);
+
+
+unsigned int W_LumpNameHash(const char *s)
+{
+    // This is the djb2 string hash function, modded to work on strings
+    // that have a maximum length of 8.
+
+    unsigned int result = 5381;
+    unsigned int i;
+
+    for (i=0; i < 8 && s[i] != '\0'; ++i)
+    {
+        result = ((result << 5) ^ result ) ^ toupper((int)s[i]);
+    }
+
+    return result;
+}
 
 int main()
 {
 	crt_init();
 
+
+	const volatile int numlumps = 121;
+	int h1, h2;
+
+
+	for (int i = 1; i < 10; ++i)
+	{
+		for (int j = 10; j < 20; ++j)
+		{
+			int rs1;
+			__asm__ volatile (
+
+				"mv		%0, %1\n"
+				"mv		%0, %2\n"
+				"mul	%0, %0, %0\n"
+
+				: "r=" (rs1)
+				: "r" (i), "r" (j)
+			);
+
+			printf("%d * %d = %d\n", i, j, rs1);
+		}
+	}
+
+
+	/*
+	for (int32_t i = 0; i < 1000000; ++i)
+	{
+		unsigned int x = ((rand() & 0x7fffu)<<17 | (rand() & 0x7fffu)<<2 ) | (rand() & 0x7fffu)>>13;
+		unsigned int y = ((rand() & 0x7fffu)<<17 | (rand() & 0x7fffu)<<2 ) | (rand() & 0x7fffu)>>13;
+
+		const uint32_t a = *(uint32_t*)&x;
+		const uint32_t b = *(uint32_t*)&y;
+
+		uint32_t tmp;
+		uint32_t res;
+
+		__asm__ volatile (
+			"mv		%0, %1\n"
+			"remu	%0, %0, %2\n"
+			: "=r" (res)
+			: "r" (a)
+			, "r" (b)
+			, "r" (tmp)
+		);
+
+		uint32_t swr = __umodsi3(a, b);
+
+		printf("(HW) %d %% %d = %d\n", a, b, res);
+		printf("(SW) %d %% %d = %d\n", a, b, swr);
+	}
+
+	*/
+
+
+	for (;;);
+
+	/*
 	hal_interrupt_init();
 	hal_interrupt_set_handler(IRQ_SOURCE_PLIC_1, gpio_input_interrupt);
 
@@ -40,8 +116,9 @@ int main()
 		printf("%4d: %02x:%02x (%d)\n", i, data[0], data[1], s_count);
 
 		++i;
-
 	}
+
+	*/
 
 
 /*
@@ -62,13 +139,6 @@ int main()
 	}
 */
 
-	for (;;)
-	{
-		uint32_t ms = hal_timer_get_ms();
-		printf("%d\n", ms);
-
-		// uint32_t ms = rt_auto_get_queued();
-	}
 
 
 	for (;;);

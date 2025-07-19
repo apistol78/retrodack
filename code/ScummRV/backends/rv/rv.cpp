@@ -600,6 +600,7 @@ void OSystem_RebelV::update_frame()
 		draw_mouse_cursor();
 
 	rt_video_present();
+	kernel_sleep(10);
 }
 
 OSystem *OSystem_RebelV_create()
