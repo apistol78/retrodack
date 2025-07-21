@@ -86,24 +86,24 @@ static void tb_input_interrupt(uint32_t source)
 
 static void gpio_input_interrupt(uint32_t source)
 {
-	uint8_t data[2] = { 0, 0 };
-	hal_i2c_read(0x40, 0x00, data, 2);
+	uint16_t data = 0;
+	hal_i2c_read(0x20, 0x00, (uint8_t*)&data, 2);
+	data = ~data;
 
-	#define S(dn, bit, mask) \
-		if (data[dn] & bit) { s_pressed |= mask; } else { s_pressed &= ~mask; }
+	#define S(bit, mask) \
+		if (data & bit) { s_pressed |= mask; } else { s_pressed &= ~mask; }
 
 	const uint32_t pressed = s_pressed;
-
-	S(0, 1, RT_INPUT_BUTTON_A);
-	S(0, 2, RT_INPUT_BUTTON_B);
-	S(0, 4, RT_INPUT_BUTTON_C);
-	S(0, 8, RT_INPUT_BUTTON_D);
-	S(0, 16, RT_INPUT_BUTTON_S1);
-	S(0, 32, RT_INPUT_BUTTON_S2);
-	S(0, 64, RT_INPUT_DPAD_N);
-	S(0, 128, RT_INPUT_DPAD_S);
-	S(1, 1, RT_INPUT_DPAD_E);
-	S(1, 2, RT_INPUT_DPAD_W);
+	S(0x0020, RT_INPUT_BUTTON_A);
+	S(0x0040, RT_INPUT_BUTTON_B);
+	S(0x0080, RT_INPUT_BUTTON_C);
+	S(0x0010, RT_INPUT_BUTTON_D);
+	S(0x0100, RT_INPUT_BUTTON_S1);
+	S(0x0200, RT_INPUT_BUTTON_S2);
+	S(0x0001, RT_INPUT_DPAD_N);
+	S(0x0008, RT_INPUT_DPAD_S);
+	S(0x0004, RT_INPUT_DPAD_E);
+	S(0x0002, RT_INPUT_DPAD_W);
 
 	#undef S
 
@@ -145,26 +145,28 @@ int32_t rt_input_init()
 		}
 		hal_timer_wait_ms(100);
 	}
-	if (!found)
-	{
-		printf("[Input] No trackball found.\n");
-		return 1;
-	}
 
-	// Set input interrupt handlers.
-	hal_interrupt_set_handler(IRQ_SOURCE_PLIC_0, tb_input_interrupt);
+	// Setup trackball.
+	if (found)
+	{
+		hal_interrupt_set_handler(IRQ_SOURCE_PLIC_0, tb_input_interrupt);
+
+		// Enable interrupt pin; notify CPU everytime
+		// track ball position change.
+		hal_i2c_read(0x0a, TRACKBALL_REG_INT, data, 1);
+		data[0] |= TRACKBALL_MSK_INT_OUT_EN;
+		hal_i2c_write(0x0a, TRACKBALL_REG_INT, data[0]);
+
+		// Turn on green backlight to indicate success.
+		hal_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0xff);
+	}
+	else
+		printf("[Input] No trackball found.\n");
+
+	// Setup button inputs.
 	hal_interrupt_set_handler(IRQ_SOURCE_PLIC_1, gpio_input_interrupt);
 
-	// Enable interrupt pin; notify CPU everytime
-	// track ball position change.
-	hal_i2c_read(0x0a, TRACKBALL_REG_INT, data, 1);
-	data[0] |= TRACKBALL_MSK_INT_OUT_EN;
-	hal_i2c_write(0x0a, TRACKBALL_REG_INT, data[0]);
-
-	// Turn on green backlight to indicate success.
-	hal_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0xff);
-
-	printf("[Input] Trackball initialized successfully.\n");
+	printf("[Input] Initialized successfully.\n");
 	return 0;
 }
 
