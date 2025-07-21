@@ -22,6 +22,15 @@
 #define RT_INPUT_DPAD_W		(1 << 9)
 #define RT_INPUT_TB		    (1 << 10)
 
+typedef struct
+{
+    uint32_t button;
+    uint8_t pressed;
+    int32_t x;
+    int32_t y;
+}
+rt_event_t;
+
 EXTERN_C int32_t rt_input_init();
 
 EXTERN_C void rt_input_get_absolute_position(int32_t* pos);
@@ -29,3 +38,5 @@ EXTERN_C void rt_input_get_absolute_position(int32_t* pos);
 EXTERN_C void rt_input_get_delta_position(int32_t* pos);
 
 EXTERN_C uint32_t rt_input_get_state();
+
+EXTERN_C uint32_t rt_input_get_event(rt_event_t* ev);

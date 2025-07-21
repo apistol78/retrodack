@@ -7,6 +7,7 @@
  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 #include <stdio.h>
+#include <string.h>
 #include "Runtime/Input.h"
 
 #include <HAL/I2C.h>
@@ -46,6 +47,12 @@ static int32_t s_deltaX = 0;
 static int32_t s_deltaY = 0;
 static uint32_t s_pressed = 0;
 
+#define NEVENTS 128
+
+static rt_event_t s_events[NEVENTS];
+static int32_t s_events_in = 0;
+static int32_t s_events_out = 0;
+
 static void tb_input_interrupt(uint32_t source)
 {
 	uint8_t data[5] = { 0, 0, 0, 0, 0 };
@@ -82,8 +89,10 @@ static void gpio_input_interrupt(uint32_t source)
 	uint8_t data[2] = { 0, 0 };
 	hal_i2c_read(0x40, 0x00, data, 2);
 
-#define S(dn, bit, mask) \
-	if (data[dn] & bit) { s_pressed |= mask; } else { s_pressed &= ~mask; }
+	#define S(dn, bit, mask) \
+		if (data[dn] & bit) { s_pressed |= mask; } else { s_pressed &= ~mask; }
+
+	const uint32_t pressed = s_pressed;
 
 	S(0, 1, RT_INPUT_BUTTON_A);
 	S(0, 2, RT_INPUT_BUTTON_B);
@@ -95,6 +104,28 @@ static void gpio_input_interrupt(uint32_t source)
 	S(0, 128, RT_INPUT_DPAD_S);
 	S(1, 1, RT_INPUT_DPAD_E);
 	S(1, 2, RT_INPUT_DPAD_W);
+
+	#undef S
+
+	if (pressed != s_pressed)
+	{
+		const uint32_t m = s_pressed ^ pressed;
+		for (int32_t i = 0; i < 11; ++i)
+		{
+			const uint32_t btn = 1 << i;
+			if ((btn & m) != 0)
+			{
+				rt_event_t* ev = &s_events[s_events_in];
+				ev->button = btn;
+				ev->pressed = (btn & s_pressed) ? 1 : 0;
+				ev->x = s_absX;
+				ev->y = s_absY;
+				s_events_in = (s_events_in + 1) & (NEVENTS - 1);
+				if (s_events_in == s_events_out)
+					s_events_out = (s_events_out + 1) & (NEVENTS - 1);
+			}
+		}
+	}
 }
 
 int32_t rt_input_init()
@@ -154,4 +185,15 @@ void rt_input_get_delta_position(int32_t* pos)
 uint32_t rt_input_get_state()
 {
 	return s_pressed;
+}
+
+uint32_t rt_input_get_event(rt_event_t* ev)
+{
+	if (s_events_in == s_events_out)
+		return 0;
+
+	memcpy(ev, &s_events[s_events_out], sizeof(rt_event_t));
+	s_events_out = (s_events_out + 1) & (NEVENTS - 1);
+
+	return 1;
 }

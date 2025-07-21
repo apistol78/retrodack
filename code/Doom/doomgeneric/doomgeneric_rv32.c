@@ -2,6 +2,7 @@
 #include "doomgeneric.h"
 #include "doomkeys.h"
 
+#include <Runtime/Input.h>
 #include <Runtime/Runtime.h>
 #include <Runtime/Timer.h>
 #include <Runtime/Video.h>
@@ -47,6 +48,45 @@ uint32_t DG_GetTicksMs()
 
 int DG_GetKey(int* pressed, unsigned char* doomKey)
 {
+	rt_event_t ev;
+	if (rt_input_get_event(&ev))
+	{
+		// printf("event : %08x\n", ev.button);
+
+		switch (ev.button)
+		{
+		case RT_INPUT_BUTTON_A:
+			*doomKey = KEY_ENTER;
+			*pressed = ev.pressed;
+			return 1;
+
+		case RT_INPUT_BUTTON_B:
+			*doomKey = KEY_FIRE;
+			*pressed = ev.pressed;
+			return 1;
+
+		case RT_INPUT_DPAD_W:
+			*doomKey = KEY_LEFTARROW;
+			*pressed = ev.pressed;
+			return 1;
+
+		case RT_INPUT_DPAD_E:
+			*doomKey = KEY_RIGHTARROW;
+			*pressed = ev.pressed;
+			return 1;
+
+		case RT_INPUT_DPAD_N:
+			*doomKey = KEY_UPARROW;
+			*pressed = ev.pressed;
+			return 1;
+
+		case RT_INPUT_DPAD_S:
+			*doomKey = KEY_DOWNARROW;
+			*pressed = ev.pressed;
+			return 1;
+		}
+	}
+
 	// static uint8_t lst = 0;
 	// const uint8_t st = (uint8_t)rt_input_get_state();
 
