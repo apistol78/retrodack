@@ -10,14 +10,14 @@
 
 #include <HAL/Common.h>
 
-EXTERN_C void fb_init();
+EXTERN_C void rt_console_init();
 
-EXTERN_C void fb_shutdown();
+EXTERN_C void rt_console_shutdown();
 
-EXTERN_C void fb_clear();
+EXTERN_C void rt_console_clear();
 
-EXTERN_C void fb_putc(char c);
+EXTERN_C void rt_console_putc(char c);
 
-EXTERN_C void fb_print(const char* str);
+EXTERN_C void rt_console_print(const char* str);
 
-EXTERN_C void fb_printf(const char* str, ...);
+EXTERN_C void rt_console_printf(const char* str, ...);

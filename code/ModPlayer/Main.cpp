@@ -47,9 +47,9 @@ int main()
 	char *mod_data;
 
 	runtime_init();
-	fb_init();
+	rt_console_init();
 
-	fb_printf("reading mod file...\n");
+	rt_console_printf("reading mod file...\n");
 
 	if (!(file = fopen("song.mod", "rb")))
 	{
@@ -61,9 +61,11 @@ int main()
 	const int32_t mod_size = ftell(file);
 	rewind(file);
 
+	rt_console_printf("size %d bytes...\n", mod_size);
+
 	if (!(mod_data = malloc(mod_size)))
 	{
-		fb_printf("error: %d-byte memory allocation failed\n", mod_size);
+		rt_console_printf("error: %d-byte memory allocation failed\n", mod_size);
 		return -1;
 	}
 	else if (!fread(mod_data, mod_size, 1, file))
@@ -73,7 +75,7 @@ int main()
 	}
 	fclose(file);
 
-	fb_printf("initialize pocketmod...\n");
+	rt_console_printf("initialize pocketmod...\n");
 
 	/* Initialize the renderer */
 	if (!pocketmod_init(&context, mod_data, mod_size, SAMPLE_RATE))
@@ -82,14 +84,14 @@ int main()
 		return -1;
 	}
 
-	fb_printf("playing...\n");
+	rt_console_printf("playing...\n");
 
 	kernel_create_thread(thread_player);
 
 	for (;;)
 	{
 		kernel_sleep(1000);
-		fb_printf(".");
+		rt_console_printf(".");
 	}
 
 	return 0;

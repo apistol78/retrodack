@@ -32,7 +32,7 @@ int s_x = 0;
 int s_y = 0;
 int s_cursor = 1;
 
-static void draw_character(const unsigned char* font, char ch, int32_t col, int32_t row, uint8_t* framebuffer)
+static void rt_console_draw_character(const unsigned char* font, char ch, int32_t col, int32_t row, uint8_t* framebuffer)
 {
 	for (int32_t x = 0; x < 8; ++x)
 	{
@@ -45,7 +45,7 @@ static void draw_character(const unsigned char* font, char ch, int32_t col, int3
 	}
 }
 
-static void draw_console()
+static void rt_console_draw_console()
 {
 	uint8_t* framebuffer = (uint8_t*)rt_video_get_secondary_target();
 
@@ -57,7 +57,7 @@ static void draw_console()
 		{
 			const char ch = s_cbuffer[x + y * CC];
 			if (ch >= ' ')
-				draw_character(font8x8_c64, ch, x, y, framebuffer);
+				rt_console_draw_character(font8x8_c64, ch, x, y, framebuffer);
 		}
 	}
 
@@ -73,7 +73,7 @@ static void draw_console()
 	rt_video_present();
 }
 
-static void con_putchar(char c)
+static void rt_console_putchar(char c)
 {
 	if (c == '\n')
 	{
@@ -108,19 +108,19 @@ static void con_putchar(char c)
 	}
 }
 
-static void con_thread_redraw()
+static void rt_console_thread_redraw()
 {
 	for (;;)
 	{
 		kernel_sig_try_wait(&s_redraw, 200);
-		draw_console();
+		rt_console_draw_console();
 		s_cursor = 1 - s_cursor;
 	}	
 }
 
 // public
 
-void fb_init()
+void rt_console_init()
 {
 	rt_video_set_mode(VMODE_360_360_8);
 
@@ -132,16 +132,16 @@ void fb_init()
 	rt_video_clear(0);
 
 	kernel_sig_init(&s_redraw);
-	s_thread = kernel_create_thread(con_thread_redraw);
+	s_thread = kernel_create_thread(rt_console_thread_redraw);
 }
 
-void fb_shutdown()
+void rt_console_shutdown()
 {
 	kernel_destroy_thread(s_thread);
 	rt_video_clear(0);
 }
 
-void fb_clear()
+void rt_console_clear()
 {
 	memset(s_cbuffer, 0, CC * CR);
 	s_x = 0;
@@ -149,25 +149,25 @@ void fb_clear()
 	kernel_sig_raise(&s_redraw);
 }
 
-void fb_putc(char c)
+void rt_console_putc(char c)
 {
-	con_putchar(c);
+	rt_console_putchar(c);
 	kernel_sig_raise(&s_redraw);
 }
 
-void fb_print(const char* str)
+void rt_console_print(const char* str)
 {
 	for (const char* c = str; *c != 0; ++c)
-        con_putchar(*c);
+        rt_console_putchar(*c);
 	kernel_sig_raise(&s_redraw);
 }
 
-void fb_printf(const char* str, ...)
+void rt_console_printf(const char* str, ...)
 {
 	char buf[128];
 	va_list args;
 	va_start(args, str);
 	vsnprintf(buf, sizeof(buf), str, args);
 	va_end(args);
-	fb_print(buf);
+	rt_console_print(buf);
 }
