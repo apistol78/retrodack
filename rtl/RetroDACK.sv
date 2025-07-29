@@ -460,9 +460,7 @@ module RetroDACK(
 
 	//====================================================
 	// VIDEO MEMORY
-
 	wire video_sram_request;
-	// wire video_sram_select;
 	wire video_sram_rw;
 	wire [31:0] video_sram_address;
 	wire [31:0] video_sram_wdata;
@@ -505,51 +503,6 @@ module RetroDACK(
 
 
 	//====================================================
-	// VIDEO MEMORY PORT
-	wire vram_pa_request;
-	wire vram_pa_rw;
-	wire [31:0] vram_pa_address;
-	wire [31:0] vram_pa_wdata;
-	wire [31:0] vram_pa_rdata;
-	wire vram_pa_ready;
-
-	wire vram_pb_request;
-	wire vram_pb_rw;
-	wire [31:0] vram_pb_address;
-	wire [31:0] vram_pb_wdata;
-	wire [31:0] vram_pb_rdata;
-	wire vram_pb_ready;
-
-	DualPort vram_bus(
-		.i_reset(reset),
-		.i_clock(clock),
-
-		.o_bus_rw(video_sram_rw),
-		.o_bus_request(video_sram_request),
-		.i_bus_ready(video_sram_ready),
-		.o_bus_address(video_sram_address),
-		.i_bus_rdata(video_sram_rdata),
-		.o_bus_wdata(video_sram_wdata),
-
-		// Video output access.
-		.i_pb_rw(vram_pb_rw),
-		.i_pb_request(vram_pb_request),
-		.o_pb_ready(vram_pb_ready),
-		.i_pb_address(vram_pb_address),
-		.o_pb_rdata(vram_pb_rdata),
-		.i_pb_wdata(vram_pb_wdata),
-
-		// Video CPU access.
-		.i_pc_rw(vram_pa_rw),
-		.i_pc_request(vram_pa_request),
-		.o_pc_ready(vram_pa_ready),
-		.i_pc_address(vram_pa_address),
-		.o_pc_rdata(vram_pa_rdata),
-		.i_pc_wdata(vram_pa_wdata)
-	);
-
-
-	//====================================================
 	// VIDEO SIGNAL GENERATOR
 	wire vga_hblank;
 	wire vga_vblank;
@@ -558,7 +511,6 @@ module RetroDACK(
 	wire [31:0] video_dac_rdata;
 
 	assign LCD_BACKLIGHT_CTRL = 1'b1;
-	
 	assign LCD_R = video_dac_rdata[7:0+2];
 	assign LCD_G = video_dac_rdata[15:8+2];
 	assign LCD_B = video_dac_rdata[23:16+2];
@@ -619,19 +571,12 @@ module RetroDACK(
 		.o_video_rdata(video_dac_rdata),
 		
 		// Video RAM interface.
-		.o_vram_pa_request(vram_pa_request),
-		.o_vram_pa_rw(vram_pa_rw),
-		.o_vram_pa_address(vram_pa_address),
-		.o_vram_pa_wdata(vram_pa_wdata),
-		.i_vram_pa_rdata(vram_pa_rdata),
-		.i_vram_pa_ready(vram_pa_ready),
-
-		.o_vram_pb_request(vram_pb_request),
-		.o_vram_pb_rw(vram_pb_rw),
-		.o_vram_pb_address(vram_pb_address),
-		.o_vram_pb_wdata(vram_pb_wdata),
-		.i_vram_pb_rdata(vram_pb_rdata),
-		.i_vram_pb_ready(vram_pb_ready)
+		.o_vram_request(video_sram_request),
+		.o_vram_rw(video_sram_rw),
+		.o_vram_address(video_sram_address),
+		.o_vram_wdata(video_sram_wdata),
+		.i_vram_rdata(video_sram_rdata),
+		.i_vram_ready(video_sram_ready),
 	);
 
 
