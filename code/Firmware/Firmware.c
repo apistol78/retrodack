@@ -188,33 +188,9 @@ int main()
 		memset(dest, 0, len);
 	}
 
+	/*
 	runtime_init();
 
-	rt_video_set_mode(VMODE_360_360_8);
-
-	rt_video_set_palette(0, 0x003f00);
-	rt_video_set_palette(1, 0xff0000);
-	rt_video_set_palette(2, 0x0000ff);
-
-	uint8_t* fb = (uint8_t*)rt_video_get_secondary_target();
-	for (int x = 0; x < 360; ++x)
-	{
-		fb[x] = 1;
-		fb[x * 360] = 1;
-		fb[x + 359 * 360] = 1;
-		fb[359 + x * 360] = 1;
-	}
-	for (int x = 0; x < 358; ++x)
-	{
-		fb[x + 1 + 360] = 2;
-		fb[(x + 1) * 360 + 1] = 2;
-		fb[x + 1 + 358 * 360] = 2;
-		fb[358 + (x + 1) * 360] = 2;
-	}
-
-	rt_video_present();
-
-	/*
 	// Try to execute BOOT executable from SD
 	// card, if available.
 	{
