@@ -65,6 +65,16 @@ int DG_GetKey(int* pressed, unsigned char* doomKey)
 			*pressed = ev.pressed;
 			return 1;
 
+		case RT_INPUT_BUTTON_C:
+			*doomKey = KEY_USE;
+			*pressed = ev.pressed;
+			return 1;
+
+		case RT_INPUT_BUTTON_D:
+			*doomKey = KEY_ESCAPE;
+			*pressed = ev.pressed;
+			return 1;
+
 		case RT_INPUT_DPAD_W:
 			*doomKey = KEY_LEFTARROW;
 			*pressed = ev.pressed;

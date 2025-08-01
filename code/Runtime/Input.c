@@ -47,6 +47,8 @@ static int32_t s_deltaX = 0;
 static int32_t s_deltaY = 0;
 static uint32_t s_pressed = 0;
 
+#define TB_MAX_X 320
+#define TB_MAX_Y 200
 #define NEVENTS 128
 
 static rt_event_t s_events[NEVENTS];
@@ -55,33 +57,63 @@ static int32_t s_events_out = 0;
 
 static void tb_input_interrupt(uint32_t source)
 {
+	hal_i2c_write(0x0a, TRACKBALL_REG_INT, 0);
+
 	uint8_t data[5] = { 0, 0, 0, 0, 0 };
 	hal_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5);
 
-	s_absX -= data[0];
-	s_absX += data[1];
-	s_absY -= data[2];
-	s_absY += data[3];
+	s_absX += data[0];
+	s_absX -= data[1];
+	s_absY += data[2];
+	s_absY -= data[3];
 
 	if (s_absX < 0)
 		s_absX = 0;
-	else if (s_absX > 719)
-		s_absX = 719;
+	else if (s_absX > (TB_MAX_X-1))
+		s_absX = (TB_MAX_X-1);
 
 	if (s_absY < 0)
 		s_absY = 0;
-	else if (s_absY > 719)
-		s_absY = 719;
+	else if (s_absY > (TB_MAX_Y-1))
+		s_absY = (TB_MAX_Y-1);
 
-	s_deltaX -= data[0];
-	s_deltaX += data[1];
-	s_deltaY -= data[2];
-	s_deltaY += data[3];
+	s_deltaX += data[0];
+	s_deltaX -= data[1];
+	s_deltaY += data[2];
+	s_deltaY -= data[3];
+
+	if (data[0] || data[1] || data[2] || data[3])
+	{
+		rt_event_t* ev = &s_events[s_events_in];
+		ev->button = 0;
+		ev->pressed = 0;
+		ev->x = s_absX;
+		ev->y = s_absY;
+		s_events_in = (s_events_in + 1) & (NEVENTS - 1);
+		if (s_events_in == s_events_out)
+			s_events_out = (s_events_out + 1) & (NEVENTS - 1);		
+	}
+
+	const uint32_t pressed = s_pressed;
 
 	if (data[4])
 		s_pressed |= RT_INPUT_TB;
 	else
 		s_pressed &= ~RT_INPUT_TB;
+
+	if (pressed != s_pressed)
+	{
+		rt_event_t* ev = &s_events[s_events_in];
+		ev->button = RT_INPUT_TB;
+		ev->pressed = (RT_INPUT_TB & s_pressed) ? 1 : 0;
+		ev->x = s_absX;
+		ev->y = s_absY;
+		s_events_in = (s_events_in + 1) & (NEVENTS - 1);
+		if (s_events_in == s_events_out)
+			s_events_out = (s_events_out + 1) & (NEVENTS - 1);
+	}
+
+	hal_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN);
 }
 
 static void gpio_input_interrupt(uint32_t source)
@@ -94,16 +126,16 @@ static void gpio_input_interrupt(uint32_t source)
 		if (data & bit) { s_pressed |= mask; } else { s_pressed &= ~mask; }
 
 	const uint32_t pressed = s_pressed;
-	S(0x0020, RT_INPUT_BUTTON_A);
-	S(0x0040, RT_INPUT_BUTTON_B);
-	S(0x0080, RT_INPUT_BUTTON_C);
-	S(0x0010, RT_INPUT_BUTTON_D);
+	S(0x0020, RT_INPUT_DPAD_S);
+	S(0x0040, RT_INPUT_DPAD_E);
+	S(0x0080, RT_INPUT_DPAD_W);
+	S(0x0010, RT_INPUT_DPAD_N);
 	S(0x0100, RT_INPUT_BUTTON_S1);
 	S(0x0200, RT_INPUT_BUTTON_S2);
-	S(0x0001, RT_INPUT_DPAD_N);
-	S(0x0008, RT_INPUT_DPAD_S);
-	S(0x0004, RT_INPUT_DPAD_E);
-	S(0x0002, RT_INPUT_DPAD_W);
+	S(0x0001, RT_INPUT_BUTTON_A);
+	S(0x0008, RT_INPUT_BUTTON_B);
+	S(0x0004, RT_INPUT_BUTTON_C);
+	S(0x0002, RT_INPUT_BUTTON_D);
 
 	#undef S
 
@@ -151,14 +183,24 @@ int32_t rt_input_init()
 	{
 		hal_interrupt_set_handler(IRQ_SOURCE_PLIC_0, tb_input_interrupt);
 
-		// Enable interrupt pin; notify CPU everytime
-		// track ball position change.
-		hal_i2c_read(0x0a, TRACKBALL_REG_INT, data, 1);
-		data[0] |= TRACKBALL_MSK_INT_OUT_EN;
-		hal_i2c_write(0x0a, TRACKBALL_REG_INT, data[0]);
-
 		// Turn on green backlight to indicate success.
 		hal_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0xff);
+
+		// Enable interrupt pin; notify CPU everytime
+		// track ball position change.
+		// hal_i2c_read(0x0a, TRACKBALL_REG_INT, data, 1);
+		// data[0] |= TRACKBALL_MSK_INT_OUT_EN;
+		// data[0] &= ~TRACKBALL_MSK_INT_TRIGGERED;
+		hal_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN); //data[0]);
+
+		// Read data from TB; to ensure interrupt state
+		// in TB is reset.
+		for (int i = 0; i < 10; ++i)
+		{
+			uint8_t data[5] = { 0, 0, 0, 0, 0 };
+			hal_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5);
+			hal_timer_wait_ms(10);
+		}
 	}
 	else
 		printf("[Input] No trackball found.\n");

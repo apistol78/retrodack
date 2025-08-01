@@ -234,35 +234,32 @@ void OSystem_RebelV::set_timer(TimerProc callback, int timer)
 
 bool OSystem_RebelV::poll_event(Event *event)
 {
-	int32_t dp[2];
-	rt_input_get_delta_position(dp);
-	if (dp[0] != 0 || dp[1] != 0)
+	rt_event_t ev;
+	if (rt_input_get_event(&ev) > 0)
 	{
-		//rt_input_get_absolute_position(dp);
-		event->event_code = EVENT_MOUSEMOVE;
-		event->mouse.x = dp[0];
-		event->mouse.y = dp[1];
-		return true;		
+
+		event->mouse.x = ev.x;
+		event->mouse.y = ev.y;
+
+		if (ev.button == 0)
+		{
+			event->event_code = EVENT_MOUSEMOVE;
+			return true;
+		}
+		else
+		{
+
+			if (ev.button == RT_INPUT_BUTTON_A)
+				event->event_code = ev.pressed ? EVENT_LBUTTONDOWN : EVENT_LBUTTONUP;
+			else if (ev.button == RT_INPUT_BUTTON_B)
+				event->event_code = ev.pressed ? EVENT_RBUTTONDOWN : EVENT_RBUTTONUP;
+			else
+				return false;
+
+			return true;
+		}
 	}
 
-	uint8_t buttons = (uint8_t)rt_input_get_state();
-	if (buttons != m_lastButtons)
-	{
-		if (buttons & 1)
-			event->event_code = EVENT_LBUTTONDOWN;
-		else if (m_lastButtons & 1)
-			event->event_code = EVENT_LBUTTONUP;
-		// else if (buttons & 2)
-		// 	event->event_code = EVENT_RBUTTONDOWN;
-		// else if (m_lastButtons & 2)
-		// 	event->event_code = EVENT_RBUTTONUP;
-
-		event->mouse.x = dp[0];
-		event->mouse.y = dp[1];
-
-		m_lastButtons = buttons;
-		return true;
-	}
 
 /*
 	// Get keyboard events.

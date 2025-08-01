@@ -434,15 +434,20 @@ module RetroDACK(
 
 	bit [1:0] tbi = 2'b00;
 	always_ff @(posedge clock) begin
-		tbi <= { tbi[0], ~KEYPAD_INTERRUPT };
+		tbi <= { tbi[0], ~TRACKBALL_INTERRUPT };
+	end
+
+	bit [1:0] kpi = 2'b00;
+	always_ff @(posedge clock) begin
+		kpi <= { kpi[0], ~KEYPAD_INTERRUPT };
 	end
 
 	CPU_PLIC plic(
 		.i_reset(reset),
 		.i_clock(clock),
 
-		.i_interrupt_0(0), // ~TRACKBALL_INTERRUPT),
-		.i_interrupt_1(tbi == 2'b01),
+		.i_interrupt_0(tbi == 2'b01),
+		.i_interrupt_1(kpi == 2'b01),
 		.i_interrupt_2(0),	// LCD_TOUCH_INTERRUPT
 		.i_interrupt_3(0),	// AUDIO_INTERRUPT
 
