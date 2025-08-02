@@ -237,7 +237,6 @@ bool OSystem_RebelV::poll_event(Event *event)
 	rt_event_t ev;
 	if (rt_input_get_event(&ev) > 0)
 	{
-
 		event->mouse.x = ev.x;
 		event->mouse.y = ev.y;
 
@@ -249,10 +248,24 @@ bool OSystem_RebelV::poll_event(Event *event)
 		else
 		{
 
-			if (ev.button == RT_INPUT_BUTTON_A)
+			if (ev.button == RT_INPUT_BUTTON_A /* || ev.button == RT_INPUT_TB */)
 				event->event_code = ev.pressed ? EVENT_LBUTTONDOWN : EVENT_LBUTTONUP;
 			else if (ev.button == RT_INPUT_BUTTON_B)
 				event->event_code = ev.pressed ? EVENT_RBUTTONDOWN : EVENT_RBUTTONUP;
+			else if (ev.button == RT_INPUT_BUTTON_S1)
+			{
+				// Escape
+				event->event_code = ev.pressed ? EVENT_KEYDOWN : EVENT_KEYUP;
+				event->kbd.keycode = 27;
+				event->kbd.ascii = 27;
+			}
+			else if (ev.button == RT_INPUT_BUTTON_S2)
+			{
+				// F5
+				event->event_code = ev.pressed ? EVENT_KEYDOWN : EVENT_KEYUP;
+				event->kbd.keycode = 319;
+				event->kbd.ascii = 319;
+			}
 			else
 				return false;
 
@@ -374,13 +387,13 @@ OSystem::MutexRef OSystem_RebelV::create_mutex()
 void OSystem_RebelV::lock_mutex(MutexRef mutex)
 {
 	kernel_cs_t* cs = (kernel_cs_t*)mutex;
-	// kernel_cs_lock(cs);
+	kernel_cs_lock(cs);
 }
 
 void OSystem_RebelV::unlock_mutex(MutexRef mutex)
 {
 	kernel_cs_t* cs = (kernel_cs_t*)mutex;
-	// kernel_cs_unlock(cs);
+	kernel_cs_unlock(cs);
 }
 
 void OSystem_RebelV::delete_mutex(MutexRef mutex)
@@ -572,9 +585,10 @@ void OSystem_RebelV::update_timer()
 
 void OSystem_RebelV::update_frame()
 {
-	uint8_t buttons;
-
-	//rt_input_get_mouse_state(&m_mouseX, &m_mouseY, &buttons);
+	int32_t mp[2];
+	rt_input_get_absolute_position(mp);
+	m_mouseX = mp[0];
+	m_mouseY = mp[1];
 
 	if (m_paletteDirty)
 	{
@@ -597,7 +611,7 @@ void OSystem_RebelV::update_frame()
 		draw_mouse_cursor();
 
 	rt_video_present();
-	kernel_sleep(10);
+	kernel_sleep(30);
 }
 
 OSystem *OSystem_RebelV_create()

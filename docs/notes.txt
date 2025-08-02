@@ -4,3 +4,48 @@ https://section5.ch/index.php/2017/02/25/ecp5-and-spi-data-overlay/
 https://zipcpu.com/blog/2018/08/16/spiflash.html
 
 https://github.com/BrunoLevy/learn-fpga/blob/master/FemtoRV/TUTORIALS/spi_flash.md
+
+
+-----
+
+
+n the ECP5 FPGA family from Lattice, the CLKOS_CPHASE parameter is used in the configuration of the PLL (Phase-Locked Loop) block to control the coarse phase shift of the CLKOS output.
+✅ What is CLKOS_CPHASE?
+
+    CLKOS_CPHASE stands for CLKOS Coarse Phase.
+
+    It sets the coarse phase shift of the CLKOS output in units of VCO cycles.
+
+    Valid values range from 0 to N-1, where N is the division factor set by CLKOS_DIV.
+
+    The phase shift is then:
+
+\text{Phase Shift (degrees)} = \frac{\text{CLKOS_CPHASE}}{\text{CLKOS_DIV}} \times 360^\circ
+🧮 Example Calculation
+
+Say you want a 90° phase shift on CLKOS:
+
+    If CLKOS_DIV = 4, then one unit of CLKOS_CPHASE = 90°.
+
+    To get 90°, you set:
+    CLKOS_CPHASE = 1
+
+CLKOS_DIV	CLKOS_CPHASE	Phase Offset
+2	1	180°
+4	1	90°
+4	2	180°
+8	1	45°
+8	2	90°
+⚠️ Important Notes
+
+    The phase shift is coarse, meaning it steps in large chunks based on the divider.
+
+    For fine-grained control, you might need to use CLKOS_FPHASE (fine phase shift), which adjusts phase in VCO clock period / 8 increments.
+
+    CLKOS_CPHASE must be less than CLKOS_DIV, or you’ll get illegal configuration.
+
+📘 Reference
+
+You can find this information in the ECP5 sysCLOCK PLL Design and Usage Guide (e.g., Lattice TN1188), where parameters like CLKOS_CPHASE and CLKOS_DIV are described in the context of PLL configuration.
+
+Would you like help calculating both coarse and fine phase shift settings for a specific clock frequency and desired offset?

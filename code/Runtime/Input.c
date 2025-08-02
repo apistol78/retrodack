@@ -49,7 +49,7 @@ static uint32_t s_pressed = 0;
 
 #define TB_MAX_X 320
 #define TB_MAX_Y 200
-#define NEVENTS 128
+#define NEVENTS 1024
 
 static rt_event_t s_events[NEVENTS];
 static int32_t s_events_in = 0;
@@ -240,4 +240,31 @@ uint32_t rt_input_get_event(rt_event_t* ev)
 	s_events_out = (s_events_out + 1) & (NEVENTS - 1);
 
 	return 1;
+}
+
+void rt_input_set_tb_color(int32_t clr)
+{
+	switch (clr)
+	{
+	case RT_TB_RED:
+		hal_i2c_write(0x0a, TRACKBALL_REG_LED_RED, 0xff);
+		hal_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0x00);
+		hal_i2c_write(0x0a, TRACKBALL_REG_LED_BLU, 0x00);
+		break;
+	case RT_TB_GREEN:
+		hal_i2c_write(0x0a, TRACKBALL_REG_LED_RED, 0x00);
+		hal_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0xff);
+		hal_i2c_write(0x0a, TRACKBALL_REG_LED_BLU, 0x00);
+		break;
+	case RT_TB_BLUE:
+		hal_i2c_write(0x0a, TRACKBALL_REG_LED_RED, 0x00);
+		hal_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0x00);
+		hal_i2c_write(0x0a, TRACKBALL_REG_LED_BLU, 0xff);
+		break;
+	default:
+		hal_i2c_write(0x0a, TRACKBALL_REG_LED_RED, 0x00);
+		hal_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0x00);
+		hal_i2c_write(0x0a, TRACKBALL_REG_LED_BLU, 0x00);
+		break;
+	}
 }

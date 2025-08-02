@@ -21,6 +21,7 @@
 #include "Runtime/CRT.h"
 #include "Runtime/ELF.h"
 #include "Runtime/File.h"
+#include "Runtime/Input.h"
 #include "Runtime/Runtime.h"
 #include "Runtime/Kernel.h"
 #include "Runtime/Video.h"
@@ -188,18 +189,16 @@ int main()
 		memset(dest, 0, len);
 	}
 
-	/*
 	runtime_init();
 
 	// Try to execute BOOT executable from SD
 	// card, if available.
 	{
-		const int32_t r = rt_elf_launch("doom");
-		printf("No exectuable (error: %d)\n", r);
+		rt_elf_launch("boot");
 	}
-	*/
 
 	// No BOOT executable; enter remote control mode.
+	rt_input_set_tb_color(RT_TB_RED);
 	remote_control();
 
 	return 0;
