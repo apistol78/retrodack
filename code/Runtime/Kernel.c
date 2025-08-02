@@ -397,8 +397,13 @@ void kernel_yield()
 
 void kernel_sleep(uint32_t ms)
 {
-	const uint32_t fin_ms = hal_timer_get_ms() + ms;
-
+	uint32_t fin_ms;
+	__asm__ volatile (
+		"rdtime %0"
+		: "=r" (fin_ms)
+	);
+	fin_ms += ms;
+	
 	volatile kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = 0;
 	t->sleep = fin_ms;

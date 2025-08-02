@@ -189,16 +189,27 @@ int main()
 		memset(dest, 0, len);
 	}
 
-	runtime_init();
+	// Initialize only systems which we need;
+	// prevent linker from including unused code.
+	hal_video_init();
+	hal_sd_init(SD_MODE_SW);
+	file_init();
+
+	// Green display while loading ELF.
+	rt_video_set_palette(0, 0x00ff00);
+	rt_video_clear(0);
+	rt_video_present();
 
 	// Try to execute BOOT executable from SD
 	// card, if available.
-	{
-		rt_elf_launch("boot");
-	}
+	rt_elf_launch("boot");
+
+	// Red display while in remote control.
+	rt_video_set_palette(0, 0xff0000);
+	rt_video_clear(0);
+	rt_video_present();
 
 	// No BOOT executable; enter remote control mode.
-	rt_input_set_tb_color(RT_TB_RED);
 	remote_control();
 
 	return 0;
