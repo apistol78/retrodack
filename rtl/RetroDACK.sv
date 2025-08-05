@@ -380,7 +380,8 @@ module RetroDACK(
 	//====================================================
 	// AUDIO
 	wire audio_output_busy;
-	wire [15:0] audio_output_sample;
+	wire [15:0] audio_output_sample_left;
+	wire [15:0] audio_output_sample_right;
 	wire audio_sdout;
 	wire audio_sclk;
 	wire audio_lrck;
@@ -391,7 +392,8 @@ module RetroDACK(
 	) audio_i2s_output(
 		.i_clock(clock),
 		.o_busy(audio_output_busy),
-		.i_sample(audio_output_sample),
+		.i_sample_left(audio_output_sample_left),
+		.i_sample_right(audio_output_sample_right),
 		.o_i2s_sdout(I2S_SDOUT),
 		.o_i2s_sclk(I2S_SCLK),
 		.o_i2s_lrck(I2S_LRCK),
@@ -400,7 +402,7 @@ module RetroDACK(
 
 	wire audio_select;
 	wire [3:0] audio_address;
-	wire [15:0] audio_wdata;
+	wire [31:0] audio_wdata;
 	wire [31:0] audio_rdata;
 	wire audio_ready;
 	wire audio_interrupt;
@@ -418,7 +420,8 @@ module RetroDACK(
 		.o_interrupt(audio_interrupt),
 
 		.i_output_busy(audio_output_busy),
-		.o_output_sample(audio_output_sample),
+		.o_output_sample_left(audio_output_sample_left),
+		.o_output_sample_right(audio_output_sample_right),
 		.o_output_reload(audio_output_reload)
 	);
 
@@ -696,7 +699,7 @@ module RetroDACK(
 
 	assign audio_select = bridge_far_address[27:24] == 4'h6;
 	assign audio_address = bridge_far_address[5:2];
-	assign audio_wdata = bridge_far_wdata[15:0];
+	assign audio_wdata = bridge_far_wdata[31:0];
 
 	assign plic_select = bridge_far_address[27:24] == 4'h8;
 	assign plic_address = bridge_far_address[23:0];
