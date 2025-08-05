@@ -32,12 +32,11 @@ void thread_player()
 
 		for (int32_t i = 0; i < rendered_samples; i++)
 		{
-			output[i] = (int16_t) (
-				(buffer[i][0] + buffer[i][1]) * 0x7fff
-			);
+			output[i * 2 + 0] = (int16_t)(buffer[i][0] * 0x7fff);
+			output[i * 2 + 1] = (int16_t)(buffer[i][1] * 0x7fff);
 		}
 
-		rt_audio_play_mono(output, rendered_samples);
+		rt_audio_play_stereo(output, rendered_samples);
 	}
 }
 
@@ -47,6 +46,7 @@ int main()
 	char *mod_data;
 
 	runtime_init();
+	rt_audio_set_playback_rate(SAMPLE_RATE);
 	rt_console_init();
 
 	rt_console_printf("reading mod file...\n");
