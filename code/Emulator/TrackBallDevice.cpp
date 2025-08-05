@@ -19,11 +19,11 @@ void TrackBallDevice::read(uint8_t controlAddr, uint8_t length, uint8_t* outData
 	}
 	else if (controlAddr == 0x04)
 	{
-		outData[0] = (m_deltaX < 0) ? -m_deltaX : 0;	// left
-		outData[1] = (m_deltaX > 0) ? m_deltaX : 0;	// right
-		outData[2] = (m_deltaY < 0) ? -m_deltaY : 0;	// up
-		outData[3] = (m_deltaY > 0) ? m_deltaY : 0;	// down
-		outData[4] = m_pressed ? 0x01 : 0x00;	// switch
+		outData[0] = (m_deltaX > 0) ? m_deltaX : 0;		// left
+		outData[1] = (m_deltaX < 0) ? -m_deltaX : 0;	// right
+		outData[2] = (m_deltaY > 0) ? m_deltaY : 0;		// up
+		outData[3] = (m_deltaY < 0) ? -m_deltaY : 0;	// down
+		outData[4] = m_pressed ? 0x01 : 0x00;			// switch
 
 		m_deltaX = 0;
 		m_deltaY = 0;
@@ -54,8 +54,7 @@ void TrackBallDevice::accumulateMovement(int32_t dx, int32_t dy)
 	m_absY += dy;
 
 	// Issue interrupt if there has been movement.
-	if (dx != 0 && dy != 0)
-		m_trig = true;
+	m_trig |= (dx != 0 && dy != 0);
 }
 
 void TrackBallDevice::setButton(bool pressed)

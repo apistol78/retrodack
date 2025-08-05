@@ -131,7 +131,7 @@ int main(int argc, const char** argv)
 	i2c.addSlave(0x0a, &tb);
 
 	GPIOExtender gpio;
-	i2c.addSlave(0x40, &gpio);
+	i2c.addSlave(0x20, &gpio);
 
 	Bus bus;
 	bus.map(0x00000000, 0x00000000 + rom.getCapacity(), false, false, &rom);
