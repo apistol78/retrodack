@@ -16,12 +16,8 @@
 
 #include "Runtime/Kernel.h"
 
-// #define TIMER_MS            (volatile uint32_t*)(TIMER_BASE + 0x0 * 0x04)
-// #define TIMER_CYCLES_L      (volatile uint32_t*)(TIMER_BASE + 0x1 * 0x04)
-// #define TIMER_CYCLES_H      (volatile uint32_t*)(TIMER_BASE + 0x2 * 0x04)
-// #define TIMER_COMPARE_L     (volatile uint32_t*)(TIMER_BASE + 0x3 * 0x04)
-// #define TIMER_COMPARE_H     (volatile uint32_t*)(TIMER_BASE + 0x4 * 0x04)
-#define TIMER_COUNTDOWN		(volatile uint32_t*)(TIMER_BASE + 0x5 * 0x04)
+#define SIGNAL_AWARE
+#define TIMER_COUNTDOWN				(volatile uint32_t*)(TIMER_BASE + 0x5 * 0x04)
 
 #define KERNEL_MAIN_CLOCK 			100000000
 #define KERNEL_SCHEDULE_FREQUENCY	600
@@ -137,34 +133,36 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void kernel_sc
 
 		int32_t next = g_current;
 
+#ifdef SIGNAL_AWARE
 		// Prioritize thread which are waiting for a signal.
-		// for (int32_t i = 0; i < g_count; ++i)
-		// {
-		// 	if (++next >= g_count)
-		// 		next = 0;
-		// 	volatile kernel_thread_t* t = &g_threads[next];
-		// 	if (t->waiting != 0)
-		// 	{
-		// 		if (t->sleep == 0 || ms < t->sleep)
-		// 		{
-		// 			if (t->waiting->counter > 0)
-		// 			{
-		// 				t->waiting = 0;
-		// 				break;
-		// 			}
-		// 		}
-		// 		else
-		// 		{
-		// 			// Wait has timed out; do not select immediately
-		// 			// since it's no longer prioritized.
-		// 			t->waiting = 0;
-		// 		}
-		// 	}
-		// }
+		for (int32_t i = 0; i < g_count; ++i)
+		{
+			if (++next >= g_count)
+				next = 0;
+			volatile kernel_thread_t* t = &g_threads[next];
+			if (t->waiting != 0)
+			{
+				if (t->sleep == 0 || ms < t->sleep)
+				{
+					if (t->waiting->counter > 0)
+					{
+						t->waiting = 0;
+						break;
+					}
+				}
+				else
+				{
+					// Wait has timed out; do not select immediately
+					// since it's no longer prioritized.
+					t->waiting = 0;
+				}
+			}
+		}
 
 		// If no thread awoken from signals then we
 		// select next thread round-robin style.
-		// if (next == g_current)
+		if (next == g_current)
+#endif
 		{
 			for (int32_t i = 0; i < g_count + 1; ++i)
 			{
@@ -175,20 +173,23 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void kernel_sc
 				if (t->waiting != 0 || t->sleep <= ms)
 					break;
 
-				// if (t->waiting == 0 && t->sleep <= ms)
-				// 	break;
-				// else if (t->waiting != 0)
-				// {
-				// 	if (t->sleep == 0 || t->sleep <= ms)
-				// 	{
-				// 		if (t->waiting->counter > 0)
-				// 		{
-				// 			t->waiting = 0;
-				// 			break;
-				// 		}
-				// 	}
-				// 	else if(t->sleep != 0 && t->sleep > ms)
-				// 		t->waiting = 0;
+#ifdef SIGNAL_AWARE
+				if (t->waiting == 0 && t->sleep <= ms)
+					break;
+				else if (t->waiting != 0)
+				{
+					if (t->sleep == 0 || t->sleep <= ms)
+					{
+						if (t->waiting->counter > 0)
+						{
+							t->waiting = 0;
+							break;
+						}
+					}
+					else if(t->sleep != 0 && t->sleep > ms)
+						t->waiting = 0;
+				}
+#endif
 			}
 		}
 
@@ -217,7 +218,6 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void kernel_sc
 			: "r" (t->epc), "r" (t->sp)
 		);
 	}
-
 
 #ifdef __riscv_flen
 	__asm__ volatile (
