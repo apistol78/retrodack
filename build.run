@@ -127,6 +127,7 @@ local function buildRV()
 	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Dashboard", "build/rv/ReleaseStatic/Dashboard.dump")
 	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Doom", "build/rv/ReleaseStatic/Doom.dump")
 	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/ScummRV", "build/rv/ReleaseStatic/ScummRV.dump")
+	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/ModPlayer", "build/rv/ReleaseStatic/ModPlayer.dump")
 
 	return true
 end
@@ -199,7 +200,6 @@ local function buildEmulatorFS()
 	local SCRIPT_HOME < const > = fileSystem:getAbsolutePath(Path(os:getEnvironment("RUN_SCRIPT_PATH"))):normalized().pathNameOS
 
 	run:mkdir(SCRIPT_HOME .. "/fs")
-	run:rm(SCRIPT_HOME .. "/fs/*.*")
 	run:replace(SCRIPT_HOME .. "/build/rv/ReleaseStatic/Dashboard", SCRIPT_HOME .. "/fs/dash")
 	run:replace(SCRIPT_HOME .. "/build/rv/ReleaseStatic/Doom", SCRIPT_HOME .. "/fs/doom")
 	run:replace(SCRIPT_HOME .. "/code/Doom/doom1.wad", SCRIPT_HOME .. "/fs/doom1.wad")
