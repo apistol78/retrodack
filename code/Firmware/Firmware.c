@@ -13,16 +13,19 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <HAL/Interrupt.h>
 #include <HAL/SD.h>
 #include <HAL/Timer.h>
 #include <HAL/UART.h>
 
 #include "Runtime/Audio.h"
+#include "Runtime/Console.h"
 #include "Runtime/CRT.h"
 #include "Runtime/ELF.h"
 #include "Runtime/File.h"
 #include "Runtime/Input.h"
 #include "Runtime/Runtime.h"
+#include "Runtime/Timer.h"
 #include "Runtime/Kernel.h"
 #include "Runtime/Video.h"
 
@@ -191,25 +194,23 @@ int main()
 
 	// Initialize only systems which we need;
 	// prevent linker from including unused code.
+	crt_init();
+	rt_timer_init();
+	hal_interrupt_init();
 	hal_video_init();
 	hal_sd_init(SD_MODE_SW);
+	kernel_init();
 	file_init();
-
-	// Green display while loading ELF.
-	rt_video_set_palette(0, 0x00ff00);
-	rt_video_clear(0);
-	rt_video_present();
+	rt_console_init();	
 
 	// Try to execute BOOT executable from SD
 	// card, if available.
+	rt_console_printf("trying to load \"boot\"...\n");
 	rt_elf_launch("boot");
 
-	// Red display while in remote control.
-	rt_video_set_palette(0, 0xff0000);
-	rt_video_clear(0);
-	rt_video_present();
-
 	// No BOOT executable; enter remote control mode.
+	rt_console_printf("no \"boot\" found,\n");
+	rt_console_printf("entering remote control...\n");
 	remote_control();
 
 	return 0;

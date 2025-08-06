@@ -126,7 +126,7 @@ void rt_console_init()
 
 	rt_video_set_palette(0, 0x8c6120);	// background
 	rt_video_set_palette(1, 0xee77c3);
-  	rt_video_set_palette(2, 0xfaac37);	// foreground
+  	rt_video_set_palette(2, 0xffdfaf);	// foreground
 	rt_video_set_palette(255, 0x887ecb); 
 
 	rt_video_clear(0);

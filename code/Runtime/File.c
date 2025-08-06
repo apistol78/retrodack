@@ -177,12 +177,9 @@ int32_t file_open(const char* name, int32_t mode)
 	FIL* fp = file_alloc();
 	if (!fp)
 	{
-		printf("unable to alloc file pointer!\n");
 		kernel_cs_unlock(&lock);
 		return 0;
 	}
-
-	printf("file_open %s...\n", name);
 
 	FRESULT r = FR_INVALID_PARAMETER;
 	if (mode == FILE_MODE_READ)
@@ -205,8 +202,6 @@ int32_t file_open(const char* name, int32_t mode)
 	}
 
 	file_free(fp);
-	printf("failed to open file %s!\n", name);
-
 	kernel_cs_unlock(&lock);
 	return 0;
 }
@@ -328,7 +323,6 @@ int32_t file_read(int32_t fd, void* ptr, int32_t len)
 	else
 	{
 		kernel_cs_unlock(&lock);
-		printf("f_read failed, FRESULT %d\n", (int32_t)result);
 		return -2;
 	}
 }
