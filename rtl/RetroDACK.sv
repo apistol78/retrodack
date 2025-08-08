@@ -161,7 +161,7 @@ module RetroDACK(
 
 
 	//====================================================
-	// CPU BusMux
+	// CPU bus multiplexer
 	wire bus_rw;
 	wire bus_request;
 	wire bus_ready;
@@ -169,9 +169,7 @@ module RetroDACK(
 	wire [31:0] bus_rdata;
 	wire [31:0] bus_wdata;
 
-	CPU_BusMux #(
-		.REGISTERED(0)
-	) bus(
+	DualPort bus(
 		.i_reset(reset),
 		.i_clock(clock),
 
@@ -182,17 +180,26 @@ module RetroDACK(
 		.i_bus_rdata(bus_rdata),
 		.o_bus_wdata(bus_wdata),
 
+		.i_pa_rw(1'b0),
 		.i_pa_request(cpu_ibus_request),
 		.o_pa_ready(cpu_ibus_ready),
 		.i_pa_address(cpu_ibus_address),
 		.o_pa_rdata(cpu_ibus_rdata),
+		.i_pa_wdata(32'h0),
 
 		.i_pb_rw(cpu_dbus_rw),
 		.i_pb_request(cpu_dbus_request),
 		.o_pb_ready(cpu_dbus_ready),
 		.i_pb_address(cpu_dbus_address),
 		.o_pb_rdata(cpu_dbus_rdata),
-		.i_pb_wdata(cpu_dbus_wdata)
+		.i_pb_wdata(cpu_dbus_wdata),
+
+		.i_pc_rw(1'b0),
+		.i_pc_request(1'b0),
+		.o_pc_ready(),
+		.i_pc_address(32'h0),
+		.o_pc_rdata(),
+		.i_pc_wdata(32'h0)
 	);
 
 
