@@ -41,6 +41,7 @@
 #endif
 
 // Klara-RV
+#include <Emulator2/VCDTrace.h>
 #include <Emulator2/CPU/Bus.h>
 #include <Emulator2/CPU/Helpers.h>
 #include <Emulator2/CPU/GL/CPU_gate.h>
@@ -135,14 +136,14 @@ int main(int argc, const char** argv)
 
 	Bus bus;
 	bus.map(0x00000000, 0x00000000 + rom.getCapacity(), false, false, &rom);
- 	bus.map(0x20000000, 0x20000000 + sdram.getCapacity(), true, false, &sdram);
-	bus.map(0x51000000, 0x51000100, false, false, &uart);
-	bus.map(0x53000000, 0x53000100, false, true, &i2c);
-	bus.map(0x54000000, 0x54000100, false, true, &sd);
-	bus.map(0x55000000, 0x55000100, false, true, &tmr);
-	bus.map(0x56000000, 0x56000100, false, true, &audio);
-	bus.map(0x58000000, 0x58ffffff, false, true, &plic);
-	bus.map(0x5a000000, 0x5b000000, false, false, &video);
+ 	bus.map(0x10000000, 0x10000000 + sdram.getCapacity(), true, false, &sdram);
+	bus.map(0x20000000, 0x20000100, false, false, &uart);
+	bus.map(0x30000000, 0x30000100, false, true, &i2c);
+	bus.map(0x40000000, 0x40000100, false, true, &sd);
+	bus.map(0x50000000, 0x50000100, false, true, &tmr);
+	bus.map(0x60000000, 0x60000100, false, true, &audio);
+	bus.map(0x70000000, 0x70ffffff, false, true, &plic);
+	bus.map(0x80000000, 0x81000000, false, false, &video);
 
 	Ref< OutputStream > os = nullptr;	
 	if (cmdLine.hasOption(L't', L"trace"))
@@ -173,9 +174,12 @@ int main(int argc, const char** argv)
 		// trace = L"RD_g.trace";
 	}
 
-	cpu->setSP(0x22000000 - 4);
+	cpu->setSP(0x12000000 - 4);
 
-	tmr.setCallback([&](){ cpu->interrupt(TIMER); });
+	VCDTrace vcd;
+	vcd.declare(L"TIMER");
+
+	tmr.setCallback([&](){ vcd.set(0, true); cpu->interrupt(TIMER); });
 	tb.setCallback([&](){ plic.raise(0); }); // Input interrupt
 	gpio.setCallback([&](){ plic.raise(1); }); // GPIO interrupt
 	audio.setCallback([&]() { plic.raise(2); }); // Audio interrupt
@@ -324,6 +328,9 @@ int main(int argc, const char** argv)
 	{
 		while(!th->stopped())
 		{
+			// vcd.tick();
+			// vcd.set(0, false);
+
 			if (!cpu->tick((os != nullptr) ? 1 : 10000) || bus.error())
 			{
 				log::error << L"CPU tick failed at PC " << str(L"%08x", cpu->getPC()) << Endl;
@@ -384,6 +391,13 @@ int main(int argc, const char** argv)
 		form->destroy();
 		form = nullptr;
 	}
+
+	/*
+	Ref< IStream > fs = FileSystem::getInstance().open(L"Emulator.vcd", File::FmWrite);
+	FileOutputStream fos(fs, new Utf8Encoding());
+	vcd.dump(fos);
+	fos.close();
+	*/
 
 	return 0;
 }

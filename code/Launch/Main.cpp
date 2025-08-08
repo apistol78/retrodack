@@ -194,7 +194,7 @@ int main(int argc, const char** argv)
 		}
 	}
 
-	uint32_t sp = 0x22000000 - 4;
+	uint32_t sp = 0x12000000 - 4;
 	if (commandLine.hasOption('s', L"stack"))
 		sp = (uint32_t)commandLine.getOption('s', L"stack").getInteger();
 
