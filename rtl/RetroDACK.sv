@@ -22,7 +22,7 @@ module RetroDACK(
 
 	assign LED_R = cpu_fault;
 	assign LED_G = ~cpu_fault;
-	assign LED_B = 1'b0; // SD_EXTERNAL_CARD;
+	assign LED_B = 1'b0; // sd_CARD;
 
 	// Input CLOCK is 25 MHz
 
@@ -65,141 +65,6 @@ module RetroDACK(
 		.i_clock(clock),
 		.i_reset(uart_soft_reset || !clock_locked),
 		.o_reset(reset)
-	);
-
-	//====================================================
-	// SPI Flash
-	wire spif_select;
-	wire [31:0] spif_address;
-	wire [31:0] spif_rdata;
-	wire spif_ready;
-
-	SPI_Flash spif(
-		.i_reset(reset),
-		.i_clock(clock),
-		.i_request(bus_request && spif_select),
-		.i_address(spif_address),
-		.o_rdata(spif_rdata),
-		.o_ready(spif_ready),
-
-		.SPI_nCS(FLASH_nCS),
-		.SPI_CLK(FLASH_CLK),
-		.SPI_MOSI(FLASH_MOSI),
-		.SPI_MISO(FLASH_MISO)
-	);
-
-
-	//=====================================
-    // SDRAM ($20000000 - $22000000)
-	wire sdram_select;
-	wire [31:0] sdram_address;
-	wire [31:0] sdram_wdata;
-	wire [31:0] sdram_rdata;
-	wire sdram_ready;
-
-	bit [15:0] it_sdram_data_r;
-	wire [15:0] it_sdram_data_w;
-	wire it_sdram_data_rw;
-
-	assign SDRAM_DQ = it_sdram_data_rw ? it_sdram_data_w : 16'hz;
-	assign it_sdram_data_r = SDRAM_DQ;
-
-    SDRAM_controller #(
-        .FREQUENCY(`FREQUENCY),
-		.SDRAM_DATA_WIDTH(16)
-    ) sdram(
-	    .i_reset(reset),
-	    .i_clock(clock),
-		.i_clock_sdram(clock_sdram),
-
-	    .i_request(sdram_select && bus_request),
-	    .i_rw(bus_rw),
-	    .i_address(sdram_address),
-	    .i_wdata(sdram_wdata),
-	    .o_rdata(sdram_rdata),
-	    .o_ready(sdram_ready),
-
-	    .sdram_clk(SDRAM_CLK),
-	    .sdram_clk_en(SDRAM_CKE),
-	    .sdram_cas_n(SDRAM_CAS_n),
-	    .sdram_cs_n(SDRAM_CE_n),
-	    .sdram_ras_n(SDRAM_RAS_n),
-	    .sdram_we_n(SDRAM_WE_n),
-	    .sdram_dqm(SDRAM_DQM),
-	    .sdram_bs(SDRAM_BA),
-	    .sdram_addr(SDRAM_A),
-		.sdram_rdata(it_sdram_data_r),
-		.sdram_wdata(it_sdram_data_w),
-		.sdram_data_rw(it_sdram_data_rw)
-    );
-
-
-	//====================================================
-	// CPU chip select
-	assign spif_select = bus_address[31:28] == 4'h0;
-	assign spif_address = { 4'h0, bus_address[27:0] + 28'h100000 };
-
-	assign sdram_select = bus_address[31:28] == 4'h2;
-	assign sdram_address = { 4'h0, bus_address[27:0] };
-	assign sdram_wdata = bus_wdata;
-
-	assign bridge_select = bus_address[31:28] == 4'h5;
-	assign bridge_address = { 4'h0, bus_address[27:0] };
-	assign bridge_wdata = bus_wdata;
-
-	assign bus_rdata =
-		spif_select		? spif_rdata	:
-		sdram_select	? sdram_rdata	:
-		bridge_select	? bridge_rdata	:
-		32'h00000000;
-
-	assign bus_ready =
-		spif_select		? spif_ready	:
-		sdram_select	? sdram_ready	:
-		bridge_select	? bridge_ready	:
-		1'b0;
-
-
-	//====================================================
-	// CPU bus multiplexer
-	wire bus_rw;
-	wire bus_request;
-	wire bus_ready;
-	wire [31:0] bus_address;
-	wire [31:0] bus_rdata;
-	wire [31:0] bus_wdata;
-
-	DualPort bus(
-		.i_reset(reset),
-		.i_clock(clock),
-
-		.o_bus_rw(bus_rw),
-		.o_bus_request(bus_request),
-		.i_bus_ready(bus_ready),
-		.o_bus_address(bus_address),
-		.i_bus_rdata(bus_rdata),
-		.o_bus_wdata(bus_wdata),
-
-		.i_pa_rw(1'b0),
-		.i_pa_request(cpu_ibus_request),
-		.o_pa_ready(cpu_ibus_ready),
-		.i_pa_address(cpu_ibus_address),
-		.o_pa_rdata(cpu_ibus_rdata),
-		.i_pa_wdata(32'h0),
-
-		.i_pb_rw(cpu_dbus_rw),
-		.i_pb_request(cpu_dbus_request),
-		.o_pb_ready(cpu_dbus_ready),
-		.i_pb_address(cpu_dbus_address),
-		.o_pb_rdata(cpu_dbus_rdata),
-		.i_pb_wdata(cpu_dbus_wdata),
-
-		.i_pc_rw(1'b0),
-		.i_pc_request(1'b0),
-		.o_pc_ready(),
-		.i_pc_address(32'h0),
-		.o_pc_rdata(),
-		.i_pc_wdata(32'h0)
 	);
 
 
@@ -268,9 +133,77 @@ module RetroDACK(
 
 
 	//====================================================
+	// SPI Flash
+	wire spif_request;
+	wire [31:0] spif_address;
+	wire [31:0] spif_rdata;
+	wire spif_ready;
+
+	SPI_Flash spif(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(spif_request),
+		.i_address(spif_address),
+		.o_rdata(spif_rdata),
+		.o_ready(spif_ready),
+
+		.SPI_nCS(FLASH_nCS),
+		.SPI_CLK(FLASH_CLK),
+		.SPI_MOSI(FLASH_MOSI),
+		.SPI_MISO(FLASH_MISO)
+	);
+
+
+	//=====================================
+    // SDRAM
+	wire sdram_request;
+	wire sdram_rw;
+	wire [31:0] sdram_address;
+	wire [31:0] sdram_wdata;
+	wire [31:0] sdram_rdata;
+	wire sdram_ready;
+
+	bit [15:0] it_sdram_data_r;
+	wire [15:0] it_sdram_data_w;
+	wire it_sdram_data_rw;
+
+	assign SDRAM_DQ = it_sdram_data_rw ? it_sdram_data_w : 16'hz;
+	assign it_sdram_data_r = SDRAM_DQ;
+
+    SDRAM_controller #(
+        .FREQUENCY(`FREQUENCY),
+		.SDRAM_DATA_WIDTH(16)
+    ) sdram(
+	    .i_reset(reset),
+	    .i_clock(clock),
+		.i_clock_sdram(clock_sdram),
+
+	    .i_request(sdram_request),
+	    .i_rw(sdram_rw),
+	    .i_address(sdram_address),
+	    .i_wdata(sdram_wdata),
+	    .o_rdata(sdram_rdata),
+	    .o_ready(sdram_ready),
+
+	    .sdram_clk(SDRAM_CLK),
+	    .sdram_clk_en(SDRAM_CKE),
+	    .sdram_cas_n(SDRAM_CAS_n),
+	    .sdram_cs_n(SDRAM_CE_n),
+	    .sdram_ras_n(SDRAM_RAS_n),
+	    .sdram_we_n(SDRAM_WE_n),
+	    .sdram_dqm(SDRAM_DQM),
+	    .sdram_bs(SDRAM_BA),
+	    .sdram_addr(SDRAM_A),
+		.sdram_rdata(it_sdram_data_r),
+		.sdram_wdata(it_sdram_data_w),
+		.sdram_data_rw(it_sdram_data_rw)
+    );
+
+
+	//====================================================
 	// UART
-	wire uart_select;
-	wire [1:0] uart_address;
+	wire uart_request;
+	wire [31:0] uart_address;
 	wire [31:0] uart_wdata;
 	wire [31:0] uart_rdata;
 	wire uart_ready;
@@ -284,9 +217,9 @@ module RetroDACK(
 	) uart(
 		.i_reset(reset),
 		.i_clock(clock),
-		.i_request(bridge_far_request && uart_select),
+		.i_request(uart_request),
 		.i_rw(bridge_far_rw),
-		.i_address(uart_address),
+		.i_address(uart_address[1:0]),
 		.i_wdata(uart_wdata),
 		.o_rdata(uart_rdata),
 		.o_ready(uart_ready),
@@ -300,8 +233,9 @@ module RetroDACK(
 
 	//====================================================
 	// I2C
-	wire i2c_select;
-	wire [1:0] i2c_address;
+	wire i2c_request;
+	wire i2c_rw;
+	wire [31:0] i2c_address;
 	wire [31:0] i2c_wdata;
 	wire [31:0] i2c_rdata;
 	wire i2c_ready;
@@ -313,8 +247,8 @@ module RetroDACK(
 
 	I2C i2c(
 		.i_clock(clock),
-		.i_request(bridge_far_request && i2c_select),
-		.i_rw(bridge_far_rw),
+		.i_request(i2c_request),
+		.i_rw(i2c_rw),
 		.i_wdata(i2c_wdata),
 		.o_rdata(i2c_rdata),
 		.o_ready(i2c_ready),
@@ -327,44 +261,46 @@ module RetroDACK(
 
 
 	//====================================================
-	// SD (external)
-	wire sd_external_select;
-	wire [1:0] sd_external_address;
-	wire [31:0] sd_external_wdata;
-	wire [31:0] sd_external_rdata;
-	wire sd_external_ready;
+	// SD
+	wire sd_request;
+	wire sd_rw;
+	wire [31:0] sd_address;
+	wire [31:0] sd_wdata;
+	wire [31:0] sd_rdata;
+	wire sd_ready;
 
-	wire sd_external_cmd_dir;
-	wire sd_external_cmd_out;
-	assign SD_EXTERNAL_CMD = sd_external_cmd_dir ? sd_external_cmd_out : 1'bz;
+	wire sd_cmd_dir;
+	wire sd_cmd_out;
+	assign sd_CMD = sd_cmd_dir ? sd_cmd_out : 1'bz;
 
-	wire sd_external_dat_dir;
-	wire [3:0] sd_external_dat_out;
-	assign SD_EXTERNAL_DAT = sd_external_dat_dir ? sd_external_dat_out : 4'bz; 
+	wire sd_dat_dir;
+	wire [3:0] sd_dat_out;
+	assign sd_DAT = sd_dat_dir ? sd_dat_out : 4'bz; 
 
-	SD sd_external(
+	SD sd(
 		.i_reset(reset),
 		.i_clock(clock),
-		.i_request(bridge_far_request && sd_external_select),
-		.i_rw(bridge_far_rw),
-		.i_address(sd_external_address),
-		.i_wdata(sd_external_wdata),
-		.o_rdata(sd_external_rdata),
-		.o_ready(sd_external_ready),
+		.i_request(sd_request),
+		.i_rw(sd_rw),
+		.i_address(sd_address[1:0]),
+		.i_wdata(sd_wdata),
+		.o_rdata(sd_rdata),
+		.o_ready(sd_ready),
 
-		.SD_CLK(SD_EXTERNAL_CLK),
-		.SD_CMD_dir(sd_external_cmd_dir),
-		.SD_CMD_in(SD_EXTERNAL_CMD),
-		.SD_CMD_out(sd_external_cmd_out),
-		.SD_DAT_dir(sd_external_dat_dir),
-		.SD_DAT_in(SD_EXTERNAL_DAT),
-		.SD_DAT_out(sd_external_dat_out)
+		.SD_CLK(sd_CLK),
+		.SD_CMD_dir(sd_cmd_dir),
+		.SD_CMD_in(sd_CMD),
+		.SD_CMD_out(sd_cmd_out),
+		.SD_DAT_dir(sd_dat_dir),
+		.SD_DAT_in(sd_DAT),
+		.SD_DAT_out(sd_dat_out)
 	);
 
 
 	//====================================================
 	// TIMER
-	wire timer_select;
+	wire timer_request;
+	wire timer_rw;
 	wire [3:0] timer_address;
 	wire [31:0] timer_wdata;
 	wire [31:0] timer_rdata;
@@ -375,8 +311,8 @@ module RetroDACK(
 	) timer(
 		.i_reset(reset),
 		.i_clock(clock),
-		.i_request(bridge_far_request && timer_select),
-		.i_rw(bridge_far_rw),
+		.i_request(timer_request),
+		.i_rw(timer_rw),
 		.i_address(timer_address),
 		.i_wdata(timer_wdata),
 		.o_rdata(timer_rdata),
@@ -408,8 +344,9 @@ module RetroDACK(
 		.o_i2s_mclk(I2S_MCLK)
 	);
 
-	wire audio_select;
-	wire [3:0] audio_address;
+	wire audio_request;
+	wire audio_rw;
+	wire [31:0] audio_address;
 	wire [31:0] audio_wdata;
 	wire [31:0] audio_rdata;
 	wire audio_ready;
@@ -419,9 +356,9 @@ module RetroDACK(
 		.i_reset(reset),
 		.i_clock(clock),
 
-		.i_request(audio_select && bridge_far_request),
-		.i_rw(bridge_far_rw),
-		.i_address(audio_address),
+		.i_request(audio_request),
+		.i_rw(audio_rw),
+		.i_address(audio_address[3:0]),
 		.i_wdata(audio_wdata),
 		.o_rdata(audio_rdata),
 		.o_ready(audio_ready),
@@ -437,7 +374,8 @@ module RetroDACK(
 	//====================================================
 	// PLIC
 	wire plic_interrupt;
-	wire plic_select;
+	wire plic_request;
+	wire plic_rw;
 	wire [23:0] plic_address;
 	wire [31:0] plic_wdata;
 	wire [31:0] plic_rdata;
@@ -465,8 +403,8 @@ module RetroDACK(
 		.i_interrupt_enable(1'b1),
 		.o_interrupt(cpu_external_interrupt),
 
-		.i_request(bridge_far_request && plic_select),
-		.i_rw(bridge_far_rw),
+		.i_request(plic_request),
+		.i_rw(plic_rw),
 		.i_address(plic_address),
 		.i_wdata(plic_wdata),
 		.o_rdata(plic_rdata),
@@ -478,7 +416,6 @@ module RetroDACK(
 	// VIDEO MEMORY
 
 	wire video_sram_request;
-	// wire video_sram_select;
 	wire video_sram_rw;
 	wire [31:0] video_sram_address;
 	wire [31:0] video_sram_wdata;
@@ -608,7 +545,8 @@ module RetroDACK(
 
 	//====================================================
 	// VIDEO CONTROLLER
-	wire video_select;
+	wire video_request;
+	wire video_rw;
 	wire [31:0] video_address;
 	wire [31:0] video_wdata;
 	wire [31:0] video_rdata;
@@ -620,8 +558,8 @@ module RetroDACK(
 		.i_clock(clock),
 		
 		// CPU interface.
-		.i_cpu_request(video_select && bridge_far_request),
-		.i_cpu_rw(bridge_far_rw),
+		.i_cpu_request(video_request),
+		.i_cpu_rw(video_rw),
 		.i_cpu_address(video_address),
 		.i_cpu_wdata(video_wdata),
 		.o_cpu_rdata(video_rdata),
@@ -652,90 +590,110 @@ module RetroDACK(
 
 
 	//====================================================
-	// Bridge
-	wire bridge_select;
-	wire [27:0] bridge_address;
-	wire [31:0] bridge_wdata;
-	wire [31:0] bridge_rdata;
-	wire bridge_ready;
+	// XBAR
 
-	wire bridge_far_request;
-	wire bridge_far_rw;
-	wire [27:0] bridge_far_address;
-	wire [31:0] bridge_far_wdata;
-	wire [31:0] bridge_far_rdata;
-	wire bridge_far_ready;
+	XBAR_3_9 xbar(
+		.i_reset(reset),
+		.i_clock(clock),
 
-	Bridge #(
-		.REGISTERED(1)
-	) bridge(
-		.i_clock		(clock),
-		.i_reset		(reset),
+		// CPU instruction bus
+		.i_m0_rw(1'b0),
+		.i_m0_request(cpu_ibus_request),
+		.o_m0_ready(cpu_ibus_ready),
+		.i_m0_address(cpu_ibus_address),
+		.o_m0_rdata(cpu_ibus_rdata),
+		.i_m0_wdata(32'h0),
 
-		// Near
-		.i_request		(bridge_select && bus_request),
-		.i_rw			(bus_rw),
-		.i_address		(bridge_address),
-		.i_wdata		(bridge_wdata),
-		.o_rdata		(bridge_rdata),
-		.o_ready		(bridge_ready),
+		// CPU data bus
+		.i_m1_rw(cpu_dbus_rw),
+		.i_m1_request(cpu_dbus_request),
+		.o_m1_ready(cpu_dbus_ready),
+		.i_m1_address(cpu_dbus_address),
+		.o_m1_rdata(cpu_dbus_rdata),
+		.i_m1_wdata(cpu_dbus_wdata),
 
-		// Far
-		.o_far_request	(bridge_far_request),
-		.o_far_rw		(bridge_far_rw),
-		.o_far_address	(bridge_far_address),
-		.o_far_wdata	(bridge_far_wdata),
-		.i_far_rdata	(bridge_far_rdata),
-		.i_far_ready	(bridge_far_ready)
+		// DMA
+		.i_m2_rw(1'b0),
+		.i_m2_request(1'b0),
+		.o_m2_ready(),
+		.i_m2_address(32'h0),
+		.o_m2_rdata(),
+		.i_m2_wdata(32'h0),
+
+		//
+
+		// 32'h0xxx_xxxx : SPI Flash
+		.o_s0_rw(),
+		.o_s0_request(spif_request),
+		.i_s0_ready(spif_ready),
+		.o_s0_address(spif_address),
+		.i_s0_rdata(spif_rdata),
+		.o_s0_wdata(),
+
+		// 32'h1xxx_xxxx : SDRAM
+		.o_s1_rw(sdram_rw),
+		.o_s1_request(sdram_request),
+		.i_s1_ready(sdram_ready),
+		.o_s1_address(sdram_address),
+		.i_s1_rdata(sdram_rdata),
+		.o_s1_wdata(sdram_wdata),
+
+		// 32'h2xxx_xxxx : UART
+		.o_s2_rw(),
+		.o_s2_request(uart_request),
+		.i_s2_ready(uart_ready),
+		.o_s2_address(uart_address),
+		.i_s2_rdata(uart_rdata),
+		.o_s2_wdata(uart_wdata),
+
+		// 32'h3xxx_xxxx : I2C
+		.o_s3_rw(i2c_rw),
+		.o_s3_request(i2c_request),
+		.i_s3_ready(i2c_ready),
+		.o_s3_address(i2c_address),
+		.i_s3_rdata(i2c_rdata),
+		.o_s3_wdata(i2c_wdata),
+
+		// 32'h4xxx_xxxx : SD
+		.o_s4_rw(sd_rw),
+		.o_s4_request(sd_request),
+		.i_s4_ready(sd_ready),
+		.o_s4_address(sd_address),
+		.i_s4_rdata(sd_rdata),
+		.o_s4_wdata(sd_wdata),
+
+		// 32'h5xxx_xxxx : Timer
+		.o_s5_rw(timer_rw),
+		.o_s5_request(timer_request),
+		.i_s5_ready(timer_ready),
+		.o_s5_address(timer_address),
+		.i_s5_rdata(timer_rdata),
+		.o_s5_wdata(timer_wdata),
+
+		// 32'h6xxx_xxxx : Audio
+		.o_s6_rw(audio_rw),
+		.o_s6_request(audio_request),
+		.i_s6_ready(audio_ready),
+		.o_s6_address(audio_address),
+		.i_s6_rdata(audio_rdata),
+		.o_s6_wdata(audio_wdata),
+
+		// 32'h7xxx_xxxx : PLIC
+		.o_s7_rw(plic_rw),
+		.o_s7_request(plic_request),
+		.i_s7_ready(plic_ready),
+		.o_s7_address(plic_address),
+		.i_s7_rdata(plic_rdata),
+		.o_s7_wdata(plic_wdata),
+
+		// 32'h8xxx_xxxx : Video
+		.o_s8_rw(video_rw),
+		.o_s8_request(video_request),
+		.i_s8_ready(video_ready),
+		.o_s8_address(video_address),
+		.i_s8_rdata(video_rdata),
+		.o_s8_wdata(video_wdata)	
 	);
-
-	assign uart_select = bridge_far_address[27:24] == 4'h1;
-	assign uart_address = bridge_far_address[3:2];
-	assign uart_wdata = bridge_far_wdata;
-
-	assign i2c_select = bridge_far_address[27:24] == 4'h3;
-	assign i2c_address = bridge_far_address[3:2];
-	assign i2c_wdata = bridge_far_wdata;
-
-	assign sd_external_select = bridge_far_address[27:24] == 4'h4;
-	assign sd_external_address = bridge_far_address[3:2];
-	assign sd_external_wdata = bridge_far_wdata;
-
-	assign timer_select = bridge_far_address[27:24] == 4'h5;
-	assign timer_address = bridge_far_address[5:2];
-	assign timer_wdata = bridge_far_wdata;
-
-	assign audio_select = bridge_far_address[27:24] == 4'h6;
-	assign audio_address = bridge_far_address[5:2];
-	assign audio_wdata = bridge_far_wdata[31:0];
-
-	assign plic_select = bridge_far_address[27:24] == 4'h8;
-	assign plic_address = bridge_far_address[23:0];
-	assign plic_wdata = bridge_far_wdata;
-
-	assign video_select = bridge_far_address[27:24] == 4'ha;
-	assign video_address = { 8'h0, bridge_far_address[23:0] };
-	assign video_wdata = bridge_far_wdata;
-
-	assign bridge_far_rdata =
-		uart_select	? uart_rdata				:
-		i2c_select ? i2c_rdata					:
-		sd_external_select ? sd_external_rdata	:
-		timer_select ? timer_rdata				:
-		audio_select ? audio_rdata				:
-		plic_select ? plic_rdata				:
-		video_select ? video_rdata				:
-		32'h00000000;
-	
-	assign bridge_far_ready =
-		uart_select	? uart_ready				:
-		i2c_select ? i2c_ready					:
-		sd_external_select ? sd_external_ready	:
-		timer_select ? timer_ready				:
-		audio_select ? audio_ready				:
-		plic_select ? plic_ready				:
-		video_select ? video_ready				:
-		1'b0;
 
 
 endmodule
