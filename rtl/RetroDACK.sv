@@ -8,6 +8,7 @@
 */
 
 `timescale 1ns/1ns
+`default_nettype none
 
 `define FREQUENCY 100_000_000
 
@@ -70,10 +71,10 @@ module RetroDACK(
 
 	//====================================================
 	// CPU
-	wire cpu_ibus_request;
-	wire cpu_ibus_ready;
 	wire cpu_timer_interrupt;
 	wire cpu_external_interrupt;
+	wire cpu_ibus_request;
+	wire cpu_ibus_ready;
 	wire [31:0] cpu_ibus_address;
 	wire [31:0] cpu_ibus_rdata;
 	wire cpu_dbus_rw;
@@ -127,7 +128,7 @@ module RetroDACK(
 
 	//===========================================================
 	//===========================================================
-	// Everything below is on "the bridge", ie far peripherials.
+	// Everything below is connected on the XBAR.
 	//===========================================================
 	//===========================================================
 
@@ -143,7 +144,7 @@ module RetroDACK(
 		.i_reset(reset),
 		.i_clock(clock),
 		.i_request(spif_request),
-		.i_address(spif_address),
+		.i_address({ 4'h0, spif_address[27:0] + 28'h100000 }),
 		.o_rdata(spif_rdata),
 		.o_ready(spif_ready),
 
@@ -203,6 +204,7 @@ module RetroDACK(
 	//====================================================
 	// UART
 	wire uart_request;
+	wire uart_rw;
 	wire [31:0] uart_address;
 	wire [31:0] uart_wdata;
 	wire [31:0] uart_rdata;
@@ -218,7 +220,7 @@ module RetroDACK(
 		.i_reset(reset),
 		.i_clock(clock),
 		.i_request(uart_request),
-		.i_rw(bridge_far_rw),
+		.i_rw(uart_rw),
 		.i_address(uart_address[1:0]),
 		.i_wdata(uart_wdata),
 		.o_rdata(uart_rdata),
@@ -271,11 +273,11 @@ module RetroDACK(
 
 	wire sd_cmd_dir;
 	wire sd_cmd_out;
-	assign sd_CMD = sd_cmd_dir ? sd_cmd_out : 1'bz;
+	wire SD_EXTERNAL_CMD = sd_cmd_dir ? sd_cmd_out : 1'bz;
 
 	wire sd_dat_dir;
 	wire [3:0] sd_dat_out;
-	assign sd_DAT = sd_dat_dir ? sd_dat_out : 4'bz; 
+	assign SD_EXTERNAL_DAT = sd_dat_dir ? sd_dat_out : 4'bz; 
 
 	SD sd(
 		.i_reset(reset),
@@ -287,12 +289,12 @@ module RetroDACK(
 		.o_rdata(sd_rdata),
 		.o_ready(sd_ready),
 
-		.SD_CLK(sd_CLK),
+		.SD_CLK(SD_EXTERNAL_CLK),
 		.SD_CMD_dir(sd_cmd_dir),
-		.SD_CMD_in(sd_CMD),
+		.SD_CMD_in(SD_EXTERNAL_CMD),
 		.SD_CMD_out(sd_cmd_out),
 		.SD_DAT_dir(sd_dat_dir),
-		.SD_DAT_in(sd_DAT),
+		.SD_DAT_in(SD_EXTERNAL_DAT),
 		.SD_DAT_out(sd_dat_out)
 	);
 
@@ -301,7 +303,7 @@ module RetroDACK(
 	// TIMER
 	wire timer_request;
 	wire timer_rw;
-	wire [3:0] timer_address;
+	wire [31:0] timer_address;
 	wire [31:0] timer_wdata;
 	wire [31:0] timer_rdata;
 	wire timer_ready;
@@ -313,7 +315,7 @@ module RetroDACK(
 		.i_clock(clock),
 		.i_request(timer_request),
 		.i_rw(timer_rw),
-		.i_address(timer_address),
+		.i_address(timer_address[3:0]),
 		.i_wdata(timer_wdata),
 		.o_rdata(timer_rdata),
 		.o_ready(timer_ready),
@@ -367,7 +369,7 @@ module RetroDACK(
 		.i_output_busy(audio_output_busy),
 		.o_output_sample_left(audio_output_sample_left),
 		.o_output_sample_right(audio_output_sample_right),
-		.o_output_reload(audio_output_reload)
+		.o_output_reload()
 	);
 
 
@@ -376,7 +378,7 @@ module RetroDACK(
 	wire plic_interrupt;
 	wire plic_request;
 	wire plic_rw;
-	wire [23:0] plic_address;
+	wire [31:0] plic_address;
 	wire [31:0] plic_wdata;
 	wire [31:0] plic_rdata;
 	wire plic_ready;
@@ -405,7 +407,7 @@ module RetroDACK(
 
 		.i_request(plic_request),
 		.i_rw(plic_rw),
-		.i_address(plic_address),
+		.i_address(plic_address[23:0]),
 		.i_wdata(plic_wdata),
 		.o_rdata(plic_rdata),
 		.o_ready(plic_ready)
@@ -592,7 +594,7 @@ module RetroDACK(
 	//====================================================
 	// XBAR
 
-	XBAR_3_9 xbar(
+	XBAR_2_9 xbar(
 		.i_reset(reset),
 		.i_clock(clock),
 
@@ -611,14 +613,6 @@ module RetroDACK(
 		.i_m1_address(cpu_dbus_address),
 		.o_m1_rdata(cpu_dbus_rdata),
 		.i_m1_wdata(cpu_dbus_wdata),
-
-		// DMA
-		.i_m2_rw(1'b0),
-		.i_m2_request(1'b0),
-		.o_m2_ready(),
-		.i_m2_address(32'h0),
-		.o_m2_rdata(),
-		.i_m2_wdata(32'h0),
 
 		//
 
@@ -639,7 +633,7 @@ module RetroDACK(
 		.o_s1_wdata(sdram_wdata),
 
 		// 32'h2xxx_xxxx : UART
-		.o_s2_rw(),
+		.o_s2_rw(uart_rw),
 		.o_s2_request(uart_request),
 		.i_s2_ready(uart_ready),
 		.o_s2_address(uart_address),

@@ -35,7 +35,7 @@ local SOURCE < const > =
 	PATH_PERIFHERIALS .. "/misc/Reset.sv",
 	PATH_PERIFHERIALS .. "/misc/Timer.sv",
 	PATH_PERIFHERIALS .. "/misc/WriteBuffer.sv",
-	PATH_PERIFHERIALS .. "/misc/XBAR_3_9.sv",
+	PATH_PERIFHERIALS .. "/misc/XBAR_2_9.sv",
 	PATH_PERIFHERIALS .. "/sdcard/SD.sv",
 	PATH_PERIFHERIALS .. "/sdram/SDRAM_controller.sv",
 	PATH_PERIFHERIALS .. "/sram/SRAM_controller.sv",
@@ -339,16 +339,19 @@ function main()
 		stdout:printLn("Synthesize...")
 		stdout:printLn("==============================")
 		local tmr = Timer()
+
 		local xc = run:execute("yosys -l build/" .. rtl .. ".log -p \"opt; share -aggressive; synth_ecp5 -abc9 -json build/" .. rtl .. ".json\" " .. f)
-		-- local xc = run:execute(
-		-- 	"yosys -l build/" .. rtl .. ".log " ..
-		-- 	"-p \"" ..
-		-- 		"read_verilog -noautowire " .. f .. "; " ..
-		-- 		"opt; "..
-		-- 		"share -aggressive; " ..
-		-- 		"synth_ecp5 -abc9 -json build/" .. rtl .. ".json; " ..
-		-- 	"\""
-		-- )
+--[[
+		local xc = run:execute(
+			"yosys -l build/" .. rtl .. ".log " ..
+			"-p \"" ..
+				"read_verilog -noautowire " .. f .. "; " ..
+				"opt; "..
+				"share -aggressive; " ..
+				"synth_ecp5 -abc9 -json build/" .. rtl .. ".json; " ..
+			"\""
+		)
+]]
 		if xc ~= 0 then
 			stderr:printLn("yosys failed; build aborted.")
 			return 1

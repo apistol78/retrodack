@@ -167,7 +167,7 @@ static void remote_control()
 int main()
 {
 	// Initialize SP, since we hot restart and startup doesn't set SP.
-	const uint32_t sp = 0x22000000 - 4;
+	const uint32_t sp = 0x12000000 - 4;
 	__asm__ volatile (
 		"mv sp, %0	\n"
 		:
