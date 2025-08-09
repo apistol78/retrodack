@@ -650,12 +650,12 @@ module RetroDACK(
 		.i_m1_wdata(cpu_dbus_wdata),
 
 		// DMA channel
-		.i_m1_rw(dma_bus_rw),
-		.i_m1_request(dma_bus_request),
-		.o_m1_ready(dma_bus_ready),
-		.i_m1_address(dma_bus_address),
-		.o_m1_rdata(dma_bus_rdata),
-		.i_m1_wdata(dma_bus_wdata),	
+		.i_m2_rw(dma_bus_rw),
+		.i_m2_request(dma_bus_request),
+		.o_m2_ready(dma_bus_ready),
+		.i_m2_address(dma_bus_address),
+		.o_m2_rdata(dma_bus_rdata),
+		.i_m2_wdata(dma_bus_wdata),	
 
 		//
 
