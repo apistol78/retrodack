@@ -592,9 +592,44 @@ module RetroDACK(
 
 
 	//====================================================
+	// DMA
+	wire dma_request;
+	wire dma_rw;
+	wire [31:0] dma_address;
+	wire [31:0] dma_wdata;
+	wire [31:0] dma_rdata;
+	wire dma_ready;
+
+	wire dma_bus_rw;
+	wire dma_bus_request;
+	wire dma_bus_ready;
+	wire [31:0] dma_bus_address;
+	wire [31:0] dma_bus_rdata;
+	wire [31:0] dma_bus_wdata;
+
+	DMA dma(
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(dma_request),
+		.i_rw(dma_rw),
+		.i_address(dma_address[3:2]),
+		.i_wdata(dma_wdata),
+		.o_rdata(dma_rdata),
+		.o_ready(dma_ready),
+		
+		.o_bus_rw(dma_bus_rw),
+		.o_bus_request(dma_bus_request),
+		.i_bus_ready(dma_bus_ready),
+		.o_bus_address(dma_bus_address),
+		.i_bus_rdata(dma_bus_rdata),
+		.o_bus_wdata(dma_bus_wdata)
+	);
+
+
+	//====================================================
 	// XBAR
 
-	XBAR_2_9 xbar(
+	XBAR_3_10 xbar(
 		.i_reset(reset),
 		.i_clock(clock),
 
@@ -613,6 +648,14 @@ module RetroDACK(
 		.i_m1_address(cpu_dbus_address),
 		.o_m1_rdata(cpu_dbus_rdata),
 		.i_m1_wdata(cpu_dbus_wdata),
+
+		// DMA channel
+		.i_m1_rw(dma_bus_rw),
+		.i_m1_request(dma_bus_request),
+		.o_m1_ready(dma_bus_ready),
+		.i_m1_address(dma_bus_address),
+		.o_m1_rdata(dma_bus_rdata),
+		.i_m1_wdata(dma_bus_wdata),	
 
 		//
 
@@ -686,7 +729,15 @@ module RetroDACK(
 		.i_s8_ready(video_ready),
 		.o_s8_address(video_address),
 		.i_s8_rdata(video_rdata),
-		.o_s8_wdata(video_wdata)	
+		.o_s8_wdata(video_wdata),
+
+		// 32'h9xxx_xxxx : DMA
+		.o_s9_rw(dma_rw),
+		.o_s9_request(dma_request),
+		.i_s9_ready(dma_ready),
+		.o_s9_address(dma_address),
+		.i_s9_rdata(dma_rdata),
+		.o_s9_wdata(dma_wdata)	
 	);
 
 

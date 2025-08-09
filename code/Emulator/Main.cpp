@@ -47,6 +47,7 @@
 #include <Emulator2/CPU/GL/CPU_gate.h>
 #include <Emulator2/CPU/HL/CPU_hl.h>
 #include <Emulator2/Devices/Audio.h>
+#include <Emulator2/Devices/DMA.h>
 #include <Emulator2/Devices/I2C.h>
 #include <Emulator2/Devices/Memory.h>
 #include <Emulator2/Devices/PLIC.h>
@@ -127,6 +128,7 @@ int main(int argc, const char** argv)
 	::Timer tmr;
 	PLIC plic;
 	Audio audio;
+	DMA dma;
 
 	TrackBallDevice tb;
 	i2c.addSlave(0x0a, &tb);
@@ -144,6 +146,7 @@ int main(int argc, const char** argv)
 	bus.map(0x60000000, 0x60000100, false, true, &audio);
 	bus.map(0x70000000, 0x70ffffff, false, true, &plic);
 	bus.map(0x80000000, 0x81000000, false, false, &video);
+	bus.map(0x90000000, 0x90000100, false, true, &dma);
 
 	Ref< OutputStream > os = nullptr;	
 	if (cmdLine.hasOption(L't', L"trace"))
@@ -356,7 +359,7 @@ int main(int argc, const char** argv)
 	th->start();
 
 	traktor::Timer timer;
-	while (g_going)
+	while (g_going && !th->wait(0))
 	{
 		if (!ui::Application::getInstance()->process())
 			break;

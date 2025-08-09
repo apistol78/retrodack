@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <HAL/DMA.h>
+
 #include "Runtime/Video.h"
 
 int32_t rt_video_init() { return hal_video_init(); }
@@ -53,7 +55,11 @@ void rt_video_blit(const void* source)
 {
 	const uint32_t pixels = hal_video_get_resolution_width() * hal_video_get_resolution_height();
 	uint8_t* target = (uint8_t*)hal_video_get_secondary_target();
-	memcpy(target, source, pixels);
+	//memcpy(target, source, pixels);
+	__asm__ volatile ( "fence" );
+	hal_dma_copy(target, source, pixels >> 2);
+	// while (hal_dma_is_busy())
+	// 	;
 }
 
 void rt_video_present() { hal_video_present(); }
