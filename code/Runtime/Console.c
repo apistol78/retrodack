@@ -50,6 +50,7 @@ static void rt_console_draw_console()
 	uint8_t* framebuffer = (uint8_t*)rt_video_get_secondary_target();
 
 	rt_video_clear(0);
+	rt_video_wait();
 
 	for (int y = 0; y < CR; ++y)
 	{
@@ -130,6 +131,7 @@ void rt_console_init()
 	rt_video_set_palette(255, 0x887ecb); 
 
 	rt_video_clear(0);
+	rt_video_wait();
 
 	kernel_sig_init(&s_redraw);
 	s_thread = kernel_create_thread(rt_console_thread_redraw);
@@ -139,6 +141,7 @@ void rt_console_shutdown()
 {
 	kernel_destroy_thread(s_thread);
 	rt_video_clear(0);
+	rt_video_wait();
 }
 
 void rt_console_clear()

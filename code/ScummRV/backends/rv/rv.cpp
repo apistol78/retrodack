@@ -605,6 +605,8 @@ void OSystem_RebelV::update_frame()
 	else
 	  	rt_video_blit(m_target);
 
+	rt_video_wait();
+
 	// Mouse is drawn directly onto primary target, thus
 	// no need to preserve background etc.
 	if (m_mouseVisible)

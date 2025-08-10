@@ -92,13 +92,14 @@ int32_t rt_elf_launch(const char* filename)
 	{
 		rt_video_set_palette(0, 0x000000);
 		rt_video_clear(0);
+		rt_video_wait();
 		rt_video_present();
 
 		// Disable interrupts; assumed to be reinitialized
 		// by executable.
 		hal_interrupt_disable();
 
-		const uint32_t sp = 0x22000000 - 4;
+		const uint32_t sp = 0x12000000 - 4;
 		__asm__ volatile (
 			"fence			\n"
 			"fence			\n"
