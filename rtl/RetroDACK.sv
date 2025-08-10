@@ -25,8 +25,11 @@ module RetroDACK(
 	assign LED_G = ~cpu_fault;
 	assign LED_B = 1'b0; // sd_CARD;
 
-	// Input CLOCK is 25 MHz
 
+	//====================================================
+
+
+	// Input CLOCK is 25 MHz
 	// 100 MHz
 	// 100 MHz (7000 ps phase shift)
 	// 33.3 MHz
@@ -40,7 +43,7 @@ module RetroDACK(
 		.CLKOS_CPHASE(5),
 		.CLKOS2_DIV(6*3),
 		.CLKOS2_CPHASE(0)
-	) pll(
+	) pll (
 		.i_clk(CLOCK),
 		.o_clk1(clock),
 		.o_clk2(clock_sdram),
@@ -49,6 +52,9 @@ module RetroDACK(
 	);
 
 	assign clock_locked = pll_locked;
+
+
+	//====================================================
 
 
 	// CLK need to be tunneled through a primitive

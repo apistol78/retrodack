@@ -33,6 +33,7 @@ void DG_DrawFrame2(const uint8_t* frame, const uint32_t* colors)
 		rt_video_set_palette(i, colors[i]);
 
 	rt_video_blit(frame);
+	rt_video_wait();
 	rt_video_present();
 }
 
