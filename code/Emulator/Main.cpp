@@ -28,6 +28,7 @@
 #include <Core/Thread/Thread.h>
 #include <Drawing/Image.h>
 #include <Ui/Application.h>
+#include <Ui/AspectLayout.h>
 #include <Ui/Bitmap.h>
 #include <Ui/Image.h>
 #include <Ui/Form.h>
@@ -162,7 +163,7 @@ int main(int argc, const char** argv)
 	if (cmdLine.hasOption(L"hl"))
 	{
 		log::info << L"Using high level CPU emulation." << Endl;
-		cpu = new CPU_hl(&bus, os, false);
+		cpu = new CPU_hl(&bus, os, true);
 		// trace = L"RD_h.trace";
 	}
 	else
@@ -220,12 +221,15 @@ int main(int argc, const char** argv)
 
 	// Create user interface.
 	Ref< ui::Form > form = new ui::Form();
-	form->create(L"RetroDACK", 360_ut, 360_ut, ui::Form::WsDefault, new ui::FloodLayout());
+	form->create(L"RetroDACK", 720_ut, 720_ut, ui::Form::WsDefault, new ui::FloodLayout());
 
 	Ref< ui::Bitmap > uiImage = new ui::Bitmap(720, 720);
+
+	Ref< ui::Container > container = new ui::Container();
+	container->create(form, ui::WsNone, new ui::AspectLayout());
 	
 	Ref< ui::Image > image = new ui::Image();
-	image->create(form, uiImage, ui::Image::WsScale | ui::Image::WsNearestFilter);
+	image->create(container, uiImage, ui::Image::WsScale | ui::Image::WsNearestFilter);
 
 	form->update();
 	form->show();
