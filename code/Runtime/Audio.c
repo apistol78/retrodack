@@ -7,12 +7,16 @@
  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 #include "Runtime/Input.h"
+#include "Runtime/Kernel.h"
 
 #include <HAL/Audio.h>
+#include <HAL/DMA.h>
 #include <HAL/I2C.h>
 #include <HAL/Timer.h>
 
 #define TLV320_ADDR 0x18
+
+static uint32_t s_dma_tag = 0;
 
 int32_t rt_audio_init()
 {
@@ -118,12 +122,32 @@ uint32_t rt_audio_get_queued()
 	return hal_audio_get_queued();
 }
 
-void rt_audio_play_mono(const int16_t* samples, uint32_t nsamples)
-{
-	hal_audio_play_mono(samples, nsamples);
-}
+// void rt_audio_play_mono(const int16_t* samples, uint32_t nsamples)
+// {
+// 	volatile uint32_t* audio = (volatile uint32_t*)AUDIO_BASE;
+// 	for (uint32_t i = 0; i < nsamples; ++i)
+// 	{
+// 		const uint16_t v = *(uint16_t*)&samples[i];
+// 		*audio = (v << 16) | v;
+// 	}
+// }
 
 void rt_audio_play_stereo(const int16_t* samples, uint32_t nsamples)
 {
-	hal_audio_play_stereo(samples, nsamples);
+	volatile int32_t* audio = (volatile int32_t*)AUDIO_BASE;
+	// for (uint32_t i = 0; i < nsamples; i += 2)
+	// {
+	// 	const uint16_t lh = *(uint16_t*)&samples[i];
+	// 	const uint16_t rh = *(uint16_t*)&samples[i + 1];
+	// 	*audio = (lh << 16) | rh;
+	// }
+	
+	__asm__ volatile ( "fence" );
+	s_dma_tag = hal_dma_feed(audio, samples, nsamples);
+}
+
+void rt_audio_wait()
+{
+	while (hal_dma_retired() < s_dma_tag)
+		kernel_yield();
 }

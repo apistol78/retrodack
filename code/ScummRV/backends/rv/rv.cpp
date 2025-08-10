@@ -550,7 +550,9 @@ void OSystem_RebelV::draw_mouse_cursor()
 void OSystem_RebelV::update_sound()
 {
 	const int32_t chunkSize = 1024;
-	static int16_t buf[chunkSize * 2];
+	static int16_t buf[2][chunkSize * 2];
+	int32_t toggle = 0;
+
 	if (m_soundProc)
 	{
 		for (int32_t i = 0; i < 16; ++i)
@@ -563,8 +565,12 @@ void OSystem_RebelV::update_sound()
 			if (free < chunkSize)
 				break;
 
-			m_soundProc(m_soundParam, (byte*)buf, sizeof(buf));
-			rt_audio_play_stereo(buf, chunkSize * 2);
+			m_soundProc(m_soundParam, (byte*)buf[toggle], sizeof(buf[toggle]));
+			
+			rt_audio_wait();
+			rt_audio_play_stereo(buf[toggle], chunkSize >> 1);
+
+			toggle = 1 - toggle;
 		}
 	}
 	kernel_sleep(4);

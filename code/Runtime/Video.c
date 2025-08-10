@@ -14,6 +14,8 @@
 #include "Runtime/Kernel.h"
 #include "Runtime/Video.h"
 
+static uint32_t s_dma_tag = 0;
+
 int32_t rt_video_init()
 {
 	return hal_video_init();
@@ -81,12 +83,12 @@ void rt_video_blit(const void* source)
 	uint8_t* target = (uint8_t*)hal_video_get_secondary_target();
 	
 	__asm__ volatile ( "fence" );
-	hal_dma_copy(target, source, pixels >> 2);
+	s_dma_tag = hal_dma_copy(target, source, pixels >> 2);
 }
 
 void rt_video_wait()
 {
-	while (hal_dma_is_busy())
+	while (hal_dma_retired() < s_dma_tag)
 		kernel_yield();
 }
 

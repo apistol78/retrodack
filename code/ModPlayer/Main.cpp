@@ -30,6 +30,8 @@ void thread_player()
 		int32_t rendered_bytes = pocketmod_render(&context, buffer, avail * sizeof(float[2]));
 		int32_t rendered_samples = rendered_bytes / sizeof(float[2]);
 
+		rt_audio_wait();
+
 		for (int32_t i = 0; i < rendered_samples; i++)
 		{
 			output[i * 2 + 0] = (int16_t)(buffer[i][0] * 0x7fff);
