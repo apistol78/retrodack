@@ -331,7 +331,7 @@ module RetroDACK(
 		.i_clock(clock),
 		.i_request(timer_request),
 		.i_rw(timer_rw),
-		.i_address(timer_address[3:0]),
+		.i_address(timer_address[5:2]),
 		.i_wdata(timer_wdata),
 		.o_rdata(timer_rdata),
 		.o_ready(timer_ready),
