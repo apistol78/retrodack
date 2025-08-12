@@ -270,6 +270,15 @@ module RetroDACK(
 
 	//====================================================
 	// SD
+
+	wire bd_sd_card;
+
+	Debounce bd_sd(
+		.i_clock(clock),
+		.i_data(SD_EXTERNAL_CARD),
+		.o_stable(bd_sd_card)
+	);
+
 	wire sd_request;
 	wire sd_rw;
 	wire [31:0] sd_address;
@@ -301,7 +310,8 @@ module RetroDACK(
 		.SD_CMD_out(sd_cmd_out),
 		.SD_DAT_dir(sd_dat_dir),
 		.SD_DAT_in(SD_EXTERNAL_DAT),
-		.SD_DAT_out(sd_dat_out)
+		.SD_DAT_out(sd_dat_out),
+		.SD_CARD(bd_sd_card)
 	);
 
 
