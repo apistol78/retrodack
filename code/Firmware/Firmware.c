@@ -198,18 +198,27 @@ int main()
 	rt_timer_init();
 	hal_interrupt_init();
 	hal_video_init();
-	hal_sd_init(SD_MODE_SW);
 	kernel_init();
-	file_init();
 	rt_console_init();	
 
-	// Try to execute BOOT executable from SD
-	// card, if available.
-	rt_console_printf("trying to load \"boot\"...\n");
-	rt_elf_launch("boot");
+	if (hal_sd_init(SD_MODE_SW) == SD_RESULT_OK)
+	{
+		file_init();
 
-	// No BOOT executable; enter remote control mode.
-	rt_console_printf("no \"boot\" found,\n");
+		// Try to execute BOOT executable from SD
+		// card, if available.
+		rt_console_printf("trying to load \"boot\"...\n");
+		rt_elf_launch("boot");
+
+		// No BOOT executable found.
+		rt_console_printf("no \"boot\" found.\n");
+	}
+	else
+	{
+		// No SD card inserted.
+		rt_console_printf("no SD card inserted.\n");
+	}
+
 	rt_console_printf("entering remote control...\n");
 	remote_control();
 
