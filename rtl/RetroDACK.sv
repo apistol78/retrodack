@@ -22,7 +22,7 @@ module RetroDACK(
 	wire clock_locked;
 
 	assign LED_R = cpu_fault;
-	assign LED_G = ~cpu_fault;
+	assign LED_G = 1'b0; //~cpu_fault;
 	assign LED_B = 1'b0; // sd_CARD;
 
 
@@ -521,6 +521,32 @@ module RetroDACK(
 
 
 	//====================================================
+
+	bit bl_clk_l = 1'b0;
+	wire bl_clk;
+
+	ClockDivider #(
+		.CLOCK_RATE(`FREQUENCY),
+		.BAUD_RATE(100000)
+	) clk_div(
+		.i_reset(1'b0),
+		.i_clock(clock),
+		.o_clock(bl_clk)
+	);
+
+	bit [7:0] counter = 0;
+
+	always_ff @(posedge clock) begin
+		bl_clk_l <= bl_clk;
+		if ({ bl_clk_l, bl_clk } == 2'b01) begin
+			counter <= counter + 8'h1;
+		end
+	end
+
+	assign LCD_BACKLIGHT_CTRL = (counter > 64) ? 1'b1 : 1'b0;
+
+
+	//====================================================
 	// VIDEO SIGNAL GENERATOR
 	wire vga_hblank;
 	wire vga_vblank;
@@ -528,8 +554,6 @@ module RetroDACK(
 	wire [10:0] vga_pos_y;
 	wire [31:0] video_dac_rdata;
 
-	assign LCD_BACKLIGHT_CTRL = 1'b1;
-	
 	assign LCD_R = video_dac_rdata[7:0+2];
 	assign LCD_G = video_dac_rdata[15:8+2];
 	assign LCD_B = video_dac_rdata[23:16+2];

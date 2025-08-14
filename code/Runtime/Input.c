@@ -47,9 +47,10 @@ static int32_t s_deltaX = 0;
 static int32_t s_deltaY = 0;
 static uint32_t s_pressed = 0;
 
-#define TB_MAX_X 320
-#define TB_MAX_Y 200
-#define NEVENTS 1024
+#define TB_MAX_X	320
+#define TB_MAX_Y	200
+#define TB_SPEED	2
+#define NEVENTS		128
 
 static rt_event_t s_events[NEVENTS];
 static int32_t s_events_in = 0;
@@ -62,10 +63,13 @@ static void tb_input_interrupt(uint32_t source)
 	uint8_t data[5] = { 0, 0, 0, 0, 0 };
 	hal_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5);
 
-	s_absX += data[0];
-	s_absX -= data[1];
-	s_absY += data[2];
-	s_absY -= data[3];
+	#define TB_DATA(N) \
+		((data[N] > 1) ? (data[N] * TB_SPEED) : data[N])
+
+	s_absX += TB_DATA(0);
+	s_absX -= TB_DATA(1);
+	s_absY += TB_DATA(2);
+	s_absY -= TB_DATA(3);
 
 	if (s_absX < 0)
 		s_absX = 0;
@@ -77,10 +81,10 @@ static void tb_input_interrupt(uint32_t source)
 	else if (s_absY > (TB_MAX_Y-1))
 		s_absY = (TB_MAX_Y-1);
 
-	s_deltaX += data[0];
-	s_deltaX -= data[1];
-	s_deltaY += data[2];
-	s_deltaY -= data[3];
+	s_deltaX += TB_DATA(0);
+	s_deltaX -= TB_DATA(1);
+	s_deltaY += TB_DATA(2);
+	s_deltaY -= TB_DATA(3);
 
 	if (data[0] || data[1] || data[2] || data[3])
 	{
@@ -132,10 +136,10 @@ static void gpio_input_interrupt(uint32_t source)
 	S(0x0010, RT_INPUT_DPAD_N);
 	S(0x0100, RT_INPUT_BUTTON_S1);
 	S(0x0200, RT_INPUT_BUTTON_S2);
-	S(0x0001, RT_INPUT_BUTTON_A);
-	S(0x0008, RT_INPUT_BUTTON_B);
-	S(0x0004, RT_INPUT_BUTTON_C);
-	S(0x0002, RT_INPUT_BUTTON_D);
+	S(0x0001, RT_INPUT_BUTTON_D);
+	S(0x0008, RT_INPUT_BUTTON_A);
+	S(0x0004, RT_INPUT_BUTTON_B);
+	S(0x0002, RT_INPUT_BUTTON_C);
 
 	#undef S
 
@@ -188,10 +192,7 @@ int32_t rt_input_init()
 
 		// Enable interrupt pin; notify CPU everytime
 		// track ball position change.
-		// hal_i2c_read(0x0a, TRACKBALL_REG_INT, data, 1);
-		// data[0] |= TRACKBALL_MSK_INT_OUT_EN;
-		// data[0] &= ~TRACKBALL_MSK_INT_TRIGGERED;
-		hal_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN); //data[0]);
+		hal_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN);
 
 		// Read data from TB; to ensure interrupt state
 		// in TB is reset.

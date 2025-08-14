@@ -38,7 +38,7 @@ extern OSystem *OSystem_SDL_create(int gfx_driver);
 #endif
 
 #ifndef __ATARI__
-#define SAMPLES_PER_SEC 11025
+#define SAMPLES_PER_SEC 22050
 #endif
 
 #endif

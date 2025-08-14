@@ -125,9 +125,9 @@ void rt_console_init()
 {
 	rt_video_set_mode(VMODE_360_360_8);
 
-	rt_video_set_palette(0, 0x8c6120);	// background
+	rt_video_set_palette(0, 0x5e3d00);	// background
 	rt_video_set_palette(1, 0xee77c3);
-  	rt_video_set_palette(2, 0xffdfaf);	// foreground
+  	rt_video_set_palette(2, 0xffffff);	// foreground
 	rt_video_set_palette(255, 0x887ecb); 
 
 	rt_video_clear(0);

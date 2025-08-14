@@ -16,11 +16,11 @@
 
 #include "Runtime/Kernel.h"
 
-#define SIGNAL_AWARE
+// #define SIGNAL_AWARE
 #define TIMER_COUNTDOWN				(volatile uint32_t*)(TIMER_BASE + 0x5 * 0x04)
 
 #define KERNEL_MAIN_CLOCK 			100000000
-#define KERNEL_SCHEDULE_FREQUENCY	600
+#define KERNEL_SCHEDULE_FREQUENCY	100
 #define KERNEL_TIMER_RATE 			(KERNEL_MAIN_CLOCK / KERNEL_SCHEDULE_FREQUENCY)
 
 typedef struct

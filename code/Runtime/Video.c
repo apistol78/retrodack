@@ -74,7 +74,7 @@ void rt_video_clear(uint8_t idx)
 	uint8_t* target = (uint8_t*)hal_video_get_secondary_target();
 	
 	const uint32_t value = (idx << 24) | (idx << 16) | (idx << 8) | idx;
-	hal_dma_write(target, pixels >> 2, value);
+	s_dma_tag = hal_dma_write(target, pixels >> 2, value);
 }
 
 void rt_video_blit(const void* source)

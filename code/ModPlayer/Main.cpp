@@ -13,32 +13,38 @@
 #define POCKETMOD_NO_INTERPOLATION
 #include "pocketmod.h"
 
-#define SAMPLE_RATE 44100/4
+#define SAMPLE_RATE 22050
 
 pocketmod_context context;
 
 void thread_player()
 {
-	float buffer[16000][2];
-	int16_t output[16000];
+	float buffer[1024][2];
+	uint32_t output[32][4096];
+	int32_t count = 0;
 
-	//while (pocketmod_loop_count(&context) == 0)
 	for (;;)
 	{
-		int32_t avail = 4096 - rt_audio_get_queued();
-		
-		int32_t rendered_bytes = pocketmod_render(&context, buffer, avail * sizeof(float[2]));
+		int32_t rendered_bytes = pocketmod_render(&context, buffer, sizeof(buffer));
 		int32_t rendered_samples = rendered_bytes / sizeof(float[2]);
 
-		rt_audio_wait();
+		uint32_t* ptr = output[count];
 
 		for (int32_t i = 0; i < rendered_samples; i++)
 		{
-			output[i * 2 + 0] = (int16_t)(buffer[i][0] * 0x7fff);
-			output[i * 2 + 1] = (int16_t)(buffer[i][1] * 0x7fff);
-		}
+			const int16_t lh = (int16_t)(buffer[i][0] * 0x7fff);
+			const int16_t rh = (int16_t)(buffer[i][1] * 0x7fff);
 
-		rt_audio_play_stereo(output, rendered_samples);
+			const uint32_t ulh = *(const uint16_t*)&lh;
+			const uint32_t urh = *(const uint16_t*)&rh;
+
+			ptr[i] = (ulh << 16) | urh;
+		}
+		
+		rt_audio_wait();
+		rt_audio_play_stereo(ptr, rendered_samples);
+
+		count = (count + 1) & 31;
 	}
 }
 

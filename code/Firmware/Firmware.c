@@ -72,6 +72,10 @@ static void remote_control()
 	uint8_t r[1024];
 	for (;;)
 	{
+		// wait until any data has been receieved.
+		// while (hal_uart_rx_empty())
+		// 	kernel_yield();
+
 		const uint8_t cmd = hal_uart_rx_u8();
 
 		// "write"
@@ -164,6 +168,29 @@ static void remote_control()
 	}
 }
 
+static void load(const char* game)
+{
+	if (hal_sd_init(SD_MODE_SW) == SD_RESULT_OK)
+	{
+		// Try to execute BOOT executable from SD
+		// card, if available.
+		rt_console_printf("trying to load \"%s\"...\n", game);
+		kernel_sleep(200);
+
+		file_init();
+		rt_elf_launch(game);
+
+		// No BOOT executable found.
+		rt_console_printf("no \"%s\" found.\n", game);
+	}
+	else
+	{
+		// No SD card inserted.
+		rt_console_printf("no SD card inserted.\n");
+		kernel_sleep(200);
+	}
+}
+
 int main()
 {
 	// Initialize SP, since we hot restart and startup doesn't set SP.
@@ -198,29 +225,35 @@ int main()
 	rt_timer_init();
 	hal_interrupt_init();
 	hal_video_init();
+	rt_input_init();
 	kernel_init();
-	rt_console_init();	
+	rt_console_init();
 
-	if (hal_sd_init(SD_MODE_SW) == SD_RESULT_OK)
+	rt_console_printf("RetroDACK 0.1\n");
+
+	rt_console_printf("press S1 for Doom\n");
+	rt_console_printf("press S2 for ScummRV\n");
+
+	kernel_sleep(200);
+
+	for (;;)
 	{
-		file_init();
+		rt_event_t ev;
+		while (rt_input_get_event(&ev))
+		{
+			if (ev.button == RT_INPUT_BUTTON_S1)
+				load("doom");
+			if (ev.button == RT_INPUT_BUTTON_S2)
+				load("scummrv");
+		}
+		kernel_sleep(100);
 
-		// Try to execute BOOT executable from SD
-		// card, if available.
-		rt_console_printf("trying to load \"boot\"...\n");
-		rt_elf_launch("boot");
-
-		// No BOOT executable found.
-		rt_console_printf("no \"boot\" found.\n");
+		// if (!hal_uart_rx_empty())
+		// {
+		// 	rt_console_printf("entering remote control...\n");
+		// 	remote_control();
+		// }
 	}
-	else
-	{
-		// No SD card inserted.
-		rt_console_printf("no SD card inserted.\n");
-	}
-
-	rt_console_printf("entering remote control...\n");
-	remote_control();
 
 	return 0;
 }

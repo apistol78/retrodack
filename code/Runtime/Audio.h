@@ -18,8 +18,6 @@ EXTERN_C void rt_audio_set_playback_rate(uint32_t rate);
 
 EXTERN_C uint32_t rt_audio_get_queued();
 
-// EXTERN_C void rt_audio_play_mono(const int16_t* samples, uint32_t nsamples);
-
-EXTERN_C void rt_audio_play_stereo(const int16_t* samples, uint32_t nsamples);
+EXTERN_C void rt_audio_play_stereo(const void* samples, uint32_t nsamples);
 
 EXTERN_C void rt_audio_wait();
