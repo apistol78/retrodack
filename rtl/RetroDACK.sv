@@ -227,7 +227,7 @@ module RetroDACK(
 		.i_clock(clock),
 		.i_request(uart_request),
 		.i_rw(uart_rw),
-		.i_address(uart_address[1:0]),
+		.i_address(uart_address[3:2]),
 		.i_wdata(uart_wdata),
 		.o_rdata(uart_rdata),
 		.o_ready(uart_ready),
