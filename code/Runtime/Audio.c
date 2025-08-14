@@ -75,8 +75,8 @@ int32_t rt_audio_init()
 	// Unmute and set gain of output driver.
 	hal_i2c_write(TLV320_ADDR, 0x28, 0x06);
 	hal_i2c_write(TLV320_ADDR, 0x29, 0x06);
-	hal_i2c_write(TLV320_ADDR, 0x2a, 0x1c);	// 24dB D-class amp gain
-	//hal_i2c_write(TLV320_ADDR, 0x2a, 0x14);		// 18dB D-class amp gain
+	// hal_i2c_write(TLV320_ADDR, 0x2a, 0x1c);	// 24dB D-class amp gain
+	hal_i2c_write(TLV320_ADDR, 0x2a, 0x14);		// 18dB D-class amp gain
 	hal_i2c_write(TLV320_ADDR, 0x1f, 0xc2);
 	hal_i2c_write(TLV320_ADDR, 0x20, 0x86);
 	hal_i2c_write(TLV320_ADDR, 0x24, 0x92);

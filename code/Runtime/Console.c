@@ -25,6 +25,9 @@
 #define CC 40
 #define CR 40
 
+const int32_t offset_y = (FW - (CC * 8)) / 2;
+const int32_t offset_x = (FH - (CR * 8)) / 2;
+
 uint32_t s_thread = 0;
 kernel_sig_t s_redraw;
 char s_cbuffer[CC * CR];
@@ -40,7 +43,7 @@ static void rt_console_draw_character(const unsigned char* font, char ch, int32_
 		{
 			const uint8_t set = font[(ch - ' ') * 8 + y] & (1 << x);
 			if (set)
-				framebuffer[(y + col * 8) + (x + row * 8) * FW] = 2;
+				framebuffer[(y + offset_y + col * 8) + (x + offset_x + row * 8) * FW] = 2;
 		}
 	}
 }
@@ -67,7 +70,7 @@ static void rt_console_draw_console()
 		for (int y = 0; y < 8; ++y)
 		{
 			for (int x = 1; x < 7; ++x)
-				framebuffer[s_x * 8 + x + (s_y * 8 + y) * FW] = 2;
+				framebuffer[s_x * 8 + x + offset_x + (s_y * 8 + y + offset_y) * FW] = 2;
 		}
 	}
 

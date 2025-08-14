@@ -50,7 +50,7 @@ static uint32_t s_pressed = 0;
 #define TB_MAX_X	320
 #define TB_MAX_Y	200
 #define TB_SPEED	2
-#define NEVENTS		128
+#define NEVENTS		64
 
 static rt_event_t s_events[NEVENTS];
 static int32_t s_events_in = 0;
@@ -172,7 +172,6 @@ int32_t rt_input_init()
 	// Locate trackball by reading it's identification.
 	for (int32_t i = 0; i < 4; ++i)
 	{
-		printf("[Input] Reading trackball chip id (%d)...\n", i);
 		hal_i2c_read(0x0a, TRACKBALL_REG_CHIP_ID_L, data, 2);
 		if (data[0] == 0x11 && data[1] == 0xba)
 		{
@@ -203,13 +202,9 @@ int32_t rt_input_init()
 			hal_timer_wait_ms(10);
 		}
 	}
-	else
-		printf("[Input] No trackball found.\n");
 
 	// Setup button inputs.
 	hal_interrupt_set_handler(IRQ_SOURCE_PLIC_1, gpio_input_interrupt);
-
-	printf("[Input] Initialized successfully.\n");
 	return 0;
 }
 
@@ -234,6 +229,20 @@ uint32_t rt_input_get_state()
 
 uint32_t rt_input_get_event(rt_event_t* ev)
 {
+	// uint32_t RA;
+	// __asm__ volatile (
+	// 	"mv %0, ra	\n"
+	// 	: "=r" (RA)
+	// 	:
+	// );
+
+	// printf("rt_input_get_event\n");
+	// printf("s_events %p\n", s_events);
+	// printf("s_events_in %d\n", s_events_in);
+	// printf("s_events_out %d\n", s_events_out);
+	// printf("ev %p\n", ev);
+	// printf("RA %08x\n", RA);
+
 	if (s_events_in == s_events_out)
 		return 0;
 

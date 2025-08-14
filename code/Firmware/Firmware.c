@@ -174,20 +174,60 @@ static void load(const char* game)
 	{
 		// Try to execute BOOT executable from SD
 		// card, if available.
-		rt_console_printf("trying to load \"%s\"...\n", game);
+		rt_console_printf("Loading \"%s\"...\n", game);
 		kernel_sleep(200);
 
 		file_init();
 		rt_elf_launch(game);
 
 		// No BOOT executable found.
-		rt_console_printf("no \"%s\" found.\n", game);
+		rt_console_printf("\"%s\" not found!\n", game);
 	}
 	else
 	{
 		// No SD card inserted.
-		rt_console_printf("no SD card inserted.\n");
+		rt_console_printf("No SD card inserted.\n");
 		kernel_sleep(200);
+	}
+}
+
+void kickstart_main()
+{
+	// Initialize only systems which we need;
+	// prevent linker from including unused code.
+	crt_init();
+	rt_timer_init();
+	hal_interrupt_init();
+	hal_video_init();
+	rt_input_init();
+	kernel_init();
+	rt_console_init();
+
+	rt_console_printf("RetroDACK 0.1\n");
+	rt_console_printf("\n");
+
+	rt_console_printf("Press S1 for Doom\n");
+	rt_console_printf("Press S2 for ScummRV\n");
+
+	kernel_sleep(200);
+
+	for (;;)
+	{
+		rt_event_t ev;
+		while (rt_input_get_event(&ev))
+		{
+			if (ev.button == RT_INPUT_BUTTON_S1)
+				load("doom");
+			if (ev.button == RT_INPUT_BUTTON_S2)
+				load("scummrv");
+		}
+		kernel_sleep(100);
+
+		if (!hal_uart_rx_empty())
+		{
+			rt_console_printf("Entering remote control...\n");
+			remote_control();
+		}
 	}
 }
 
@@ -219,41 +259,5 @@ int main()
 		memset(dest, 0, len);
 	}
 
-	// Initialize only systems which we need;
-	// prevent linker from including unused code.
-	crt_init();
-	rt_timer_init();
-	hal_interrupt_init();
-	hal_video_init();
-	rt_input_init();
-	kernel_init();
-	rt_console_init();
-
-	rt_console_printf("RetroDACK 0.1\n");
-
-	rt_console_printf("press S1 for Doom\n");
-	rt_console_printf("press S2 for ScummRV\n");
-
-	kernel_sleep(200);
-
-	for (;;)
-	{
-		rt_event_t ev;
-		while (rt_input_get_event(&ev))
-		{
-			if (ev.button == RT_INPUT_BUTTON_S1)
-				load("doom");
-			if (ev.button == RT_INPUT_BUTTON_S2)
-				load("scummrv");
-		}
-		kernel_sleep(100);
-
-		// if (!hal_uart_rx_empty())
-		// {
-		// 	rt_console_printf("entering remote control...\n");
-		// 	remote_control();
-		// }
-	}
-
-	return 0;
+	kickstart_main();
 }
