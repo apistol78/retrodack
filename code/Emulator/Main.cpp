@@ -163,7 +163,7 @@ int main(int argc, const char** argv)
 	if (cmdLine.hasOption(L"hl"))
 	{
 		log::info << L"Using high level CPU emulation." << Endl;
-		cpu = new CPU_hl(&bus, os, true);
+		cpu = new CPU_hl(&bus, nullptr, true);
 		// trace = L"RD_h.trace";
 	}
 	else
