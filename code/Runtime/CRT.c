@@ -22,7 +22,8 @@ extern int _end;
 
 static uint8_t* heap = (uint8_t*)&_end;
 
-void* __attribute__((used, retain)) _sbrk(int incr)
+__attribute__((section(".keep_rt_crt")))
+void* _sbrk(int incr)
 {
 	kernel_enter_critical();
 	uint8_t* prev_heap = heap;
@@ -32,7 +33,8 @@ void* __attribute__((used, retain)) _sbrk(int incr)
 	return prev_heap;
 }
 
-int __attribute__((used, retain)) _open(const char* name, int flags, int mode)
+__attribute__((section(".keep_rt_crt")))
+int _open(const char* name, int flags, int mode)
 {
 	int32_t fd = -1;
 
@@ -74,7 +76,8 @@ int __attribute__((used, retain)) _fstat(int file, struct stat* st)
 	return 0;
 }
 
-int __attribute__((used, retain)) _isatty(int file)
+__attribute__((section(".keep_rt_crt")))
+int _isatty(int file)
 {
     switch (file)
 	{
@@ -87,7 +90,8 @@ int __attribute__((used, retain)) _isatty(int file)
     }
 }
 
-int __attribute__((used, retain)) _lseek(int file, int ptr, int dir)
+__attribute__((section(".keep_rt_crt")))
+int _lseek(int file, int ptr, int dir)
 {
 	if (file > 100)
 	{
@@ -98,22 +102,26 @@ int __attribute__((used, retain)) _lseek(int file, int ptr, int dir)
 		return 0;
 }
 
-void __attribute__((used, retain)) _exit(int status)
+__attribute__((section(".keep_rt_crt")))
+void _exit(int status)
 {
 	for(;;);
 }
 
-int __attribute__((used, retain)) _kill(int pid, int sig)
+__attribute__((section(".keep_rt_crt")))
+int _kill(int pid, int sig)
 {
 	return -1;
 }
 
-int __attribute__((used, retain)) _getpid(void)
+__attribute__((section(".keep_rt_crt")))
+int _getpid(void)
 {
 	return 1;
 }
 
-int __attribute__((used, retain)) _write(int file, char* ptr, int len)
+__attribute__((section(".keep_rt_crt")))
+int _write(int file, char* ptr, int len)
 {
 	if (file > 100)
 	{
@@ -142,7 +150,8 @@ int __attribute__((used, retain)) _write(int file, char* ptr, int len)
 	}
 }
 
-int __attribute__((used, retain)) _read(int file, char* ptr, int len)
+__attribute__((section(".keep_rt_crt")))
+int _read(int file, char* ptr, int len)
 {
 	if (file > 100)
 	{
@@ -171,12 +180,14 @@ int __attribute__((used, retain)) _read(int file, char* ptr, int len)
 	}
 }
 
-int __attribute__((used, retain)) mkdir(const char* path, mode_t mode)
+__attribute__((section(".keep_rt_crt")))
+int mkdir(const char* path, mode_t mode)
 {
 	return -1;
 }
 
-void __attribute__((used, retain)) crt_init()
+__attribute__((section(".keep_rt_crt")))
+void crt_init()
 {
 	// do nothing; we need to reference this
 	// compile unit regardless.

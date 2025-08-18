@@ -195,7 +195,6 @@ void kickstart_main()
 {
 	// Initialize only systems which we need;
 	// prevent linker from including unused code.
-	crt_init();
 	rt_timer_init();
 	hal_interrupt_init();
 	hal_video_init();
@@ -221,6 +220,7 @@ void kickstart_main()
 			if (ev.button == RT_INPUT_BUTTON_S2)
 				load("scummrv");
 		}
+		
 		kernel_sleep(100);
 
 		if (!hal_uart_rx_empty())

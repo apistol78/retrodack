@@ -10,4 +10,4 @@
 
 #include <HAL/Common.h>
 
-EXTERN_C void crt_init();
+// EXTERN_C void crt_init();

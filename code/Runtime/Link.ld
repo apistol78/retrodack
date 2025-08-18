@@ -6,6 +6,8 @@ MEMORY
 	ram	(rwx)	: ORIGIN = 0x10000000, LENGTH = 0x01E00000
 }
 
+EXTERN(crt_init);
+
 SECTIONS
 {
 	/*--------------------------------------------------------------------*/
@@ -23,6 +25,8 @@ SECTIONS
 		*(.text)
 		*(.text.*)
 		*(.gnu.linkonce.t.*)
+
+		KEEP(*(.keep_rt_crt))
 	}
 
 	/* init: Code to execute before main (called by crt0.S) */

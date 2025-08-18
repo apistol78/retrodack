@@ -30,8 +30,6 @@ void _putchar(char character)
 
 int32_t runtime_init()
 {
-	crt_init();
-
 	printf("** Initialize Timer **\n");
 	rt_timer_init();
 
