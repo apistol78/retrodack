@@ -195,7 +195,7 @@ void SDL_RenderGetLogicalSize(SDL_Renderer* renderer, int* w, int* h)
 	*h = 200;
 }
 
-void SDL_RenderGetViewport(SDL_Renderer * renderer, SDL_Rect * rect)
+void SDL_RenderGetViewport(SDL_Renderer* renderer, SDL_Rect * rect)
 {
 	SDL_TRACE("SDL_RenderGetViewport\n");
 }
@@ -218,7 +218,7 @@ int SDL_SetWindowFullscreen(SDL_Window * window, Uint32 flags)
 	return 0;
 }
 
-int SDL_RenderSetIntegerScale(SDL_Renderer * renderer, SDL_bool enable)
+int SDL_RenderSetIntegerScale(SDL_Renderer* renderer, SDL_bool enable)
 {
 	SDL_TRACE("SDL_RenderSetIntegerScale\n");
 	return 0;
@@ -322,11 +322,29 @@ void SDL_Delay(Uint32 ms)
 
 int SDL_SetPaletteColors(SDL_Palette* palette, const SDL_Color* colors, int firstcolor, int ncolors)
 {
-	SDL_TRACE("SDL_SetPaletteColors\n");
-	for (int i = 0; i < ncolors; ++i)
-	{
-		palette->colors[firstcolor + i] = colors[i];
-	}
+	SDL_TRACE("SDL_SetPaletteColors %d %d\n", firstcolor, ncolors);
+
+	// if (!palette || !palette->colors)
+	// {
+	// 	SDL_TRACE("SDL: No palette\n");
+	// 	return 1;
+	// }
+
+	// if (!colors)
+	// {
+	// 	SDL_TRACE("SDL: No colors\n");
+	// 	return 1;
+	// }
+
+	// SDL_TRACE("SDL: palette %p\n", palette);
+	// SDL_TRACE("SDL: palette->colors %p\n", palette->colors);
+	// SDL_TRACE("SDL: colors %p\n", colors);
+
+	// for (int i = 0; i < ncolors; ++i)
+	// {
+	// 	palette->colors[firstcolor + i] = colors[i];
+	// }
+	
 	return 0;
 }
 
@@ -438,7 +456,7 @@ SDL_bool SDL_SetHint(const char *name, const char *value)
 int SDL_Init(Uint32 flags)
 {
 	runtime_init();
-	rt_video_set_mode(VMODE_320_200_8);
+	rt_video_set_mode(VMODE_320_200_32);
 	return 0;
 }
 
@@ -495,7 +513,7 @@ int SDL_SetRenderTarget(SDL_Renderer *renderer, SDL_Texture *texture)
 	return 0;
 }
 
-int SDL_RenderClear(SDL_Renderer * renderer)
+int SDL_RenderClear(SDL_Renderer* renderer)
 {
 	SDL_TRACE("SDL_RenderClear\n");
 	rt_video_clear(0);
@@ -503,7 +521,7 @@ int SDL_RenderClear(SDL_Renderer * renderer)
 	return 0;
 }
 
-int SDL_Ex_RenderSetPalette(SDL_Renderer * renderer, SDL_Palette * palette)
+int SDL_Ex_RenderSetPalette(SDL_Renderer* renderer, SDL_Palette * palette)
 {
 	SDL_TRACE("SDL_Ex_RenderSetPalette\n");
 	for (int i = 0; i < 256; ++i)
@@ -516,19 +534,19 @@ int SDL_Ex_RenderSetPalette(SDL_Renderer * renderer, SDL_Palette * palette)
 	return 0;
 }
 
-int SDL_Ex_RenderCopySurface(SDL_Renderer * renderer, SDL_Surface * surface)
+int SDL_Ex_RenderCopySurface(SDL_Renderer* renderer, SDL_Surface * surface)
 {
 	SDL_TRACE("SDL_Ex_RenderCopySurface\n");
 	void* fb = rt_video_get_secondary_target();
-	memcpy(fb, surface->pixels, surface->w * surface->h);
+	memcpy(fb, surface->pixels, surface->w * surface->h * 4);
 	return 0;
 }
 
-int SDL_RenderCopy(SDL_Renderer * renderer, SDL_Texture * texture, const SDL_Rect * srcrect, const SDL_Rect * dstrect)
+int SDL_RenderCopy(SDL_Renderer* renderer, SDL_Texture * texture, const SDL_Rect * srcrect, const SDL_Rect * dstrect)
 {
 	SDL_TRACE("SDL_RenderCopy\n");
 	void* fb = rt_video_get_secondary_target();
-	memcpy(fb, texture->pixels, texture->w * texture->h);
+	memcpy(fb, texture->pixels, texture->w * texture->h * 4);
 	return 0;
 }
 
@@ -538,7 +556,7 @@ int SDL_BlitScaled(const SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface 
 	return 0;
 }
 
-void SDL_RenderPresent(SDL_Renderer * renderer)
+void SDL_RenderPresent(SDL_Renderer* renderer)
 {
 	SDL_TRACE("SDL_RenderPresent\n");
 	rt_video_present();

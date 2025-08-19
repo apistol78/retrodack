@@ -28,13 +28,13 @@ int32_t rt_video_set_mode(int32_t mode)
 
 void* rt_video_create_target()
 {
-	const uint32_t pixels = hal_video_get_resolution_width() * hal_video_get_resolution_height();
+	const uint32_t size = hal_video_get_page_size();
 	
-	void* target = malloc(pixels);
+	void* target = malloc(size);
 	if (!target)
 		return 0;
 
-	memset(target, 0, pixels);
+	memset(target, 0, size);
 	return target;
 }
 
@@ -70,20 +70,20 @@ void* rt_video_get_secondary_target()
 
 void rt_video_clear(uint8_t idx)
 {
-	const uint32_t pixels = hal_video_get_resolution_width() * hal_video_get_resolution_height();
+	const uint32_t size = hal_video_get_page_size();
 	uint8_t* target = (uint8_t*)hal_video_get_secondary_target();
 	
 	const uint32_t value = (idx << 24) | (idx << 16) | (idx << 8) | idx;
-	s_dma_tag = hal_dma_write(target, pixels >> 2, value);
+	s_dma_tag = hal_dma_write(target, size >> 2, value);
 }
 
 void rt_video_blit(const void* source)
 {
-	const uint32_t pixels = hal_video_get_resolution_width() * hal_video_get_resolution_height();
+	const uint32_t size = hal_video_get_page_size();
 	uint8_t* target = (uint8_t*)hal_video_get_secondary_target();
 	
 	__asm__ volatile ( "fence" );
-	s_dma_tag = hal_dma_copy(target, source, pixels >> 2);
+	s_dma_tag = hal_dma_copy(target, source, size >> 2);
 }
 
 void rt_video_wait()
