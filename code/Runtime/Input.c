@@ -41,6 +41,8 @@
 #define TRACKBALL_MSK_CTRL_FREAD 0b00000100
 #define TRACKBALL_MSK_CTRL_FWRITE 0b00001000
 
+static int32_t s_filteredDeltaX = 0;
+static int32_t s_filteredDeltaY = 0;
 static int32_t s_absX = 0;
 static int32_t s_absY = 0;
 static int32_t s_deltaX = 0;
@@ -64,12 +66,24 @@ static void tb_input_interrupt(uint32_t source)
 	hal_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5);
 
 	#define TB_DATA(N) \
-		((data[N] > 1) ? (data[N] * TB_SPEED) : data[N])
+		(int32_t)((data[N] > 1) ? (data[N] * TB_SPEED) : data[N])
 
-	s_absX += TB_DATA(0);
-	s_absX -= TB_DATA(1);
-	s_absY += TB_DATA(2);
-	s_absY -= TB_DATA(3);
+	const int32_t dx = TB_DATA(0) - TB_DATA(1);
+	const int32_t dy = TB_DATA(2) - TB_DATA(3);
+
+	const int32_t f0 = 64;
+	s_filteredDeltaX = (dx * f0 + s_filteredDeltaX * (255 - f0)) / 256;
+	s_filteredDeltaY = (dy * f0 + s_filteredDeltaY * (255 - f0)) / 256;
+
+	s_absX += s_filteredDeltaX;
+	s_absY += s_filteredDeltaY;
+
+	s_deltaX += s_filteredDeltaX;
+	s_deltaY += s_filteredDeltaY;
+
+	const int32_t f1 = 192;
+	s_filteredDeltaX = (s_filteredDeltaX * f1) / 256;
+	s_filteredDeltaY = (s_filteredDeltaY * f1) / 256;
 
 	if (s_absX < 0)
 		s_absX = 0;
@@ -80,11 +94,6 @@ static void tb_input_interrupt(uint32_t source)
 		s_absY = 0;
 	else if (s_absY > (TB_MAX_Y-1))
 		s_absY = (TB_MAX_Y-1);
-
-	s_deltaX += TB_DATA(0);
-	s_deltaX -= TB_DATA(1);
-	s_deltaY += TB_DATA(2);
-	s_deltaY -= TB_DATA(3);
 
 	if (data[0] || data[1] || data[2] || data[3])
 	{
