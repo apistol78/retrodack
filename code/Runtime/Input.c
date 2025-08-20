@@ -51,8 +51,8 @@ static uint32_t s_pressed = 0;
 
 #define TB_MAX_X	320
 #define TB_MAX_Y	200
-#define TB_SPEED	2
-#define NEVENTS		64
+#define TB_SPEED	5
+#define NEVENTS		128
 
 static rt_event_t s_events[NEVENTS];
 static int32_t s_events_in = 0;
@@ -81,7 +81,7 @@ static void tb_input_interrupt(uint32_t source)
 	s_deltaX += s_filteredDeltaX;
 	s_deltaY += s_filteredDeltaY;
 
-	const int32_t f1 = 192;
+	const int32_t f1 = 240;
 	s_filteredDeltaX = (s_filteredDeltaX * f1) / 256;
 	s_filteredDeltaY = (s_filteredDeltaY * f1) / 256;
 

@@ -543,7 +543,7 @@ module RetroDACK(
 		end
 	end
 
-	assign LCD_BACKLIGHT_CTRL = (counter > 64) ? 1'b1 : 1'b0;
+	assign LCD_BACKLIGHT_CTRL = (counter > 90) ? 1'b1 : 1'b0;
 
 
 	//====================================================
