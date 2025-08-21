@@ -44,6 +44,7 @@
 // Klara-RV
 #include <Emulator2/VCDTrace.h>
 #include <Emulator2/CPU/Bus.h>
+#include <Emulator2/CPU/GDBServer.h>
 #include <Emulator2/CPU/Helpers.h>
 #include <Emulator2/CPU/GL/CPU_gate.h>
 #include <Emulator2/CPU/HL/CPU_hl.h>
@@ -75,6 +76,42 @@ void abortHandler(int s)
 	g_going = false;
 }
 #endif
+
+void dumpCallStack(const ICPU* cpu, const Bus* bus, OutputStream& os)
+{
+	uint32_t fp = cpu->getRegister(8);
+	uint32_t sp = cpu->getRegister(2);
+	// uint32_t pc = cpu->getPC();
+
+	os << L"Call stack (FP " << str(L"%08x", fp) << L"):" << Endl;
+
+	for (int i = 0; i < 8; ++i)
+	{
+		uint32_t f_ra = bus->readU32(fp - 8);
+		uint32_t f_fp = bus->readU32(fp - 4);
+
+		os << L"   " << i << L": FP "  << str(L"%08x", f_fp) << L", RA " << str(L"%08x", f_ra) << Endl;
+
+		fp = f_fp;
+	}
+
+	/*
+	int max_depth = 16;
+	int depth = 0;
+
+	while (fp && depth < max_depth)
+	{
+		uint32_t ra = bus->readU32(fp - 4);
+		if (ra == 0)
+			break;
+
+		os << L"   " << depth << L": " << str(L"%08x", ra) << Endl;
+
+		fp = bus->readU32(fp - 8);
+		depth++;
+	}
+	*/	
+}
 
 int main(int argc, const char** argv)
 {
@@ -219,6 +256,11 @@ int main(int argc, const char** argv)
 	rom.setReadOnly(true);
 	
 
+	// Create GDB server.
+	Ref< GDBServer > gdbs = new GDBServer();
+	gdbs->create();
+
+
 	// Create user interface.
 	Ref< ui::Form > form = new ui::Form();
 	form->create(L"RetroDACK", 720_ut, 720_ut, ui::Form::WsDefault, new ui::FloodLayout());
@@ -338,8 +380,12 @@ int main(int argc, const char** argv)
 			// vcd.tick();
 			// vcd.set(0, false);
 
+			gdbs->process();
+
 			if (!cpu->tick((os != nullptr) ? 1 : 10000) || bus.error())
 			{
+				cpu->flushCaches();
+
 				log::error << L"CPU tick failed at PC " << str(L"%08x", cpu->getPC()) << Endl;
 
 				log::info << str(L"%-5S", L"PC") << L" : " << str(L"%08x", cpu->getPC()) << Endl;
@@ -347,6 +393,8 @@ int main(int argc, const char** argv)
 
 				for (uint32_t i = 0; i < 32; ++i)
 					log::info << str(L"%-5S", getRegisterName(i)) << L" : " << str(L"%08x", cpu->getRegister(i)) << Endl;
+
+				dumpCallStack(cpu, &bus, log::info);
 
 				break;
 			}
