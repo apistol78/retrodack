@@ -43,7 +43,7 @@ static void rt_console_draw_character(const unsigned char* font, char ch, int32_
 		{
 			const uint8_t set = font[(ch - ' ') * 8 + y] & (1 << x);
 			if (set)
-				framebuffer[(y + offset_y + col * 8) + (x + offset_x + row * 8) * FW] = 2;
+				framebuffer[(y + offset_y + col * 8) + (x + offset_x + row * 8) * FW] = 1;
 		}
 	}
 }
@@ -55,9 +55,9 @@ static void rt_console_draw_console()
 	rt_video_clear(0);
 	rt_video_wait();
 
-	for (int y = 0; y < CR; ++y)
+	for (int32_t y = 0; y < CR; ++y)
 	{
-		for (int x = 0; x < CC; ++x)
+		for (int32_t x = 0; x < CC; ++x)
 		{
 			const char ch = s_cbuffer[x + y * CC];
 			if (ch >= ' ')
@@ -67,10 +67,10 @@ static void rt_console_draw_console()
 
 	if (s_cursor)
 	{
-		for (int y = 0; y < 8; ++y)
+		for (int32_t y = 0; y < 8; ++y)
 		{
-			for (int x = 1; x < 7; ++x)
-				framebuffer[s_x * 8 + x + offset_x + (s_y * 8 + y + offset_y) * FW] = 2;
+			for (int32_t x = 1; x < 7; ++x)
+				framebuffer[s_x * 8 + x + offset_x + (s_y * 8 + y + offset_y) * FW] = 1;
 		}
 	}
 
@@ -86,7 +86,7 @@ static void rt_console_putchar(char c)
 			s_y++;
 		else
 		{
-			for (int i = 0; i < (CR - 1); ++i)
+			for (int32_t i = 0; i < (CR - 1); ++i)
 				memmove(&s_cbuffer[i * CC], &s_cbuffer[(i + 1) * CC], CC);
 			memset(&s_cbuffer[(CR - 1) * CC], 0, CC);
 		}
@@ -116,7 +116,7 @@ static void rt_console_thread_redraw()
 {
 	for (;;)
 	{
-		kernel_sig_try_wait(&s_redraw, 200);
+		rt_kernel_sig_try_wait(&s_redraw, 200);
 		rt_console_draw_console();
 		s_cursor = 1 - s_cursor;
 	}	
@@ -129,20 +129,18 @@ void rt_console_init()
 	rt_video_set_mode(VMODE_360_360_8);
 
 	rt_video_set_palette(0, 0x5e3d00);	// background
-	rt_video_set_palette(1, 0xee77c3);
-  	rt_video_set_palette(2, 0xffffff);	// foreground
-	rt_video_set_palette(255, 0x887ecb); 
+  	rt_video_set_palette(1, 0xffffff);	// foreground
 
 	rt_video_clear(0);
 	rt_video_wait();
 
-	kernel_sig_init(&s_redraw);
-	s_thread = kernel_create_thread(rt_console_thread_redraw);
+	rt_kernel_sig_init(&s_redraw);
+	s_thread = rt_kernel_create_thread(rt_console_thread_redraw);
 }
 
 void rt_console_shutdown()
 {
-	kernel_destroy_thread(s_thread);
+	rt_kernel_destroy_thread(s_thread);
 	rt_video_clear(0);
 	rt_video_wait();
 }
@@ -152,20 +150,20 @@ void rt_console_clear()
 	memset(s_cbuffer, 0, CC * CR);
 	s_x = 0;
 	s_y = 0;
-	kernel_sig_raise(&s_redraw);
+	rt_kernel_sig_raise(&s_redraw);
 }
 
 void rt_console_putc(char c)
 {
 	rt_console_putchar(c);
-	kernel_sig_raise(&s_redraw);
+	rt_kernel_sig_raise(&s_redraw);
 }
 
 void rt_console_print(const char* str)
 {
 	for (const char* c = str; *c != 0; ++c)
         rt_console_putchar(*c);
-	kernel_sig_raise(&s_redraw);
+	rt_kernel_sig_raise(&s_redraw);
 }
 
 void rt_console_printf(const char* str, ...)

@@ -175,7 +175,7 @@ static void load(const char* game)
 		// Try to execute BOOT executable from SD
 		// card, if available.
 		rt_console_printf("Loading \"%s\"...\n", game);
-		kernel_sleep(200);
+		rt_kernel_sleep(200);
 
 		file_init();
 		rt_elf_launch(game);
@@ -187,7 +187,7 @@ static void load(const char* game)
 	{
 		// No SD card inserted.
 		rt_console_printf("No SD card inserted.\n");
-		kernel_sleep(200);
+		rt_kernel_sleep(200);
 	}
 }
 
@@ -199,7 +199,7 @@ void kickstart_main()
 	hal_interrupt_init();
 	hal_video_init();
 	rt_input_init();
-	kernel_init();
+	rt_kernel_init();
 	rt_console_init();
 
 	rt_console_printf("RetroDACK 0.1\n");
@@ -208,7 +208,7 @@ void kickstart_main()
 	rt_console_printf("Press S1 for Doom\n");
 	rt_console_printf("Press S2 for ScummRV\n");
 
-	kernel_sleep(200);
+	rt_kernel_sleep(200);
 
 	for (;;)
 	{
@@ -221,7 +221,7 @@ void kickstart_main()
 				load("scummrv");
 		}
 		
-		kernel_sleep(100);
+		rt_kernel_sleep(100);
 
 		if (!hal_uart_rx_empty())
 		{

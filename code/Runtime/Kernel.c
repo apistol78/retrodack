@@ -41,7 +41,7 @@ static volatile int32_t g_critical = 0;
 static volatile int32_t g_schedule = 0;
 static uint32_t g_next_id = 1;
 
-static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void kernel_scheduler(uint32_t source)
+static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel_scheduler(uint32_t source)
 {
 	__asm__ volatile (
 		"addi	sp, sp, -128		\n"
@@ -294,7 +294,7 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void kernel_sc
 	);
 }
 
-static void* kernel_alloc_stack()
+static void* rt_kernel_alloc_stack()
 {
 	const int32_t stackSize = 0x60000;
 	uint8_t* stack = malloc(stackSize);
@@ -307,7 +307,7 @@ static void* kernel_alloc_stack()
 		return 0;
 }
 
-void kernel_init()
+void rt_kernel_init()
 {
 	volatile kernel_thread_t* t;
 
@@ -327,7 +327,7 @@ void kernel_init()
 	g_schedule = 0;
 
 	// Setup timer interrupt for kernel scheduler.
-	hal_interrupt_set_handler(IRQ_SOURCE_TIMER, kernel_scheduler);
+	hal_interrupt_set_handler(IRQ_SOURCE_TIMER, rt_kernel_scheduler);
 	*TIMER_COUNTDOWN = KERNEL_TIMER_RATE;
 
 	// Ensure interrupts are enabled.
@@ -335,13 +335,13 @@ void kernel_init()
 	hal_csr_clr_bits_mstatus(MIP_MTI_BIT_MASK);
 }
 
-uint32_t kernel_create_thread(kernel_thread_fn_t fn)
+uint32_t rt_kernel_create_thread(kernel_thread_fn_t fn)
 {
-	kernel_enter_critical();
+	rt_kernel_enter_critical();
 	
 	volatile kernel_thread_t* t = &g_threads[g_count];
 	t->id = g_next_id++;
-	t->stack = kernel_alloc_stack();
+	t->stack = rt_kernel_alloc_stack();
 	t->sp = (uint32_t)t->stack;
 	t->epc = (uint32_t)fn;
 	t->sleep = 0;
@@ -349,13 +349,13 @@ uint32_t kernel_create_thread(kernel_thread_fn_t fn)
 
 	g_count++;
 
-	kernel_leave_critical();
+	rt_kernel_leave_critical();
 	return t->id;
 }
 
-void kernel_destroy_thread(uint32_t tid)
+void rt_kernel_destroy_thread(uint32_t tid)
 {
-	kernel_enter_critical();
+	rt_kernel_enter_critical();
 
 	volatile kernel_thread_t* t = 0;
 	uint32_t i = 0;
@@ -382,20 +382,20 @@ void kernel_destroy_thread(uint32_t tid)
 		*t = g_threads[g_count];
 	}
 
-	kernel_leave_critical();
+	rt_kernel_leave_critical();
 }
 
-uint32_t kernel_current_thread()
+uint32_t rt_kernel_current_thread()
 {
 	return g_threads[g_current].id;
 }
 
-void kernel_yield()
+void rt_kernel_yield()
 {
 	hal_csr_set_bits_mip(MIP_MTI_BIT_MASK);
 }
 
-void kernel_sleep(uint32_t ms)
+void rt_kernel_sleep(uint32_t ms)
 {
 	uint32_t fin_ms;
 	__asm__ volatile (
@@ -410,67 +410,67 @@ void kernel_sleep(uint32_t ms)
 
 	do
 	{
-		kernel_yield();
+		rt_kernel_yield();
 	}
 	while (t->sleep >= hal_timer_get_ms());
 
 	t->sleep = 0;
 }
 
-void kernel_enter_critical()
+void rt_kernel_enter_critical()
 {
 	if (g_critical++ == 0)
 		hal_csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 }
 
-void kernel_leave_critical()
+void rt_kernel_leave_critical()
 {
 	if (--g_critical == 0)
 		hal_csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 }
 
-void kernel_cs_init(volatile kernel_cs_t* cs)
+void rt_kernel_cs_init(volatile kernel_cs_t* cs)
 {
 	cs->counter = 0;
 }
 
-void kernel_cs_lock(volatile kernel_cs_t* cs)
+void rt_kernel_cs_lock(volatile kernel_cs_t* cs)
 {
 	for (;;)
 	{
 		while (cs->counter != 0)
-			kernel_yield();
-		kernel_enter_critical();
+			rt_kernel_yield();
+		rt_kernel_enter_critical();
 		if (cs->counter == 0)
 		{
 			cs->counter++;
-			kernel_leave_critical();
+			rt_kernel_leave_critical();
 			return;
 		}
-		kernel_leave_critical();
+		rt_kernel_leave_critical();
 	}
 }
 
-void kernel_cs_unlock(volatile kernel_cs_t* cs)
+void rt_kernel_cs_unlock(volatile kernel_cs_t* cs)
 {
-	kernel_enter_critical();
+	rt_kernel_enter_critical();
 	if (cs->counter > 0)
 		cs->counter--;
-	kernel_leave_critical();
+	rt_kernel_leave_critical();
 }
 
-void kernel_sig_init(volatile kernel_sig_t* sig)
+void rt_kernel_sig_init(volatile kernel_sig_t* sig)
 {
 	sig->counter = 0;
 }
 
-void kernel_sig_raise(volatile kernel_sig_t* sig)
+void rt_kernel_sig_raise(volatile kernel_sig_t* sig)
 {
 	sig->counter = 1;
-	kernel_yield();
+	rt_kernel_yield();
 }
 
-void kernel_sig_wait(volatile kernel_sig_t* sig)
+void rt_kernel_sig_wait(volatile kernel_sig_t* sig)
 {
 	volatile kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = sig;
@@ -478,13 +478,13 @@ void kernel_sig_wait(volatile kernel_sig_t* sig)
 	
 	sig->counter = 0;
 	while (sig->counter == 0)
-		kernel_yield();
+		rt_kernel_yield();
 
 	t->waiting = 0;
 	t->sleep = 0;
 }
 
-int32_t kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
+int32_t rt_kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 {
 	const uint32_t fin_ms = hal_timer_get_ms() + timeout;
 
@@ -495,7 +495,7 @@ int32_t kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 	sig->counter = 0;
 	while (sig->counter == 0)
 	{
-		kernel_yield();
+		rt_kernel_yield();
 		if (hal_timer_get_ms() >= fin_ms)
 			break;
 	}

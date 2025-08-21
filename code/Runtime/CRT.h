@@ -7,7 +7,3 @@
  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 #pragma once
-
-#include <HAL/Common.h>
-
-// EXTERN_C void crt_init();

@@ -89,7 +89,7 @@ void rt_video_blit(const void* source)
 void rt_video_wait()
 {
 	while (hal_dma_retired() < s_dma_tag)
-		kernel_yield();
+		rt_kernel_yield();
 }
 
 void rt_video_present()

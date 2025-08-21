@@ -54,26 +54,21 @@ OSystem_RebelV::OSystem_RebelV()
 
 	_this = this;
 
-	tid = kernel_create_thread([](){
+	tid = rt_kernel_create_thread([](){
 		for (;;) {
 			_this->update_timer();
 		}
 	});
-	printf("timer thread %d\n", tid);
-
-	tid = kernel_create_thread([](){
+	tid = rt_kernel_create_thread([](){
 		for (;;) {
 			_this->update_sound();
 		}
 	});
-	printf("sound thread %d\n", tid);
-
-	tid = kernel_create_thread([](){
+	tid = rt_kernel_create_thread([](){
 		for (;;) {
 			_this->update_frame();
 		}
 	});	
-	printf("update thread %d\n", tid);
 
 	m_target = (byte*)rt_video_create_target();
 }
@@ -222,7 +217,7 @@ uint32 OSystem_RebelV::get_msecs()
 
 void OSystem_RebelV::delay_msecs(uint msecs)
 {
-	kernel_sleep(msecs);
+	rt_kernel_sleep(msecs);
 }
 
 void OSystem_RebelV::set_timer(TimerProc callback, int timer)
@@ -380,20 +375,20 @@ void OSystem_RebelV::update_cdrom()
 OSystem::MutexRef OSystem_RebelV::create_mutex()
 {
 	kernel_cs_t* cs = new kernel_cs_t();
-	kernel_cs_init(cs);
+	rt_kernel_cs_init(cs);
 	return (OSystem::MutexRef)cs;
 }
 
 void OSystem_RebelV::lock_mutex(MutexRef mutex)
 {
 	kernel_cs_t* cs = (kernel_cs_t*)mutex;
-	kernel_cs_lock(cs);
+	rt_kernel_cs_lock(cs);
 }
 
 void OSystem_RebelV::unlock_mutex(MutexRef mutex)
 {
 	kernel_cs_t* cs = (kernel_cs_t*)mutex;
-	kernel_cs_unlock(cs);
+	rt_kernel_cs_unlock(cs);
 }
 
 void OSystem_RebelV::delete_mutex(MutexRef mutex)
@@ -566,7 +561,7 @@ void OSystem_RebelV::update_sound()
 		}
 	}
 
-	kernel_sleep(4);
+	rt_kernel_sleep(4);
 }
 
 void OSystem_RebelV::update_timer()
@@ -579,7 +574,7 @@ void OSystem_RebelV::update_timer()
 		m_timerExpire = ms + m_timerInterval;
 	}
 	m_lastTime = ms;
-	kernel_sleep(30);
+	rt_kernel_sleep(30);
 }
 
 void OSystem_RebelV::update_frame()
@@ -612,7 +607,7 @@ void OSystem_RebelV::update_frame()
 		draw_mouse_cursor();
 
 	rt_video_present();
-	kernel_sleep(30);
+	rt_kernel_sleep(30);
 }
 
 OSystem *OSystem_RebelV_create()

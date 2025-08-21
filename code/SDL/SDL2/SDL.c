@@ -317,7 +317,7 @@ Uint64 SDL_GetPerformanceFrequency()
 void SDL_Delay(Uint32 ms)
 {
 	SDL_TRACE("SDL_Delay\n");
-	kernel_sleep(ms);
+	rt_kernel_sleep(ms);
 }
 
 int SDL_SetPaletteColors(SDL_Palette* palette, const SDL_Color* colors, int firstcolor, int ncolors)

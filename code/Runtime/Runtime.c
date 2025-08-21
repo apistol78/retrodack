@@ -55,7 +55,7 @@ int32_t runtime_init()
 	rt_input_init();
 
 	printf("** Initialize Kernel **\n");
-	kernel_init();
+	rt_kernel_init();
 
 	printf("** Ready **\n");
     return 0;
@@ -65,12 +65,11 @@ void runtime_warm_restart()
 {
 	typedef void (*call_fn_t)();
 
-	const uint32_t sp = 0x22000000 - 4;
+	const uint32_t sp = 0x12000000 - 4;
 	__asm__ volatile (
 		"mv sp, %0	\n"
 		:
 		: "r" (sp)
-
 	);
 
 	const uint32_t addr = 0x00000000;

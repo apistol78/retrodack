@@ -94,11 +94,11 @@ int main()
 
 	rt_console_printf("playing...\n");
 
-	kernel_create_thread(thread_player);
+	rt_kernel_create_thread(thread_player);
 
 	for (;;)
 	{
-		kernel_sleep(1000);
+		rt_kernel_sleep(1000);
 		rt_console_printf(".");
 	}
 

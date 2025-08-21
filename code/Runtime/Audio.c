@@ -99,6 +99,9 @@ int32_t rt_audio_init()
 	// Set GPIO INT1 mode.
 	// hal_i2c_write(TLV320_ADDR, 0x33, 0x24);
 
+	// Enable headset detection.
+	hal_i2c_write(TLV320_ADDR, 0x43, 0x80);
+
 	// Initialize audio controller.
 	hal_audio_init();
 	hal_audio_set_playback_rate(22050);
@@ -131,5 +134,5 @@ void rt_audio_play_stereo(const void* samples, uint32_t nsamples)
 void rt_audio_wait()
 {
 	while (hal_dma_retired() < s_dma_tag)
-		kernel_yield();
+		rt_kernel_yield();
 }

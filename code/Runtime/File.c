@@ -43,7 +43,7 @@ DSTATUS disk_status(BYTE pdrv)
 
 DRESULT disk_read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 {
-	kernel_enter_critical();
+	rt_kernel_enter_critical();
 	for (UINT i = 0; i < count; ++i)
 	{
 		const uint32_t s = sector + i;
@@ -59,7 +59,7 @@ DRESULT disk_read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 		// Not cached, load from SD.
 		if (hal_sd_read_block512(s, buff, 512) != 512)
 		{
-			kernel_leave_critical();
+			rt_kernel_leave_critical();
 			return RES_ERROR;
 		}
 
@@ -72,13 +72,13 @@ DRESULT disk_read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 __cache_hit:;
 		buff += 512;
 	}
-	kernel_leave_critical();
+	rt_kernel_leave_critical();
 	return RES_OK;
 }
 
 DRESULT disk_write(BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count)
 {
-	kernel_enter_critical();
+	rt_kernel_enter_critical();
 	for (UINT i = 0; i < count; ++i)
 	{
 		const uint32_t s = sector + i;
@@ -89,13 +89,13 @@ DRESULT disk_write(BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count)
 
 		if (hal_sd_write_block512(s, buff, 512) != 512)
 		{
-			kernel_leave_critical();
+			rt_kernel_leave_critical();
 			return RES_ERROR;
 		}
 
 		buff += 512;
 	}
-	kernel_leave_critical();
+	rt_kernel_leave_critical();
 	return RES_OK;
 }
 
@@ -172,12 +172,12 @@ int32_t file_init()
 
 int32_t file_open(const char* name, int32_t mode)
 {
-	kernel_cs_lock(&lock);
+	rt_kernel_cs_lock(&lock);
 
 	FIL* fp = file_alloc();
 	if (!fp)
 	{
-		kernel_cs_unlock(&lock);
+		rt_kernel_cs_unlock(&lock);
 		return 0;
 	}
 
@@ -187,7 +187,7 @@ int32_t file_open(const char* name, int32_t mode)
 		if ((r = f_open(fp, name, FA_READ)) == FR_OK)
 		{
 			const int32_t index = file_index(fp);
-			kernel_cs_unlock(&lock);
+			rt_kernel_cs_unlock(&lock);
 			return index;
 		}
 	}
@@ -196,19 +196,19 @@ int32_t file_open(const char* name, int32_t mode)
 		if ((r = f_open(fp, name, FA_CREATE_ALWAYS | FA_WRITE)) == FR_OK)
 		{
 			const int32_t index = file_index(fp);
-			kernel_cs_unlock(&lock);
+			rt_kernel_cs_unlock(&lock);
 			return index;
 		}
 	}
 
 	file_free(fp);
-	kernel_cs_unlock(&lock);
+	rt_kernel_cs_unlock(&lock);
 	return 0;
 }
 
 void file_close(int32_t fd)
 {
-	kernel_cs_lock(&lock);
+	rt_kernel_cs_lock(&lock);
 
 	FIL* fp = file_from_index(fd);
 	if (fp)
@@ -217,18 +217,18 @@ void file_close(int32_t fd)
 		file_free(fp);
 	}
 
-	kernel_cs_unlock(&lock);
+	rt_kernel_cs_unlock(&lock);
 }
 
 int32_t file_size(int32_t fd)
 {
 	int32_t fs = -1;
 
-	kernel_cs_lock(&lock);
+	rt_kernel_cs_lock(&lock);
 	FIL* fp = file_from_index(fd);
 	if (fp)
 		fs = f_size(fp);
-	kernel_cs_unlock(&lock);
+	rt_kernel_cs_unlock(&lock);
 
 	return fs;
 }
@@ -237,12 +237,12 @@ int32_t file_seek(int32_t fd, int32_t offset, int32_t from)
 {
 	FRESULT result = FR_INVALID_PARAMETER;
 
-	kernel_cs_lock(&lock);
+	rt_kernel_cs_lock(&lock);
 
 	FIL* fp = file_from_index(fd);
 	if (!fp)
 	{
-		kernel_cs_unlock(&lock);
+		rt_kernel_cs_unlock(&lock);
 		return -1;
 	}
 
@@ -272,7 +272,7 @@ int32_t file_seek(int32_t fd, int32_t offset, int32_t from)
 	if (result == FR_OK)
 		ft = f_tell(fp);
 
-	kernel_cs_unlock(&lock);
+	rt_kernel_cs_unlock(&lock);
 	return ft;
 }
 
@@ -281,35 +281,35 @@ int32_t file_write(int32_t fd, const void* ptr, int32_t len)
 	FRESULT result;
 	UINT bw = 0;
 
-	kernel_cs_lock(&lock);
+	rt_kernel_cs_lock(&lock);
 
 	FIL* fp = file_from_index(fd);
 	if (!fp)
 	{
-		kernel_cs_unlock(&lock);
+		rt_kernel_cs_unlock(&lock);
 		return -1;
 	}
 
 	if ((result = f_write(fp, ptr, len, &bw)) == FR_OK)
 	{
-		kernel_cs_unlock(&lock);
+		rt_kernel_cs_unlock(&lock);
 		return (int32_t)bw;
 	}
 	else
 	{
-		kernel_cs_unlock(&lock);
+		rt_kernel_cs_unlock(&lock);
 		return -2;
 	}
 }
 
 int32_t file_read(int32_t fd, void* ptr, int32_t len)
 {
-	kernel_cs_lock(&lock);
+	rt_kernel_cs_lock(&lock);
 
 	FIL* fp = file_from_index(fd);
 	if (!fp)
 	{
-		kernel_cs_unlock(&lock);
+		rt_kernel_cs_unlock(&lock);
 		return -1;
 	}
 
@@ -317,12 +317,12 @@ int32_t file_read(int32_t fd, void* ptr, int32_t len)
 	FRESULT result = f_read(fp, ptr, len, &br);
 	if (result == FR_OK)
 	{
-		kernel_cs_unlock(&lock);
+		rt_kernel_cs_unlock(&lock);
 		return (int32_t)br;
 	}
 	else
 	{
-		kernel_cs_unlock(&lock);
+		rt_kernel_cs_unlock(&lock);
 		return -2;
 	}
 }
@@ -332,11 +332,11 @@ int32_t file_enumerate(const char* path, void* user, fn_enum_t fnen)
 	FILINFO fno;
 	DIR dp;
 
-	kernel_cs_lock(&lock);
+	rt_kernel_cs_lock(&lock);
 
 	if (f_opendir(&dp, path) != FR_OK)
 	{
-		kernel_cs_unlock(&lock);
+		rt_kernel_cs_unlock(&lock);
 		return 1;
 	}
 
@@ -345,7 +345,7 @@ int32_t file_enumerate(const char* path, void* user, fn_enum_t fnen)
 
 	f_closedir(&dp);
 
-	kernel_cs_unlock(&lock);
+	rt_kernel_cs_unlock(&lock);
 	return 0;
 }
 
