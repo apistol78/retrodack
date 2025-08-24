@@ -253,12 +253,12 @@ int main(int argc, const char** argv)
 		sdram.setReadOnly(false);
 	}
 
-	rom.setReadOnly(true);
-	
-
 	// Create GDB server.
-	Ref< GDBServer > gdbs = new GDBServer();
+	Ref< GDBServer > gdbs = new GDBServer(cpu, &bus);
 	gdbs->create();
+
+	// Do not set read-only if a GDB server is attached.
+	// rom.setReadOnly(true);
 
 
 	// Create user interface.
@@ -375,37 +375,73 @@ int main(int argc, const char** argv)
 
 	Thread* th = ThreadManager::getInstance().create([&]()
 	{
+		uint32_t mode = 2;
+		uint32_t pc = ~0U;
+
 		while(!th->stopped())
 		{
 			// vcd.tick();
 			// vcd.set(0, false);
 
-			gdbs->process();
+			if (gdbs)
+				gdbs->process(mode);
 
-			if (!cpu->tick((os != nullptr) ? 1 : 10000) || bus.error())
+			switch (mode)
 			{
-				cpu->flushCaches();
+			case 0:	// Run
+				{
+					if (!cpu->tick(10000) || bus.error())
+					{
+						pc = cpu->getPC();
+						mode = 2;
+					}
+				}
+				break;
 
-				log::error << L"CPU tick failed at PC " << str(L"%08x", cpu->getPC()) << Endl;
+			case 1:	// Step
+				{
+					if (!cpu->tick(1) || bus.error())
+					{
+						pc = cpu->getPC();
+						mode = 2;
+					}
+					if (pc != cpu->getPC())
+					{
+						pc = cpu->getPC();
+						mode = 2;
+					}
+				}
+				break;
 
-				log::info << str(L"%-5S", L"PC") << L" : " << str(L"%08x", cpu->getPC()) << Endl;
-				log::info << L"---" << Endl;
-
-				for (uint32_t i = 0; i < 32; ++i)
-					log::info << str(L"%-5S", getRegisterName(i)) << L" : " << str(L"%08x", cpu->getRegister(i)) << Endl;
-
-				dumpCallStack(cpu, &bus, log::info);
-
+			case 2:	// Stopped
+			case 3:	// Killed
 				break;
 			}
 
-			if (os)
-			{
-				(*os) << str(L"%08x", cpu->getPC());
-				for (uint32_t i = 0; i < 32; ++i)
-					(*os) << L":" << str(L"%08x", cpu->getRegister(i));
-				(*os) << Endl;
-			}
+			// if (!cpu->tick(ticksPerIteration) || bus.error())
+			// {
+			// 	cpu->flushCaches();
+
+			// 	log::error << L"CPU tick failed at PC " << str(L"%08x", cpu->getPC()) << Endl;
+
+			// 	log::info << str(L"%-5S", L"PC") << L" : " << str(L"%08x", cpu->getPC()) << Endl;
+			// 	log::info << L"---" << Endl;
+
+			// 	for (uint32_t i = 0; i < 32; ++i)
+			// 		log::info << str(L"%-5S", getRegisterName(i)) << L" : " << str(L"%08x", cpu->getRegister(i)) << Endl;
+
+			// 	dumpCallStack(cpu, &bus, log::info);
+
+			// 	break;
+			// }
+
+			// if (os)
+			// {
+			// 	(*os) << str(L"%08x", cpu->getPC());
+			// 	for (uint32_t i = 0; i < 32; ++i)
+			// 		(*os) << L":" << str(L"%08x", cpu->getRegister(i));
+			// 	(*os) << Endl;
+			// }
 		}
 	});
 	th->start();
