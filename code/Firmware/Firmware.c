@@ -70,12 +70,8 @@ static uint32_t rx_u32()
 static void remote_control()
 {
 	uint8_t r[1024];
-	for (;;)
+	// for (;;)
 	{
-		// wait until any data has been receieved.
-		// while (hal_uart_rx_empty())
-		// 	kernel_yield();
-
 		const uint8_t cmd = hal_uart_rx_u8();
 
 		// "write"
@@ -88,7 +84,8 @@ static void remote_control()
 			if (nb == 0 || nb > 1024)
 			{
 				hal_uart_tx_u8('E');
-				continue;
+				// continue;
+				return;
 			}
 
 			// Add address to checksum.
@@ -221,13 +218,10 @@ void kickstart_main()
 				load("scummrv");
 		}
 		
-		rt_kernel_sleep(100);
+		rt_kernel_yield();
 
-		if (!hal_uart_rx_empty())
-		{
-			rt_console_printf("Entering remote control...\n");
+		while (!hal_uart_rx_empty())
 			remote_control();
-		}
 	}
 }
 
