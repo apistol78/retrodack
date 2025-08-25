@@ -1,13 +1,14 @@
 {
 	"version": "0.2.0",
 	"configurations": [
+
 		{
 			"name": "Emulator",
 			"request": "launch",
 			"type": "cppdbg",
 			"program": "${workspaceRoot}/build/linux/ReleaseStatic/RetroDACK.Emulator",
 			"args": [
-				"--elf=${workspaceRoot}/build/rv/ReleaseStatic/Firmware"
+				"--hl"
 			],
 			"stopAtEntry": false,
 			"cwd": "${workspaceRoot}",
@@ -22,5 +23,62 @@
 				}
 			],
 		},
+
+		{
+			"type": "gdb",
+			"request": "attach",
+			"name": "RV Firmware",
+			"executable": "${workspaceRoot}/build/rv/DebugStatic/Firmware",
+			"target": ":12345",
+			"remote": true,
+			"cwd": "${workspaceRoot}",
+			"gdbpath": "/opt/riscv/bin/riscv32-unknown-elf-gdb",
+			"autorun": [
+				"load"
+			]
+		},
+
+		{
+			"type": "gdb",
+			"request": "attach",
+			"name": "RV Doom",
+			"executable": "${workspaceRoot}/build/rv/DebugStatic/Doom",
+			"target": ":12345",
+			"remote": true,
+			"cwd": "${workspaceRoot}",
+			"gdbpath": "/opt/riscv/bin/riscv32-unknown-elf-gdb",
+			"autorun": [
+				"load"
+			]
+		},		
+
+		{
+			"type": "gdb",
+			"request": "attach",
+			"name": "RV ModPlayer",
+			"executable": "${workspaceRoot}/build/rv/DebugStatic/ModPlayer",
+			"target": ":12345",
+			"remote": true,
+			"cwd": "${workspaceRoot}",
+			"gdbpath": "/opt/riscv/bin/riscv32-unknown-elf-gdb",
+			"autorun": [
+				"load"
+			]
+		},
+
+		{
+			"type": "gdb",
+			"request": "attach",
+			"name": "RV ScummRV",
+			"executable": "${workspaceRoot}/build/rv/ReleaseStatic/ScummRV",
+			"target": ":12345",
+			"remote": true,
+			"cwd": "${workspaceRoot}",
+			"gdbpath": "/opt/riscv/bin/riscv32-unknown-elf-gdb",
+			"autorun": [
+				"load"
+			]
+		},
+
 	]
 }

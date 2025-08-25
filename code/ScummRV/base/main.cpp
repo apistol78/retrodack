@@ -265,12 +265,12 @@ static void runGame(GameDetector &detector, OSystem *system) {
 };
 
 #ifndef _WIN32_WCE
-int main(int argc, char *argv[]) {
+int main(/*int argc, char *argv[]*/) {
 #else
 extern "C" int scummvm_main(GameDetector &detector, int argc, char *argv[]) {
 #endif
 	OSystem::Property prop;
-	char *cfgFilename = NULL, *s=argv[1];
+	//char *cfgFilename = NULL, *s=argv[1];
 
 #if defined(UNIX)
 	/* On Unix, do a quick endian / alignement check before starting */
@@ -345,7 +345,7 @@ extern "C" int scummvm_main(GameDetector &detector, int argc, char *argv[]) {
 #ifndef _WIN32_WCE
 	GameDetector detector;
 #endif
-	detector.parseCommandLine(argc, argv);
+	detector.parseCommandLine(0, nullptr); // argc, argv);
 
 	// Create the system object
 	OSystem *system = OSystem::instance();

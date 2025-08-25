@@ -390,7 +390,7 @@ int main(int argc, const char** argv)
 			{
 			case 0:	// Run
 				{
-					if (!cpu->tick(10000) || bus.error())
+					if (!cpu->tick(1) || bus.error())
 					{
 						pc = cpu->getPC();
 						mode = 2;
@@ -410,11 +410,13 @@ int main(int argc, const char** argv)
 						pc = cpu->getPC();
 						mode = 2;
 					}
+					th->sleep(0);
 				}
 				break;
 
 			case 2:	// Stopped
 			case 3:	// Killed
+				th->sleep(0);
 				break;
 			}
 

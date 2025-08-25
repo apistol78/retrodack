@@ -119,9 +119,11 @@ local function buildRV()
 	)
 
 	run:pushd("build/rv")
+	if run:execute("make -f RetroDACK.mak DebugStatic") ~= 0 then return false end
 	if run:execute("make -f RetroDACK.mak ReleaseStatic") ~= 0 then return false end
 	run:popd()
 
+	--[[
 	-- Create binary and dump files of firmware.
 	run:execute("riscv32-unknown-elf-objcopy -O binary build/rv/ReleaseStatic/Firmware build/rv/ReleaseStatic/Firmware.bin")
 	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Firmware", "build/rv/ReleaseStatic/Firmware.dump")
@@ -131,6 +133,7 @@ local function buildRV()
 	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Doom", "build/rv/ReleaseStatic/Doom.dump")
 	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/ScummRV", "build/rv/ReleaseStatic/ScummRV.dump")
 	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/ModPlayer", "build/rv/ReleaseStatic/ModPlayer.dump")
+	]]
 
 	return true
 end
