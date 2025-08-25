@@ -215,6 +215,11 @@ int main(int argc, const char** argv)
 		// trace = L"RD_g.trace";
 	}
 
+	// Create GDB server.
+	Ref< GDBServer > gdbs = new GDBServer(cpu, &bus);
+	gdbs->create();
+	bus.map(0, 0, false, true, gdbs);
+
 	cpu->setSP(0x12000000 - 4);
 
 	VCDTrace vcd;
@@ -252,10 +257,6 @@ int main(int argc, const char** argv)
 
 		sdram.setReadOnly(false);
 	}
-
-	// Create GDB server.
-	Ref< GDBServer > gdbs = new GDBServer(cpu, &bus);
-	gdbs->create();
 
 	// Do not set read-only if a GDB server is attached.
 	// rom.setReadOnly(true);
@@ -375,7 +376,6 @@ int main(int argc, const char** argv)
 
 	Thread* th = ThreadManager::getInstance().create([&]()
 	{
-		uint32_t mode = 2;
 		uint32_t pc = ~0U;
 
 		while(!th->stopped())
@@ -383,17 +383,15 @@ int main(int argc, const char** argv)
 			// vcd.tick();
 			// vcd.set(0, false);
 
-			if (gdbs)
-				gdbs->process(mode);
-
-			switch (mode)
+			gdbs->process();
+			switch (gdbs->getMode())
 			{
 			case 0:	// Run
 				{
-					if (!cpu->tick(1) || bus.error())
+					if (!cpu->tick(10000) || bus.error())
 					{
 						pc = cpu->getPC();
-						mode = 2;
+						gdbs->setMode(GDBServer::ModeStopped);
 					}
 				}
 				break;
@@ -403,12 +401,12 @@ int main(int argc, const char** argv)
 					if (!cpu->tick(1) || bus.error())
 					{
 						pc = cpu->getPC();
-						mode = 2;
+						gdbs->setMode(GDBServer::ModeStopped);
 					}
 					if (pc != cpu->getPC())
 					{
 						pc = cpu->getPC();
-						mode = 2;
+						gdbs->setMode(GDBServer::ModeStopped);
 					}
 					th->sleep(0);
 				}
