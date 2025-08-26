@@ -3,12 +3,34 @@
 	"configurations": [
 
 		{
-			"name": "Emulator",
+			"name": "Emulator HL",
 			"request": "launch",
 			"type": "cppdbg",
 			"program": "${workspaceRoot}/build/linux/ReleaseStatic/RetroDACK.Emulator",
 			"args": [
 				"--hl"
+			],
+			"stopAtEntry": false,
+			"cwd": "${workspaceRoot}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"setupCommands": [
+				{
+					"description": "Enable pretty-printing for gdb",
+					"text": "-enable-pretty-printing",
+					"ignoreFailures": true
+				}
+			],
+		},
+
+		{
+			"name": "Emulator GL",
+			"request": "launch",
+			"type": "cppdbg",
+			"program": "${workspaceRoot}/build/linux/ReleaseStatic/RetroDACK.Emulator",
+			"args": [
+				"--gl"
 			],
 			"stopAtEntry": false,
 			"cwd": "${workspaceRoot}",
@@ -71,6 +93,20 @@
 			"request": "attach",
 			"name": "RV ScummRV",
 			"executable": "${workspaceRoot}/build/rv/ReleaseStatic/ScummRV",
+			"target": ":12345",
+			"remote": true,
+			"cwd": "${workspaceRoot}",
+			"gdbpath": "/opt/riscv/bin/riscv32-unknown-elf-gdb",
+			"autorun": [
+				"load"
+			]
+		},
+
+		{
+			"type": "gdb",
+			"request": "attach",
+			"name": "RV Quake",
+			"executable": "${workspaceRoot}/build/rv/ReleaseStatic/Quake",
 			"target": ":12345",
 			"remote": true,
 			"cwd": "${workspaceRoot}",
