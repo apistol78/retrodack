@@ -21,6 +21,20 @@ namespace
 uint8_t* s_imageData = nullptr;
 uint32_t s_imageSize = 0;
 
+void collectAllFiles(const Path& path, RefArray< File >& outFiles)
+{
+	for (auto ff : FileSystem::getInstance().find(path.getPathNameOS() + L"/*.*"))
+	{
+		if (ff->getPath().getFileName() == L"." || ff->getPath().getFileName() == L"..")
+			continue;
+
+		outFiles.push_back(ff);
+
+		if (ff->isDirectory())
+			collectAllFiles(ff->getPath(), outFiles);
+	}
+}
+
 }
 
 DSTATUS disk_initialize(BYTE pdrv)
@@ -70,8 +84,13 @@ Ref< FileSystemImage > FileSystemImage::createFromDirectory(const Path& path)
 	FIL f;
 	UINT bw;
 
+	// Recursively collect all files.
+	RefArray< File > files;
+	collectAllFiles(path, files);
+
+	// Estimate image size.
 	uint64_t imageSize = 0;
-	for (auto ff : FileSystem::getInstance().find(path.getPathNameOS() + L"/*.*"))
+	for (auto ff : files)
 	{
 		if (ff->isDirectory())
 			continue;
@@ -80,6 +99,7 @@ Ref< FileSystemImage > FileSystemImage::createFromDirectory(const Path& path)
 	}
 	log::info << L"FS image size " << imageSize << L" byte(s)." << Endl;
 
+	// Allocate image.
 	Ref< FileSystemImage > image = new FileSystemImage();
 	image->m_data.resize(imageSize + 1 * 1024 * 1024, 0);
 
@@ -100,7 +120,32 @@ Ref< FileSystemImage > FileSystemImage::createFromDirectory(const Path& path)
 		return nullptr;
 	}
 
-	for (auto ff : FileSystem::getInstance().find(path.getPathNameOS() + L"/*.*"))
+	// Create all directories first.
+	for (auto ff : files)
+	{
+		if (!ff->isDirectory())
+			continue;
+
+		const Path base = FileSystem::getInstance().getAbsolutePath(L"fs");
+		const Path p = FileSystem::getInstance().getAbsolutePath(ff->getPath());
+
+		Path rp;
+		FileSystem::getInstance().getRelativePath(
+			p,
+			base,
+			rp
+		);
+
+		log::info << L"[FS] Creating directory \"" << rp.getPathName() << L"\"" << Endl;
+
+		char fn[512];
+		strcpy(fn, wstombs(rp.getPathName()).c_str());
+
+		f_mkdir(fn);
+	}
+
+	// Copy all files.
+	for (auto ff : files)
 	{
 		if (ff->isDirectory())
 			continue;
@@ -108,8 +153,20 @@ Ref< FileSystemImage > FileSystemImage::createFromDirectory(const Path& path)
 		Ref< traktor::IStream > sf = FileSystem::getInstance().open(ff->getPath(), File::FmRead);
 		if (sf)
 		{
+			const Path base = FileSystem::getInstance().getAbsolutePath(L"fs");
+			const Path p = FileSystem::getInstance().getAbsolutePath(ff->getPath());
+
+			Path rp;
+			FileSystem::getInstance().getRelativePath(
+				p,
+				base,
+				rp
+			);
+
+			log::info << L"[FS] Copying file \"" << rp.getPathName() << L"\"" << Endl;
+
 			char fn[512];
-			strcpy(fn, wstombs(ff->getPath().getFileName()).c_str());
+			strcpy(fn, wstombs(rp.getPathName()).c_str());
 
 			res = f_open(&f, fn, FA_CREATE_ALWAYS | FA_WRITE);
 			if (res)
