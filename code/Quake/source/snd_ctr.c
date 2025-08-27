@@ -84,9 +84,9 @@ qboolean SNDDMA_Init(void)
   shm->samples = CSND_BUFSIZE;
   shm->samplepos = 0;
   shm->submission_chunk = 1;
-  shm->buffer = audiobuffer;
+  shm->buffer = (unsigned char*)audiobuffer;
 	
-  initial_tick = svcGetSystemTick();
+  initial_tick = 0; // svcGetSystemTick();
 
   snd_initialized = 1;
   return 1;
