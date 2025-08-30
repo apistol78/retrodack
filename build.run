@@ -12,6 +12,7 @@ import(traktor.run)
 
 run:loadScript("../klara-rv/sv2v.run")
 
+local FREQUENCY < const > = 100
 local PATH_SOC < const > = "rtl"
 local PATH_PERIFHERIALS < const > = "../klara-rv/rtl"
 
@@ -368,7 +369,7 @@ function main()
 		stdout:printLn("Place and route...")
 		stdout:printLn("==============================")
 		local tmr = Timer()
-		local xc = run:execute("nextpnr-ecp5 --25k --package CABGA256 --speed 6 --timing-allow-fail --top " .. rtl .. " --json build/" .. rtl .. ".json --textcfg build/" .. rtl .. ".config --lpf rtl/Constraints.lpf --report build/" .. rtl .. ".report.json --freq 100")
+		local xc = run:execute("nextpnr-ecp5 --25k --package CABGA256 --speed 6 --timing-allow-fail --top " .. rtl .. " --json build/" .. rtl .. ".json --textcfg build/" .. rtl .. ".config --lpf rtl/Constraints.lpf --report build/" .. rtl .. ".report.json --freq " .. FREQUENCY)
 		if xc ~= 0 then
 			stderr:printLn("nextpnr-ecp5 failed; build aborted.")
 			return 1
