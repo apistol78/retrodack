@@ -216,9 +216,13 @@ int main(int argc, const char** argv)
 	}
 
 	// Create GDB server.
-	Ref< GDBServer > gdbs = new GDBServer(cpu, &bus);
-	gdbs->create();
-	bus.map(0, 0, false, true, gdbs);
+	Ref< GDBServer > gdbs;
+	if (cmdLine.hasOption(L"gdb"))
+	{
+		gdbs = new GDBServer(cpu, &bus);
+		gdbs->create();
+		bus.map(0, 0, false, true, gdbs);
+	}
 
 	cpu->setSP(0x12000000 - 4);
 
@@ -259,8 +263,8 @@ int main(int argc, const char** argv)
 	}
 
 	// Do not set read-only if a GDB server is attached.
-	// rom.setReadOnly(true);
-
+	if (!gdbs)
+		rom.setReadOnly(true);
 
 	// Create user interface.
 	Ref< ui::Form > form = new ui::Form();
@@ -276,7 +280,6 @@ int main(int argc, const char** argv)
 
 	form->update();
 	form->show();
-
 
 	ui::Point mousePosition(0, 0);
 
@@ -383,57 +386,62 @@ int main(int argc, const char** argv)
 			// vcd.tick();
 			// vcd.set(0, false);
 
-			gdbs->process();
-			switch (gdbs->getMode())
+			if (gdbs)
 			{
-			case 0:	// Run
+				gdbs->process();
+				switch (gdbs->getMode())
 				{
-					if (!cpu->tick(10000) || bus.error())
+				case 0:	// Run
 					{
-						pc = cpu->getPC();
-						gdbs->setMode(GDBServer::ModeStopped);
+						if (!cpu->tick(10000) || bus.error())
+						{
+							pc = cpu->getPC();
+							gdbs->setMode(GDBServer::ModeStopped);
+						}
 					}
-				}
-				break;
+					break;
 
-			case 1:	// Step
-				{
-					if (!cpu->tick(1) || bus.error())
+				case 1:	// Step
 					{
-						pc = cpu->getPC();
-						gdbs->setMode(GDBServer::ModeStopped);
+						if (!cpu->tick(1) || bus.error())
+						{
+							pc = cpu->getPC();
+							gdbs->setMode(GDBServer::ModeStopped);
+						}
+						if (pc != cpu->getPC())
+						{
+							pc = cpu->getPC();
+							gdbs->setMode(GDBServer::ModeStopped);
+						}
+						th->sleep(0);
 					}
-					if (pc != cpu->getPC())
-					{
-						pc = cpu->getPC();
-						gdbs->setMode(GDBServer::ModeStopped);
-					}
+					break;
+
+				case 2:	// Stopped
+				case 3:	// Killed
 					th->sleep(0);
+					break;
 				}
-				break;
-
-			case 2:	// Stopped
-			case 3:	// Killed
-				th->sleep(0);
-				break;
 			}
+			else
+			{
+				if (!cpu->tick(10000) || bus.error())
+				{
+					cpu->flushCaches();
 
-			// if (!cpu->tick(ticksPerIteration) || bus.error())
-			// {
-			// 	cpu->flushCaches();
+					log::error << L"CPU tick failed at PC " << str(L"%08x", cpu->getPC()) << Endl;
 
-			// 	log::error << L"CPU tick failed at PC " << str(L"%08x", cpu->getPC()) << Endl;
+					log::info << str(L"%-5S", L"PC") << L" : " << str(L"%08x", cpu->getPC()) << Endl;
+					log::info << L"---" << Endl;
 
-			// 	log::info << str(L"%-5S", L"PC") << L" : " << str(L"%08x", cpu->getPC()) << Endl;
-			// 	log::info << L"---" << Endl;
+					for (uint32_t i = 0; i < 32; ++i)
+						log::info << str(L"%-5S", getRegisterName(i)) << L" : " << str(L"%08x", cpu->getRegister(i)) << Endl;
 
-			// 	for (uint32_t i = 0; i < 32; ++i)
-			// 		log::info << str(L"%-5S", getRegisterName(i)) << L" : " << str(L"%08x", cpu->getRegister(i)) << Endl;
+					dumpCallStack(cpu, &bus, log::info);
 
-			// 	dumpCallStack(cpu, &bus, log::info);
-
-			// 	break;
-			// }
+					break;
+				}
+			}
 
 			// if (os)
 			// {
