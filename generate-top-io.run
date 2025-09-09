@@ -43,7 +43,7 @@ function main()
 			local iname, idx = name:match("^(.+)%[(%d+)%]$")
 			if idx == nil then
 				if not first then stdout:printLn(",") end
-				stdout:print(direction .. " " .. name)
+				stdout:print(direction .. " wire " .. name)
 				first = false
 			else
 				idx = tonumber(idx)
@@ -67,7 +67,7 @@ function main()
 
 	for iname, tbl in pairsByKeys(indexed) do
 		if not first then stdout:printLn(",") end
-		stdout:print(tbl.direction .. " [" .. tbl.to .. ":" .. tbl.from .. "] " .. iname)
+		stdout:print(tbl.direction .. " wire [" .. tbl.to .. ":" .. tbl.from .. "] " .. iname)
 		first = false
 	end
 

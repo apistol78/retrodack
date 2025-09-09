@@ -207,6 +207,7 @@ void kickstart_main()
 
 	rt_console_printf("Press S1 for Doom\n");
 	rt_console_printf("Press S2 for ScummRV\n");
+	rt_console_printf("Press  A for Quake\n");
 
 	rt_kernel_sleep(200);
 
@@ -219,6 +220,8 @@ void kickstart_main()
 				load("doom");
 			if (ev.button == RT_INPUT_BUTTON_S2)
 				load("scummrv");
+			if (ev.button == RT_INPUT_BUTTON_A)
+				load("quake");
 		}
 		
 		rt_kernel_sleep(100);

@@ -29,6 +29,8 @@ module RetroDACK(
 	//====================================================
 
 
+	// https://blog.dave.tf/post/ecp5-pll/
+	//
 	// Input CLOCK is 25 MHz
 	// 100 MHz
 	// 100 MHz (7000 ps phase shift)
@@ -37,12 +39,15 @@ module RetroDACK(
 	PLL_ECP5 #(
 		.CLKI_DIV(1),
 		.CLKFB_DIV(4),
+		
 		.CLKOP_DIV(6),
-		.CLKOP_CPHASE(0),
+		.CLKOP_CPHASE(6 - 1),
+		
 		.CLKOS_DIV(6),
-		.CLKOS_CPHASE(5),
+		.CLKOS_CPHASE(15),
+		
 		.CLKOS2_DIV(6*3),
-		.CLKOS2_CPHASE(0)
+		.CLKOS2_CPHASE(6*3 - 1)
 	) pll (
 		.i_clk(CLOCK),
 		.o_clk1(clock),
@@ -67,6 +72,7 @@ module RetroDACK(
 	//====================================================
 	// Reset
 	wire reset;
+	wire uart_soft_reset;
 
 	Reset rst(
 		.i_clock(clock),
@@ -215,7 +221,6 @@ module RetroDACK(
 	wire [31:0] uart_wdata;
 	wire [31:0] uart_rdata;
 	wire uart_ready;
-	wire uart_soft_reset;
 
 	UART #(
 		.FREQUENCY(`FREQUENCY),
@@ -264,7 +269,7 @@ module RetroDACK(
 		.I2C_SCL(I2C_SCL),
 		.I2C_SDA_direction(I2C_SDA_direction),
 		.I2C_SDA_r(I2C_SDA),
-		.I2C_SDA_w(I2C_SDA_w),
+		.I2C_SDA_w(I2C_SDA_w)
 	);
 
 
@@ -288,7 +293,7 @@ module RetroDACK(
 
 	wire sd_cmd_dir;
 	wire sd_cmd_out;
-	wire SD_EXTERNAL_CMD = sd_cmd_dir ? sd_cmd_out : 1'bz;
+	assign SD_EXTERNAL_CMD = sd_cmd_dir ? sd_cmd_out : 1'bz;
 
 	wire sd_dat_dir;
 	wire [3:0] sd_dat_out;
