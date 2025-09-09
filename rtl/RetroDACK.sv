@@ -40,14 +40,14 @@ module RetroDACK(
 		.CLKI_DIV(1),
 		.CLKFB_DIV(4),
 		
-		.CLKOP_DIV(6),
-		.CLKOP_CPHASE(6 - 1),
+		.CLKOP_DIV(4),
+		.CLKOP_CPHASE(4 - 1),
 		
-		.CLKOS_DIV(6),
-		.CLKOS_CPHASE(15),
+		.CLKOS_DIV(4),
+		.CLKOS_CPHASE(5),
 		
-		.CLKOS2_DIV(6*3),
-		.CLKOS2_CPHASE(6*3 - 1)
+		.CLKOS2_DIV(4*3),
+		.CLKOS2_CPHASE(4*3 - 1)
 	) pll (
 		.i_clk(CLOCK),
 		.o_clk1(clock),
