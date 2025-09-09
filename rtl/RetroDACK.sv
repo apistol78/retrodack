@@ -25,6 +25,13 @@ module RetroDACK(
 	assign LED_G = 1'b0; //~cpu_fault;
 	assign LED_B = 1'b0; // sd_CARD;
 
+	// Unimplemeneted pins.
+	assign LCD_CS = 1'b0;
+	assign USB_HCI_SS_n = 1'b1;
+	assign USB_HCI_SCLK = 1'b0;
+	assign USB_HCI_RESET_n = ~reset;
+	assign USB_HCI_MOSI = 1'b0;
+
 
 	//====================================================
 
@@ -420,8 +427,8 @@ module RetroDACK(
 
 		.i_interrupt_0(tbi == 2'b01),
 		.i_interrupt_1(kpi == 2'b01),
-		.i_interrupt_2(0),	// LCD_TOUCH_INTERRUPT
-		.i_interrupt_3(0),	// AUDIO_INTERRUPT
+		.i_interrupt_2(1'b0),	// LCD_TOUCH_INTERRUPT
+		.i_interrupt_3(1'b0),	// AUDIO_INTERRUPT
 
 		.i_interrupt_enable(1'b1),
 		.o_interrupt(cpu_external_interrupt),
@@ -507,6 +514,13 @@ module RetroDACK(
 		.i_bus_rdata(video_sram_rdata),
 		.o_bus_wdata(video_sram_wdata),
 
+		.i_pa_rw(1'b0),
+		.i_pa_request(1'b0),
+		.o_pa_ready(),
+		.i_pa_address(32'h0),
+		.o_pa_rdata(),
+		.i_pa_wdata(32'h0),
+
 		// Video output access.
 		.i_pb_rw(vram_pb_rw),
 		.i_pb_request(vram_pb_request),
@@ -549,8 +563,7 @@ module RetroDACK(
 	end
 
 	assign LCD_BACKLIGHT_CTRL = (counter > 90) ? 1'b1 : 1'b0;
-
-
+	
 	//====================================================
 	// VIDEO SIGNAL GENERATOR
 	wire vga_hblank;

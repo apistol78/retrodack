@@ -234,6 +234,15 @@ void kickstart_main()
 	}
 }
 
+__attribute__((noreturn)) void error(const char* const msg)
+{
+	for (;;)
+	{
+		for (const char* ch = msg; *ch; ++ch)
+			hal_uart_tx_u8(*ch);
+	}
+}
+
 int main()
 {
 	// Initialize SP, since we hot restart and startup doesn't set SP.
@@ -243,6 +252,33 @@ int main()
 		:
 		: "r" (sp)
 	);
+
+	// Do some memory testing first.
+	{
+		volatile uint32_t* start = (volatile uint32_t*)0x10000000;
+		volatile uint32_t* end = (volatile uint32_t*)0x12000000;
+		for (volatile uint32_t* ptr = start; ptr != end; ++ptr)
+		{
+			*ptr = (uint32_t)ptr;
+		}
+		for (volatile uint32_t* ptr = start; ptr != end; ++ptr)
+		{
+			uint32_t value = *ptr;
+			if (value != (uint32_t)ptr)
+			{
+				error("memory check 1 failed\n");
+			}
+			*ptr = ~(uint32_t)ptr;
+		}
+		for (volatile uint32_t* ptr = start; ptr != end; ++ptr)
+		{
+			uint32_t value = *ptr;
+			if (value != ~(uint32_t)ptr)
+			{
+				error("memory check 2 failed\n");
+			}
+		}
+	}
 
 	// Initialize segments when running from ROM.
 	{
