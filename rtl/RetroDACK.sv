@@ -22,8 +22,8 @@ module RetroDACK(
 	wire clock_locked;
 
 	assign LED_R = cpu_fault;
-	assign LED_G = 1'b0; //~cpu_fault;
-	assign LED_B = 1'b0; // sd_CARD;
+	assign LED_G = cpu_external_interrupt; //~cpu_fault;
+	assign LED_B = cpu_timer_interrupt; // sd_CARD;
 
 	// Unimplemeneted pins.
 	assign LCD_CS = 1'b0;
@@ -390,7 +390,7 @@ module RetroDACK(
 
 		.i_request(audio_request),
 		.i_rw(audio_rw),
-		.i_address(audio_address[3:0]),
+		.i_address(audio_address[5:2]),
 		.i_wdata(audio_wdata),
 		.o_rdata(audio_rdata),
 		.o_ready(audio_ready),
