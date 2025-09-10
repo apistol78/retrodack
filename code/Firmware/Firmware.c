@@ -69,12 +69,12 @@ static uint32_t rx_u32()
 
 static void remote_control()
 {
-	uint8_t r[1024];
+	static uint8_t r[1024];
 	for (;;)
 	{
 		// wait until any data has been receieved.
-		// while (hal_uart_rx_empty())
-		// 	kernel_yield();
+		while (hal_uart_rx_empty())
+			rt_kernel_yield();
 
 		const uint8_t cmd = hal_uart_rx_u8();
 
@@ -208,7 +208,12 @@ void kickstart_main()
 	rt_console_printf("Press S1 for Doom\n");
 	rt_console_printf("Press S2 for ScummRV\n");
 	rt_console_printf("Press  A for Quake\n");
+	// rt_console_printf("Press  B for Download\n");
 
+	hal_uart_reset();
+	rt_kernel_sleep(200);
+
+	hal_uart_reset();
 	rt_kernel_sleep(200);
 
 	for (;;)
@@ -218,10 +223,15 @@ void kickstart_main()
 		{
 			if (ev.button == RT_INPUT_BUTTON_S1)
 				load("doom");
-			if (ev.button == RT_INPUT_BUTTON_S2)
+			else if (ev.button == RT_INPUT_BUTTON_S2)
 				load("scummrv");
-			if (ev.button == RT_INPUT_BUTTON_A)
+			else if (ev.button == RT_INPUT_BUTTON_A)
 				load("quake");
+			// else if (ev.button == RT_INPUT_BUTTON_B)
+			// {
+			// 	rt_console_printf("Entering remote control...\n");
+			// 	remote_control();
+			// }
 		}
 		
 		rt_kernel_sleep(100);
@@ -254,6 +264,7 @@ int main()
 	);
 
 	// Do some memory testing first.
+	/*
 	{
 		volatile uint32_t* start = (volatile uint32_t*)0x10000000;
 		volatile uint32_t* end = (volatile uint32_t*)0x12000000;
@@ -279,6 +290,7 @@ int main()
 			}
 		}
 	}
+	*/
 
 	// Initialize segments when running from ROM.
 	{

@@ -174,7 +174,7 @@ int main(int argc, const char** argv)
 		const uint8_t ch = 0xff;
 		target->write(&ch, 1);
 		target->write(&ch, 1);
-		ThreadManager::getInstance().getCurrentThread()->sleep(6000);
+		ThreadManager::getInstance().getCurrentThread()->sleep(1000);
 	}
 
 	// Purge incoming data.
