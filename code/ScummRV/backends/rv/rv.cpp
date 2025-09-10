@@ -50,7 +50,7 @@ OSystem_RebelV::OSystem_RebelV()
 
 	// runtime_init();
 	rt_video_set_mode(VMODE_320_200_8);
-	rt_audio_set_playback_rate(11025);
+	rt_audio_set_playback_rate(22050);
 
 	_this = this;
 

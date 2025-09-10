@@ -104,7 +104,6 @@ int32_t rt_audio_init()
 
 	// Initialize audio controller.
 	hal_audio_init();
-	hal_audio_set_playback_rate(22050);
 	return 0;
 }
 

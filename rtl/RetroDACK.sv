@@ -354,6 +354,7 @@ module RetroDACK(
 	//====================================================
 	// AUDIO
 	wire audio_output_busy;
+	wire [31:0] audio_output_sample_rate;
 	wire [15:0] audio_output_sample_left;
 	wire [15:0] audio_output_sample_right;
 	wire audio_sdout;
@@ -366,6 +367,7 @@ module RetroDACK(
 	) audio_i2s_output(
 		.i_clock(clock),
 		.o_busy(audio_output_busy),
+		.i_sample_rate(audio_output_sample_rate),
 		.i_sample_left(audio_output_sample_left),
 		.i_sample_right(audio_output_sample_right),
 		.o_i2s_sdout(I2S_SDOUT),
@@ -395,9 +397,9 @@ module RetroDACK(
 		.o_interrupt(audio_interrupt),
 
 		.i_output_busy(audio_output_busy),
+		.o_output_sample_rate(audio_output_sample_rate),
 		.o_output_sample_left(audio_output_sample_left),
-		.o_output_sample_right(audio_output_sample_right),
-		.o_output_reload()
+		.o_output_sample_right(audio_output_sample_right)
 	);
 
 
