@@ -44,6 +44,10 @@
 #include "backends/wince/CELauncherDialog.h" 
 #endif
 
+#if defined(__RV__)
+#include <Runtime/Runtime.h>
+#endif
+
 /*
  * Version string and build date string. These can be used by anything that
  * wants to display this information to the user (e.g. about dialog).
@@ -271,6 +275,10 @@ extern "C" int scummvm_main(GameDetector &detector, int argc, char *argv[]) {
 #endif
 	OSystem::Property prop;
 	//char *cfgFilename = NULL, *s=argv[1];
+
+#if defined(__RV__)
+	runtime_init();
+#endif
 
 #if defined(UNIX)
 	/* On Unix, do a quick endian / alignement check before starting */

@@ -48,7 +48,7 @@ OSystem_RebelV::OSystem_RebelV()
 {
 	uint32_t tid;
 
-	runtime_init();
+	// runtime_init();
 	rt_video_set_mode(VMODE_320_200_8);
 	rt_audio_set_playback_rate(11025);
 
