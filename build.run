@@ -46,6 +46,7 @@ local SOURCE < const > =
 	PATH_PERIFHERIALS .. "/uart/UART_RX.sv",
 	PATH_PERIFHERIALS .. "/uart/UART_TX.sv",
 	PATH_PERIFHERIALS .. "/video/VIDEO_controller.sv",
+	PATH_PERIFHERIALS .. "/video/VIDEO_sprite.sv",
 	PATH_PERIFHERIALS .. "/video/VIDEO_VGA.sv",
 	PATH_PERIFHERIALS .. "/i2c/I2C.sv",
 	PATH_PERIFHERIALS .. "/cpu/CPU.sv",
