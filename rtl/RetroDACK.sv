@@ -609,7 +609,7 @@ module RetroDACK(
 	// VIDEO SPRITE
 	wire [10:0] video_overlay_x;
 	wire [10:0] video_overlay_y;
-	wire [31:0] video_overlay_data;
+	wire [7:0] video_overlay_data;
 	wire video_overlay_mask;
 
 	VIDEO_sprite video_sprite(
