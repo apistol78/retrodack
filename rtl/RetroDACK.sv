@@ -607,6 +607,11 @@ module RetroDACK(
 
 	//====================================================
 	// VIDEO SPRITE
+	wire video_sprite_request;
+	wire [31:0] video_sprite_address;
+	wire [31:0] video_sprite_wdata;
+	wire video_sprite_ready;
+
 	wire [10:0] video_overlay_x;
 	wire [10:0] video_overlay_y;
 	wire [7:0] video_overlay_data;
@@ -614,6 +619,12 @@ module RetroDACK(
 
 	VIDEO_sprite video_sprite(
 		.i_clock(clock),
+
+		.i_request(video_sprite_request),
+		.i_address(video_sprite_address[5:2]),
+		.i_wdata(video_sprite_wdata),
+		.o_ready(video_sprite_ready),
+
 		.i_video_hblank(vga_hblank),
 		.i_video_vblank(vga_vblank),
 		.i_overlay_x(video_overlay_x),
@@ -693,6 +704,7 @@ module RetroDACK(
 	DMA dma(
 		.i_reset(reset),
 		.i_clock(clock),
+
 		.i_request(dma_request),
 		.i_rw(dma_rw),
 		.i_address(dma_address[3:2]),
@@ -712,7 +724,7 @@ module RetroDACK(
 	//====================================================
 	// XBAR
 
-	XBAR_3_10 xbar(
+	XBAR_3_11 xbar(
 		.i_reset(reset),
 		.i_clock(clock),
 
@@ -820,7 +832,15 @@ module RetroDACK(
 		.i_s9_ready(dma_ready),
 		.o_s9_address(dma_address),
 		.i_s9_rdata(dma_rdata),
-		.o_s9_wdata(dma_wdata)	
+		.o_s9_wdata(dma_wdata),
+
+		// 32'haxxx_xxxx : Sprites
+		.o_s10_rw(),
+		.o_s10_request(video_sprite_request),
+		.i_s10_ready(video_sprite_ready),
+		.o_s10_address(video_sprite_address),
+		.i_s10_rdata(32'h0),
+		.o_s10_wdata(video_sprite_wdata),
 	);
 
 
