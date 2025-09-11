@@ -12,7 +12,9 @@
 
 #include <HAL/I2C.h>
 #include <HAL/Interrupt.h>
+#include <HAL/Sprite.h>
 #include <HAL/Timer.h>
+#include <HAL/Video.h>
 
 #define TRACKBALL_REG_LED_RED 0x00
 #define TRACKBALL_REG_LED_GRN 0x01
@@ -49,8 +51,6 @@ static int32_t s_deltaX = 0;
 static int32_t s_deltaY = 0;
 static uint32_t s_pressed = 0;
 
-#define TB_MAX_X	320
-#define TB_MAX_Y	200
 #define TB_SPEED	5
 #define NEVENTS		128
 
@@ -85,15 +85,23 @@ static void tb_input_interrupt(uint32_t source)
 	s_filteredDeltaX = (s_filteredDeltaX * f1) / 256;
 	s_filteredDeltaY = (s_filteredDeltaY * f1) / 256;
 
+	// Clamp absolute position to the size of the current resolution.
+	const int32_t width = hal_video_get_resolution_width();
+	const int32_t height = hal_video_get_resolution_height();
+
 	if (s_absX < 0)
 		s_absX = 0;
-	else if (s_absX > (TB_MAX_X-1))
-		s_absX = (TB_MAX_X-1);
+	else if (s_absX > width - 1)
+		s_absX = width - 1;
 
 	if (s_absY < 0)
 		s_absY = 0;
-	else if (s_absY > (TB_MAX_Y-1))
-		s_absY = (TB_MAX_Y-1);
+	else if (s_absY > height - 1)
+		s_absY = height - 1;
+
+	// Place position of first sprite as a mouse cursor;
+	// offset to ensure center of sprite is a mouse position.
+	hal_sprite_set_position(0, s_absX - 8, s_absY - 8);
 
 	if (data[0] || data[1] || data[2] || data[3])
 	{
@@ -179,7 +187,7 @@ int32_t rt_input_init()
 	uint8_t found = 0;
 
 	// Locate trackball by reading it's identification.
-	for (int32_t i = 0; i < 4; ++i)
+	for (int32_t i = 0; i < 10; ++i)
 	{
 		hal_i2c_read(0x0a, TRACKBALL_REG_CHIP_ID_L, data, 2);
 		if (data[0] == 0x11 && data[1] == 0xba)
@@ -191,7 +199,7 @@ int32_t rt_input_init()
 	}
 
 	// Setup trackball.
-	if (found)
+	// if (found)
 	{
 		hal_interrupt_set_handler(IRQ_SOURCE_PLIC_0, tb_input_interrupt);
 
@@ -204,7 +212,7 @@ int32_t rt_input_init()
 
 		// Read data from TB; to ensure interrupt state
 		// in TB is reset.
-		for (int i = 0; i < 10; ++i)
+		for (int i = 0; i < 100; ++i)
 		{
 			uint8_t data[5] = { 0, 0, 0, 0, 0 };
 			hal_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5);
