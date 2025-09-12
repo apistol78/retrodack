@@ -50,6 +50,8 @@ static int32_t s_absY = 0;
 static int32_t s_deltaX = 0;
 static int32_t s_deltaY = 0;
 static uint32_t s_pressed = 0;
+static int32_t s_hotX = 0;
+static int32_t s_hotY = 0;
 
 #define TB_SPEED	5
 #define NEVENTS		128
@@ -101,7 +103,7 @@ static void tb_input_interrupt(uint32_t source)
 
 	// Place position of first sprite as a mouse cursor;
 	// offset to ensure center of sprite is a mouse position.
-	hal_sprite_set_position(0, s_absX - 8, s_absY - 8);
+	hal_sprite_set_position(0, s_absX - s_hotX, s_absY - s_hotY);
 
 	if (data[0] || data[1] || data[2] || data[3])
 	{
@@ -225,6 +227,13 @@ int32_t rt_input_init()
 	return 0;
 }
 
+void rt_input_set_absolute_position(int32_t x, int32_t y)
+{
+	s_absX = x;
+	s_absY = y;
+	hal_sprite_set_position(0, s_absX - s_hotX, s_absY - s_hotY);
+}
+
 void rt_input_get_absolute_position(int32_t* pos)
 {
 	pos[0] = s_absX;
@@ -294,4 +303,11 @@ void rt_input_set_tb_color(int32_t clr)
 		hal_i2c_write(0x0a, TRACKBALL_REG_LED_BLU, 0x00);
 		break;
 	}
+}
+
+void rt_input_set_hotspot(int32_t x, int32_t y)
+{
+	s_hotX = x;
+	s_hotY = y;
+	hal_sprite_set_position(0, s_absX - s_hotX, s_absY - s_hotY);
 }

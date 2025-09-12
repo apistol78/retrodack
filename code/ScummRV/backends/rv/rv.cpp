@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <HAL/Sprite.h>
+
 #include <Runtime/Audio.h>
 #include <Runtime/Input.h>
 #include <Runtime/Kernel.h>
@@ -192,22 +194,30 @@ bool OSystem_RebelV::show_mouse(bool visible)
 {
 	const bool last = m_mouseVisible;
 	m_mouseVisible = visible;
+	hal_sprite_set_visible(0, visible ? 0xff : 0x00);
 	return last;
 }
 
 void OSystem_RebelV::warp_mouse(int x, int y)
 {
-	m_mouseX = x;
-	m_mouseY = y;
+	rt_input_set_absolute_position(x, y);
 }
 
 void OSystem_RebelV::set_mouse_cursor(const byte *buf, uint w, uint h, int hotspot_x, int hotspot_y)
 {
-	m_mouseBits = buf;
-	m_mouseW = w;
-	m_mouseH = h;
-	m_mouseHotX = hotspot_x;
-	m_mouseHotY = hotspot_y;
+	uint8_t tmp[32][32];
+	for (int y = 0; y < 32; ++y)
+	{
+		for (int x = 0; x < 32; ++x)
+		{
+			if (x < w && y < h)
+				tmp[y][x] = *buf++;
+			else
+				tmp[y][x] = 0xff;
+		}
+	}
+	hal_sprite_set_bits(0, tmp);
+	rt_input_set_hotspot(hotspot_x, hotspot_y);
 }
 
 uint32 OSystem_RebelV::get_msecs()
@@ -267,75 +277,6 @@ bool OSystem_RebelV::poll_event(Event *event)
 			return true;
 		}
 	}
-
-
-/*
-	// Get keyboard events.
-	uint8_t kc, m, p;
-	if (input_get_kb_event(&kc, &m, &p) > 0)
-	{
-		event->kbd.flags = 0;
-		if ((m & (RT_MODIFIER_SHIFT | RT_MODIFIER_R_SHIFT)) != 0)
-			event->kbd.flags |= KBD_SHIFT;
-		if ((m & (RT_MODIFIER_CTRL | RT_MODIFIER_R_CTRL)) != 0)
-			event->kbd.flags |= KBD_CTRL;
-		if ((m & (RT_MODIFIER_ALT | RT_MODIFIER_R_ALT)) != 0)
-			event->kbd.flags |= KBD_ALT;
-
-		event->event_code = p ? EVENT_KEYDOWN : EVENT_KEYUP;
-
-		char ch = 0;
-		if (input_translate_key(kc, m, &ch))
-		{
-			event->kbd.keycode = map_key(kc, ch);
-			event->kbd.ascii = ch;
-		}
-		else
-		{
-			event->kbd.keycode = map_key(kc, kc);
-			event->kbd.ascii = event->kbd.keycode;
-		}
-		return true;
-	}
-
-	// Get mouse motion events.
-	int8_t x, y, wheel;
-	uint8_t buttons;
-	if (input_get_mouse_event(&x, &y, &wheel, &buttons) > 0)
-	{
-		if (x != 0 || y != 0)
-		{
-			int32_t mx, my;
-			input_get_mouse_state(&mx, &my, &buttons);			
-
-			event->event_code = EVENT_MOUSEMOVE;
-			event->mouse.x = mx;
-			event->mouse.y = my;
-			return true;
-		}
-	}
-
-	// Get mouse button events.
-	int32_t mx, my;
-	input_get_mouse_state(&mx, &my, &buttons);
-	if (buttons != m_lastButtons)
-	{
-		if (buttons & 1)
-			event->event_code = EVENT_LBUTTONDOWN;
-		else if (m_lastButtons & 1)
-			event->event_code = EVENT_LBUTTONUP;
-		else if (buttons & 2)
-			event->event_code = EVENT_RBUTTONDOWN;
-		else if (m_lastButtons & 2)
-			event->event_code = EVENT_RBUTTONUP;
-
-		event->mouse.x = m_mouseX;
-		event->mouse.y = m_mouseY;
-
-		m_lastButtons = buttons;
-		return true;
-	}
-*/
 	return false;
 }
 
@@ -492,55 +433,55 @@ void OSystem_RebelV::quit()
 	runtime_warm_restart();
 }
 
-void OSystem_RebelV::draw_mouse_cursor()
-{
-	const byte *src = m_mouseBits;
+// void OSystem_RebelV::draw_mouse_cursor()
+// {
+// 	const byte *src = m_mouseBits;
 
-	int32_t x = m_mouseX - m_mouseHotX;
-	int32_t y = m_mouseY - m_mouseHotY;
-	int32_t w = m_mouseW;
-	int32_t h = m_mouseH;
+// 	int32_t x = m_mouseX - m_mouseHotX;
+// 	int32_t y = m_mouseY - m_mouseHotY;
+// 	int32_t w = m_mouseW;
+// 	int32_t h = m_mouseH;
 
-	if (x < 0)
-	{
-		w += x;
-		src -= x;
-		x = 0;
-	}
-	if (y < 0)
-	{
-		h += y;
-		src -= y * m_mouseW;
-		y = 0;
-	}
+// 	if (x < 0)
+// 	{
+// 		w += x;
+// 		src -= x;
+// 		x = 0;
+// 	}
+// 	if (y < 0)
+// 	{
+// 		h += y;
+// 		src -= y * m_mouseW;
+// 		y = 0;
+// 	}
 
-	if (w > 320 - x)
-		w = 320 - x;
-	if (h > 200 - y)
-		h = 200 - y;
+// 	if (w > 320 - x)
+// 		w = 320 - x;
+// 	if (h > 200 - y)
+// 		h = 200 - y;
 
-	if (w <= 0 || h <= 0)
-		return;
+// 	if (w <= 0 || h <= 0)
+// 		return;
 
-	byte* dst = (uint8_t*)rt_video_get_secondary_target();
-	dst += y * 320 + x;
+// 	byte* dst = (uint8_t*)rt_video_get_secondary_target();
+// 	dst += y * 320 + x;
 
-	while (h > 0)
-	{
-		int width = w;
-		while (width > 0)
-		{
-			byte color = *src++;
-			if (color != 0xFF)
-				*dst = color;
-			dst++;
-			width--;
-		}
-		src += m_mouseW - w;
-		dst += 320 - w;
-		h--;
-	}
-}
+// 	while (h > 0)
+// 	{
+// 		int width = w;
+// 		while (width > 0)
+// 		{
+// 			byte color = *src++;
+// 			if (color != 0xFF)
+// 				*dst = color;
+// 			dst++;
+// 			width--;
+// 		}
+// 		src += m_mouseW - w;
+// 		dst += 320 - w;
+// 		h--;
+// 	}
+// }
 
 void OSystem_RebelV::update_sound()
 {
@@ -579,10 +520,10 @@ void OSystem_RebelV::update_timer()
 
 void OSystem_RebelV::update_frame()
 {
-	int32_t mp[2];
-	rt_input_get_absolute_position(mp);
-	m_mouseX = mp[0];
-	m_mouseY = mp[1];
+	// int32_t mp[2];
+	// rt_input_get_absolute_position(mp);
+	// m_mouseX = mp[0];
+	// m_mouseY = mp[1];
 
 	if (m_paletteDirty)
 	{
@@ -603,8 +544,8 @@ void OSystem_RebelV::update_frame()
 
 	// Mouse is drawn directly onto primary target, thus
 	// no need to preserve background etc.
-	if (m_mouseVisible)
-		draw_mouse_cursor();
+	// if (m_mouseVisible)
+	// 	draw_mouse_cursor();
 
 	rt_video_present();
 	rt_kernel_sleep(30);

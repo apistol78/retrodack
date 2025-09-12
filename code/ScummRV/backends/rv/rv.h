@@ -96,13 +96,13 @@ public:
 
 	uint8_t* m_target = nullptr;
 
-	const uint8_t* m_mouseBits = nullptr;
-	int32_t m_mouseW = 0;
-	int32_t m_mouseH = 0;
-	int32_t m_mouseHotX = 0;
-	int32_t m_mouseHotY = 0;
-	int32_t m_mouseX = 160;
-	int32_t m_mouseY = 100;
+	// const uint8_t* m_mouseBits = nullptr;
+	// int32_t m_mouseW = 0;
+	// int32_t m_mouseH = 0;
+	// int32_t m_mouseHotX = 0;
+	// int32_t m_mouseHotY = 0;
+	// int32_t m_mouseX = 160;
+	// int32_t m_mouseY = 100;
 	bool m_mouseVisible = false;
 
 	uint8_t* m_overlayTarget = nullptr;
@@ -113,7 +113,7 @@ public:
 
 	uint8_t m_lastButtons = 0;
 
-	void draw_mouse_cursor();
+	// void draw_mouse_cursor();
 
 	void update_timer();
 
