@@ -51,7 +51,6 @@ local SOURCE < const > =
 	PATH_PERIFHERIALS .. "/video/VIDEO_VGA.sv",
 	PATH_PERIFHERIALS .. "/i2c/I2C.sv",
 	PATH_PERIFHERIALS .. "/cpu/CPU.sv",
-	-- PATH_PERIFHERIALS .. "/cpu/CPU_BusMux.sv",
 	PATH_PERIFHERIALS .. "/cpu/CPU_PLIC.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_ALU.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_BRAM.sv",
@@ -216,71 +215,6 @@ local function buildEmulatorFS()
 	run:replace(SCRIPT_HOME .. "/build/rv/ReleaseStatic/ScummRV", SCRIPT_HOME .. "/fs/scummrv")
 	run:replace(SCRIPT_HOME .. "/3rdp/pocketmod/songs/elysium.mod", SCRIPT_HOME .. "/fs/song.mod")
 
-	-- Convert splash screen into RAW image.
-	--[[
-		local img = drawing.Image.loadFromFile(SCRIPT_HOME .. "/docs/Splash8.png")
-		if img == nil then
-			stderr:printLn("Unable to load image.")
-			return 1
-		end
-
-		img:apply(drawing.ScaleFilter(720, 720))
-		stdout:printLn("Image loaded; " .. img.width .. " * " .. img.height)
-
-		local um = {}
-		for y = 0, img.height - 1 do
-			for x = 0, img.width - 1 do
-				local clr = img:getPixel(x, y)
-				local r = math.floor(clr.red * 255)
-				local g = math.floor(clr.green * 255)
-				local b = math.floor(clr.blue * 255)
-				local c = (r << 16) | (g << 8) | b
-				um[c] = true
-			end
-		end
-
-		-- Counter number of unique colors.
-		local unique = 0
-		for c, _ in pairs(um) do
-			unique = unique + 1
-		end
-		stdout:printLn(unique .. " unique colors")
-
-		-- Create complete color palette.
-		local plt = drawing.Palette(unique)
-		local index = 0
-		for c, _ in pairs(um) do
-			local r = (c >> 16) / 255.0
-			local g = ((c >> 8) & 255) / 255.0
-			local b = (c & 255) / 255.0
-			plt:set(index, Color4f(r, g, b, 1))
-			index = index + 1
-		end
-
-		-- Reduce palette into 256 colors.
-		stdout:printLn("Reducing palette...")
-		plt = plt:reduce(256)
-
-		-- Convert source image into palettized image.
-		stdout:printLn("Converting...")
-		img:convert(drawing.PixelFormat.getP8(), plt)
-
-		-- Save a raw image prepended with palette.
-		stdout:printLn("Saving raw...")
-		local f = fileSystem:open(Path(SCRIPT_HOME .. "/fs/splash"), File.FmWrite)
-		local bw = BitWriter(f)
-		for i = 0, 255 do
-			local clr = plt:get(i)
-			local r = math.floor(clr.red * 255)
-			local g = math.floor(clr.green * 255)
-			local b = math.floor(clr.blue * 255)
-			local c = (r << 16) | (g << 8) | b
-			bw:writeUInt32(c)
-		end
-		StreamCopy(f, MemoryStream(img.data, img.dataSize)):execute()
-		f:close()
-	]]
-
 	return true
 end
 
@@ -289,8 +223,6 @@ function main()
 	local synthesize < const > = run.commandLine:hasOption("synth")
 	local flash < const > = run.commandLine:hasOption("flash")
 	local program < const > = run.commandLine:hasOption("prog") or flash
-	local emulation < const > = run.commandLine:hasOption("emu")
-	local launch < const > = run.commandLine:hasOption("launch")
 
 	local rtl < const > = "RetroDACK"
 	-- local rtl < const > = "RetroDACK_VGA"
@@ -335,7 +267,6 @@ function main()
 			if v == nil then return 1 end
 			f = f .. " " .. v
 		end
-		stdout:printLn(f)
 
 		-- Ensure old bit file is removed.
 		run:rm("build/" .. rtl .. ".bit")
@@ -347,19 +278,7 @@ function main()
 		stdout:printLn("Synthesize...")
 		stdout:printLn("==============================")
 		local tmr = Timer()
-
-		local xc = run:execute("yosys -q -l build/" .. rtl .. ".log -p \"opt; share -aggressive; synth_ecp5 -abc9 -json build/" .. rtl .. ".json\" " .. f, "build/" .. rtl .. ".yosys.log")
---[[
-		local xc = run:execute(
-			"yosys -l build/" .. rtl .. ".log " ..
-			"-p \"" ..
-				"read_verilog -noautowire " .. f .. "; " ..
-				"opt; "..
-				"share -aggressive; " ..
-				"synth_ecp5 -abc9 -json build/" .. rtl .. ".json; " ..
-			"\""
-		)
-]]
+		local xc = run:execute("yosys -l build/" .. rtl .. ".log -p \"opt; share -aggressive; synth_ecp5 -abc9 -json build/" .. rtl .. ".json\" " .. f, "build/" .. rtl .. ".yosys.log")
 		if xc ~= 0 then
 			stderr:printLn("yosys failed; build aborted.")
 			return 1
@@ -425,16 +344,6 @@ function main()
 			stderr:printLn("openFPGALoader failed to write bitstream to target; build aborted.")
 			return 1
 		end
-	end
-
-	-- Launch on target.
-	if launch then
-		run:execute("build/linux/ReleaseStatic/RetroDACK.Launch -elf=build/rv/ReleaseStatic/Dashboard")
-	end
-
-	-- Launch in emulator.
-	if emulation then
-		run:execute("build/linux/ReleaseStatic/RetroDACK.Emulator -elf=build/rv/ReleaseStatic/Dashboard")
 	end
 
 	stdout:printLn("Build successful.")

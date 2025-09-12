@@ -617,11 +617,14 @@ module RetroDACK(
 	wire [7:0] video_overlay_data;
 	wire video_overlay_mask;
 
-	VIDEO_sprite video_sprite(
+	VIDEO_sprite #(
+		.WIDTH(32),
+		.HEIGHT(32)
+	) video_sprite (
 		.i_clock(clock),
 
 		.i_request(video_sprite_request),
-		.i_address(video_sprite_address[5:2]),
+		.i_address(video_sprite_address[15:0]),
 		.i_wdata(video_sprite_wdata),
 		.o_ready(video_sprite_ready),
 
