@@ -167,6 +167,7 @@ int main(int argc, const char** argv)
 	PLIC plic;
 	Audio audio;
 	DMA dma;
+	Unknown sprite;
 
 	TrackBallDevice tb;
 	i2c.addSlave(0x0a, &tb);
@@ -185,6 +186,7 @@ int main(int argc, const char** argv)
 	bus.map(0x70000000, 0x70ffffff, false, true, &plic);
 	bus.map(0x80000000, 0x81000000, false, false, &video);
 	bus.map(0x90000000, 0x90000100, false, true, &dma);
+	bus.map(0xa0000000, 0xa0010000, false, false, &sprite);
 
 	Ref< OutputStream > os = nullptr;	
 	if (cmdLine.hasOption(L't', L"trace"))
