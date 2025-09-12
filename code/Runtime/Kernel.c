@@ -16,7 +16,7 @@
 
 #include "Runtime/Kernel.h"
 
-// #define SIGNAL_AWARE
+#define SIGNAL_AWARE
 #define TIMER_COUNTDOWN				(volatile uint32_t*)(TIMER_BASE + 0x5 * 0x04)
 
 #define KERNEL_MAIN_CLOCK 			100000000
@@ -404,9 +404,11 @@ void rt_kernel_sleep(uint32_t ms)
 	);
 	fin_ms += ms;
 	
+	rt_kernel_enter_critical();
 	volatile kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = 0;
 	t->sleep = fin_ms;
+	rt_kernel_leave_critical();
 
 	do
 	{
@@ -414,7 +416,9 @@ void rt_kernel_sleep(uint32_t ms)
 	}
 	while (t->sleep >= hal_timer_get_ms());
 
+	rt_kernel_enter_critical();
 	t->sleep = 0;
+	rt_kernel_leave_critical();
 }
 
 void rt_kernel_enter_critical()
@@ -440,6 +444,7 @@ void rt_kernel_cs_lock(volatile kernel_cs_t* cs)
 	{
 		while (cs->counter != 0)
 			rt_kernel_yield();
+
 		rt_kernel_enter_critical();
 		if (cs->counter == 0)
 		{
@@ -472,25 +477,31 @@ void rt_kernel_sig_raise(volatile kernel_sig_t* sig)
 
 void rt_kernel_sig_wait(volatile kernel_sig_t* sig)
 {
+	rt_kernel_enter_critical();
 	volatile kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = sig;
 	t->sleep = 0;
+	rt_kernel_leave_critical();
 	
 	sig->counter = 0;
 	while (sig->counter == 0)
 		rt_kernel_yield();
 
+	rt_kernel_enter_critical();
 	t->waiting = 0;
 	t->sleep = 0;
+	rt_kernel_leave_critical();
 }
 
 int32_t rt_kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 {
 	const uint32_t fin_ms = hal_timer_get_ms() + timeout;
 
+	rt_kernel_enter_critical();
 	volatile kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = sig;
 	t->sleep = fin_ms;
+	rt_kernel_leave_critical();
 
 	sig->counter = 0;
 	while (sig->counter == 0)
@@ -502,8 +513,10 @@ int32_t rt_kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 
 	const int32_t result = (sig->counter != 0) ? 1 : 0;
 
+	rt_kernel_enter_critical();
 	t->waiting = 0;
 	t->sleep = 0;
+	rt_kernel_leave_critical();
 
 	return result;
 }
