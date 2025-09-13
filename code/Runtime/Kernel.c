@@ -20,7 +20,7 @@
 #define TIMER_COUNTDOWN				(volatile uint32_t*)(TIMER_BASE + 0x5 * 0x04)
 
 #define KERNEL_MAIN_CLOCK 			100000000
-#define KERNEL_SCHEDULE_FREQUENCY	100
+#define KERNEL_SCHEDULE_FREQUENCY	150
 #define KERNEL_TIMER_RATE 			(KERNEL_MAIN_CLOCK / KERNEL_SCHEDULE_FREQUENCY)
 
 typedef struct
@@ -146,6 +146,7 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel
 				{
 					if (t->waiting->counter > 0)
 					{
+						// Signal has been raised; awake this thread.
 						t->waiting = 0;
 						break;
 					}
@@ -170,25 +171,12 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel
 					next = 0;
 
 				volatile kernel_thread_t* t = &g_threads[next];
-				if (t->waiting != 0 || t->sleep <= ms)
-					break;
-
 #ifdef SIGNAL_AWARE
 				if (t->waiting == 0 && t->sleep <= ms)
 					break;
-				else if (t->waiting != 0)
-				{
-					if (t->sleep == 0 || t->sleep <= ms)
-					{
-						if (t->waiting->counter > 0)
-						{
-							t->waiting = 0;
-							break;
-						}
-					}
-					else if(t->sleep != 0 && t->sleep > ms)
-						t->waiting = 0;
-				}
+#else				
+				if (t->sleep <= ms)
+					break;
 #endif
 			}
 		}

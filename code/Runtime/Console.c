@@ -74,7 +74,7 @@ static void rt_console_draw_console()
 		}
 	}
 
-	rt_video_present();
+	rt_video_present(1);
 }
 
 static void rt_console_putchar(char c)

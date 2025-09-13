@@ -433,56 +433,6 @@ void OSystem_RebelV::quit()
 	runtime_warm_restart();
 }
 
-// void OSystem_RebelV::draw_mouse_cursor()
-// {
-// 	const byte *src = m_mouseBits;
-
-// 	int32_t x = m_mouseX - m_mouseHotX;
-// 	int32_t y = m_mouseY - m_mouseHotY;
-// 	int32_t w = m_mouseW;
-// 	int32_t h = m_mouseH;
-
-// 	if (x < 0)
-// 	{
-// 		w += x;
-// 		src -= x;
-// 		x = 0;
-// 	}
-// 	if (y < 0)
-// 	{
-// 		h += y;
-// 		src -= y * m_mouseW;
-// 		y = 0;
-// 	}
-
-// 	if (w > 320 - x)
-// 		w = 320 - x;
-// 	if (h > 200 - y)
-// 		h = 200 - y;
-
-// 	if (w <= 0 || h <= 0)
-// 		return;
-
-// 	byte* dst = (uint8_t*)rt_video_get_secondary_target();
-// 	dst += y * 320 + x;
-
-// 	while (h > 0)
-// 	{
-// 		int width = w;
-// 		while (width > 0)
-// 		{
-// 			byte color = *src++;
-// 			if (color != 0xFF)
-// 				*dst = color;
-// 			dst++;
-// 			width--;
-// 		}
-// 		src += m_mouseW - w;
-// 		dst += 320 - w;
-// 		h--;
-// 	}
-// }
-
 void OSystem_RebelV::update_sound()
 {
 	const int32_t NumSamples = 1024;
@@ -520,11 +470,6 @@ void OSystem_RebelV::update_timer()
 
 void OSystem_RebelV::update_frame()
 {
-	// int32_t mp[2];
-	// rt_input_get_absolute_position(mp);
-	// m_mouseX = mp[0];
-	// m_mouseY = mp[1];
-
 	if (m_paletteDirty)
 	{
 		m_paletteDirty = false;
@@ -541,14 +486,9 @@ void OSystem_RebelV::update_frame()
 	  	rt_video_blit(m_target);
 
 	rt_video_wait();
+	rt_video_present(1);
 
-	// Mouse is drawn directly onto primary target, thus
-	// no need to preserve background etc.
-	// if (m_mouseVisible)
-	// 	draw_mouse_cursor();
-
-	rt_video_present();
-	rt_kernel_sleep(30);
+	rt_kernel_sleep(10);
 }
 
 OSystem *OSystem_RebelV_create()

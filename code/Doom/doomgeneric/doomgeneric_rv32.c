@@ -34,7 +34,7 @@ void DG_DrawFrame2(const uint8_t* frame, const uint32_t* colors)
 
 	rt_video_blit(frame);
 	rt_video_wait();
-	rt_video_present();
+	rt_video_present(0);
 }
 
 void DG_SleepMs(uint32_t ms)

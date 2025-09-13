@@ -34,4 +34,4 @@ EXTERN_C void rt_video_blit(const void* source);
 
 EXTERN_C void rt_video_wait();
 
-EXTERN_C void rt_video_present();
+EXTERN_C void rt_video_present(uint8_t waitVBlank);

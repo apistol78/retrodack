@@ -559,7 +559,7 @@ int SDL_BlitScaled(const SDL_Surface *src, const SDL_Rect *srcrect, SDL_Surface 
 void SDL_RenderPresent(SDL_Renderer* renderer)
 {
 	SDL_TRACE("SDL_RenderPresent\n");
-	rt_video_present();
+	rt_video_present(0);
 }
 
 SDL_Surface* SDL_ConvertSurfaceFormat(SDL_Surface * src, Uint32 pixel_format, Uint32 flags)

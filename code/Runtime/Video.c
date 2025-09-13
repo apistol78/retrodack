@@ -92,7 +92,13 @@ void rt_video_wait()
 		rt_kernel_yield();
 }
 
-void rt_video_present()
+void rt_video_present(uint8_t waitVBlank)
 {
+	if (waitVBlank)
+	{
+		const uint32_t fc = hal_video_get_frame_counter();
+		while (hal_video_get_frame_counter() == fc)
+			rt_kernel_yield();
+	}
 	hal_video_present();
 }
