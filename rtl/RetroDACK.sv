@@ -265,10 +265,12 @@ module RetroDACK(
 
 	assign I2C_SDA = I2C_SDA_direction ? I2C_SDA_w : 1'bz;
 
-	I2C i2c(
+	I2C_v2 i2c(
+		.i_reset(reset),
 		.i_clock(clock),
 		.i_request(i2c_request),
 		.i_rw(i2c_rw),
+		.i_address(i2c_address[3:2]),
 		.i_wdata(i2c_wdata),
 		.o_rdata(i2c_rdata),
 		.o_ready(i2c_ready),
