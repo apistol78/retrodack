@@ -33,6 +33,8 @@
 #include <Ui/Image.h>
 #include <Ui/Form.h>
 #include <Ui/FloodLayout.h>
+#include <Ui/TableLayout.h>
+#include <Ui/StatusBar/StatusBar.h>
 #if defined(_WIN32)
 #	include <Ui/Win32/WidgetFactoryWin32.h>
 #elif defined(__APPLE__)
@@ -270,7 +272,7 @@ int main(int argc, const char** argv)
 
 	// Create user interface.
 	Ref< ui::Form > form = new ui::Form();
-	form->create(L"RetroDACK", 720_ut, 720_ut, ui::Form::WsDefault, new ui::FloodLayout());
+	form->create(L"RetroDACK", 720_ut, 720_ut, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"100%,*", 0_ut, 0_ut));
 
 	Ref< ui::Bitmap > uiImage = new ui::Bitmap(720, 720);
 
@@ -279,6 +281,10 @@ int main(int argc, const char** argv)
 	
 	Ref< ui::Image > image = new ui::Image();
 	image->create(container, uiImage, ui::Image::WsScale | ui::Image::WsNearestFilter);
+
+	Ref< ui::StatusBar > statusBar = new ui::StatusBar();
+	statusBar->create(form);
+	statusBar->addColumn(200);
 
 	form->update();
 	form->show();
@@ -480,6 +486,10 @@ int main(int argc, const char** argv)
 				}
 				image->setImage(uiImage);
 			}
+
+			if (gdbs)
+				statusBar->setText(0, gdbs->getMode() == 0 ? L"Running" : L"Halted");
+
 			timer.reset();
 		}			
 	}
