@@ -17,6 +17,7 @@
 #include "Runtime/Audio.h"
 #include "Runtime/CRT.h"
 #include "Runtime/File.h"
+#include "Runtime/I2C.h"
 #include "Runtime/Input.h"
 #include "Runtime/Kernel.h"
 #include "Runtime/Runtime.h"
@@ -36,6 +37,9 @@ int32_t runtime_init()
 	printf("** Initialize IRQ handler **\n");
 	hal_interrupt_init();
 
+	printf("** Initialize Kernel **\n");
+	rt_kernel_init();
+
 	printf("** Initialize Video **\n");
 	if (hal_video_init() != 0)
 		printf("Video init failed!\n");
@@ -53,9 +57,6 @@ int32_t runtime_init()
 
 	printf("** Initialize Input **\n");
 	rt_input_init();
-
-	printf("** Initialize Kernel **\n");
-	rt_kernel_init();
 
 	printf("** Ready **\n");
     return 0;

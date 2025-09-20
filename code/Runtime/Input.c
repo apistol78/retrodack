@@ -8,9 +8,9 @@
 */
 #include <stdio.h>
 #include <string.h>
+#include "Runtime/I2C.h"
 #include "Runtime/Input.h"
 
-#include <HAL/I2C.h>
 #include <HAL/Interrupt.h>
 #include <HAL/Sprite.h>
 #include <HAL/Timer.h>
@@ -62,10 +62,10 @@ static int32_t s_events_out = 0;
 
 static void tb_input_interrupt(uint32_t source)
 {
-	hal_i2c_write(0x0a, TRACKBALL_REG_INT, 0);
+	rt_i2c_write(0x0a, TRACKBALL_REG_INT, 0);
 
 	uint8_t data[5] = { 0, 0, 0, 0, 0 };
-	hal_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5);
+	rt_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5);
 
 	#define TB_DATA(N) \
 		(int32_t)((data[N] > 1) ? (data[N] * TB_SPEED) : data[N])
@@ -136,13 +136,13 @@ static void tb_input_interrupt(uint32_t source)
 			s_events_out = (s_events_out + 1) & (NEVENTS - 1);
 	}
 
-	hal_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN);
+	rt_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN);
 }
 
 static void gpio_input_interrupt(uint32_t source)
 {
 	uint16_t data = 0;
-	hal_i2c_read(0x20, 0x00, (uint8_t*)&data, 2);
+	rt_i2c_read(0x20, 0x00, (uint8_t*)&data, 2);
 	data = ~data;
 
 	#define S(bit, mask) \
@@ -191,7 +191,7 @@ int32_t rt_input_init()
 	// Locate trackball by reading it's identification.
 	for (int32_t i = 0; i < 10; ++i)
 	{
-		hal_i2c_read(0x0a, TRACKBALL_REG_CHIP_ID_L, data, 2);
+		rt_i2c_read(0x0a, TRACKBALL_REG_CHIP_ID_L, data, 2);
 		if (data[0] == 0x11 && data[1] == 0xba)
 		{
 			found = 1;
@@ -206,18 +206,18 @@ int32_t rt_input_init()
 		hal_interrupt_set_handler(IRQ_SOURCE_PLIC_0, tb_input_interrupt);
 
 		// Turn on green backlight to indicate success.
-		hal_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0xff);
+		rt_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0xff);
 
 		// Enable interrupt pin; notify CPU everytime
 		// track ball position change.
-		hal_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN);
+		rt_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN);
 
 		// Read data from TB; to ensure interrupt state
 		// in TB is reset.
 		for (int i = 0; i < 100; ++i)
 		{
 			uint8_t data[5] = { 0, 0, 0, 0, 0 };
-			hal_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5);
+			rt_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5);
 			hal_timer_wait_ms(10);
 		}
 	}
@@ -283,24 +283,24 @@ void rt_input_set_tb_color(int32_t clr)
 	switch (clr)
 	{
 	case RT_TB_RED:
-		hal_i2c_write(0x0a, TRACKBALL_REG_LED_RED, 0xff);
-		hal_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0x00);
-		hal_i2c_write(0x0a, TRACKBALL_REG_LED_BLU, 0x00);
+		rt_i2c_write(0x0a, TRACKBALL_REG_LED_RED, 0xff);
+		rt_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0x00);
+		rt_i2c_write(0x0a, TRACKBALL_REG_LED_BLU, 0x00);
 		break;
 	case RT_TB_GREEN:
-		hal_i2c_write(0x0a, TRACKBALL_REG_LED_RED, 0x00);
-		hal_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0xff);
-		hal_i2c_write(0x0a, TRACKBALL_REG_LED_BLU, 0x00);
+		rt_i2c_write(0x0a, TRACKBALL_REG_LED_RED, 0x00);
+		rt_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0xff);
+		rt_i2c_write(0x0a, TRACKBALL_REG_LED_BLU, 0x00);
 		break;
 	case RT_TB_BLUE:
-		hal_i2c_write(0x0a, TRACKBALL_REG_LED_RED, 0x00);
-		hal_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0x00);
-		hal_i2c_write(0x0a, TRACKBALL_REG_LED_BLU, 0xff);
+		rt_i2c_write(0x0a, TRACKBALL_REG_LED_RED, 0x00);
+		rt_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0x00);
+		rt_i2c_write(0x0a, TRACKBALL_REG_LED_BLU, 0xff);
 		break;
 	default:
-		hal_i2c_write(0x0a, TRACKBALL_REG_LED_RED, 0x00);
-		hal_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0x00);
-		hal_i2c_write(0x0a, TRACKBALL_REG_LED_BLU, 0x00);
+		rt_i2c_write(0x0a, TRACKBALL_REG_LED_RED, 0x00);
+		rt_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0x00);
+		rt_i2c_write(0x0a, TRACKBALL_REG_LED_BLU, 0x00);
 		break;
 	}
 }

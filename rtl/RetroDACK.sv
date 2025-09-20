@@ -266,7 +266,7 @@ module RetroDACK(
 	assign I2C_SDA = I2C_SDA_direction ? I2C_SDA_w : 1'bz;
 
 	I2C_v2 #(
-		.DELAY(600)
+		.DELAY(400)	// 100 works for GPIO, 400 for TB.
 	) i2c (
 		.i_reset(reset),
 		.i_clock(clock),

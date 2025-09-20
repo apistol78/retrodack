@@ -24,6 +24,7 @@
 #include "Runtime/CRT.h"
 #include "Runtime/ELF.h"
 #include "Runtime/File.h"
+#include "Runtime/I2C.h"
 #include "Runtime/Input.h"
 #include "Runtime/Runtime.h"
 #include "Runtime/Timer.h"
@@ -147,10 +148,11 @@ static void remote_control()
 			if (cs == rx_u8())
 			{
 				hal_uart_tx_u8('O');	// Ok
+				hal_interrupt_disable();
 
 				// Ensure DCACHE is flushed.
 				__asm__ volatile ("fence");
-				
+
 				// Set initial stack pointer.
 				if (sp != 0)
 				{
@@ -235,8 +237,8 @@ void kickstart_main()
 	rt_timer_init();
 	hal_interrupt_init();
 	hal_video_init();
-	rt_input_init();
 	rt_kernel_init();
+	rt_input_init();
 	rt_console_init();
 
 	rt_video_set_palette(2, 0xffffff);
