@@ -412,13 +412,13 @@ void rt_kernel_sleep(uint32_t ms)
 void rt_kernel_enter_critical()
 {
 	if (g_critical++ == 0)
-		hal_csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
+		hal_csr_clr_bits_mstatus(MIE_MTI_BIT_MASK);
 }
 
 void rt_kernel_leave_critical()
 {
 	if (--g_critical == 0)
-		hal_csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
+		hal_csr_set_bits_mstatus(MIE_MTI_BIT_MASK);
 }
 
 void rt_kernel_cs_init(volatile kernel_cs_t* cs)
