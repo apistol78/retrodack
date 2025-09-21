@@ -40,16 +40,16 @@ EXTERN_C void rt_kernel_enter_critical();
 
 EXTERN_C void rt_kernel_leave_critical();
 
-EXTERN_C void rt_kernel_cs_init(kernel_cs_t* cs);
+EXTERN_C void rt_kernel_cs_init(volatile kernel_cs_t* cs);
 
-EXTERN_C void rt_kernel_cs_lock(kernel_cs_t* cs);
+EXTERN_C void rt_kernel_cs_lock(volatile kernel_cs_t* cs);
 
-EXTERN_C void rt_kernel_cs_unlock(kernel_cs_t* cs);
+EXTERN_C void rt_kernel_cs_unlock(volatile kernel_cs_t* cs);
 
-EXTERN_C void rt_kernel_sig_init(kernel_sig_t* sig);
+EXTERN_C void rt_kernel_sig_init(volatile kernel_sig_t* sig);
 
-EXTERN_C void rt_kernel_sig_raise(kernel_sig_t* sig);
+EXTERN_C void rt_kernel_sig_raise(volatile kernel_sig_t* sig);
 
-EXTERN_C void rt_kernel_sig_wait(kernel_sig_t* sig);
+EXTERN_C void rt_kernel_sig_wait(volatile kernel_sig_t* sig);
 
-EXTERN_C int32_t rt_kernel_sig_try_wait(kernel_sig_t* sig, uint32_t timeout);
+EXTERN_C int32_t rt_kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout);

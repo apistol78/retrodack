@@ -231,7 +231,7 @@ module RetroDACK(
 
 	UART #(
 		.FREQUENCY(`FREQUENCY),
-		.BAUDRATE(115200),
+		.BAUDRATE(460800), // 115200),
 		.RX_FIFO_DEPTH(1024),
 		.TX_FIFO_DEPTH(64)
 	) uart(
@@ -266,7 +266,7 @@ module RetroDACK(
 	assign I2C_SDA = I2C_SDA_direction ? I2C_SDA_w : 1'bz;
 
 	I2C_v2 #(
-		.DELAY(400)	// 100 works for GPIO, 400 for TB.
+		.DELAY(800)	// 100 works for GPIO, 400 for TB.
 	) i2c (
 		.i_reset(reset),
 		.i_clock(clock),
@@ -427,13 +427,18 @@ module RetroDACK(
 		kpi <= { kpi[0], ~KEYPAD_INTERRUPT };
 	end
 
+	bit [1:0] vbi = 2'b00;
+	always_ff @(posedge clock) begin
+		vbi <= { vbi[0], vga_vblank };
+	end
+
 	CPU_PLIC plic(
 		.i_reset(reset),
 		.i_clock(clock),
 
 		.i_interrupt_0(tbi == 2'b01),
 		.i_interrupt_1(kpi == 2'b01),
-		.i_interrupt_2(1'b0),	// LCD_TOUCH_INTERRUPT
+		.i_interrupt_2(vbi == 2'b01),
 		.i_interrupt_3(1'b0),	// AUDIO_INTERRUPT
 
 		.i_interrupt_enable(1'b1),

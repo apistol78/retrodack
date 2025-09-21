@@ -10,6 +10,7 @@
 #include <string.h>
 #include "Runtime/I2C.h"
 #include "Runtime/Input.h"
+#include "Runtime/Kernel.h"
 
 #include <HAL/Interrupt.h>
 #include <HAL/Sprite.h>
@@ -43,141 +44,207 @@
 #define TRACKBALL_MSK_CTRL_FREAD 0b00000100
 #define TRACKBALL_MSK_CTRL_FWRITE 0b00001000
 
-static int32_t s_filteredDeltaX = 0;
-static int32_t s_filteredDeltaY = 0;
-static int32_t s_absX = 0;
-static int32_t s_absY = 0;
-static int32_t s_deltaX = 0;
-static int32_t s_deltaY = 0;
+static float s_filteredDeltaX = 0;
+static float s_filteredDeltaY = 0;
+static float s_absX = 0;
+static float s_absY = 0;
+static float s_deltaX = 0;
+static float s_deltaY = 0;
+static int32_t s_lastAbsX = 0;
+static int32_t s_lastAbsY = 0;
+
 static uint32_t s_pressed = 0;
 static int32_t s_hotX = 0;
 static int32_t s_hotY = 0;
 
-#define TB_SPEED	5
-#define NEVENTS		128
+#define NEVENTS 256
 
 static rt_event_t s_events[NEVENTS];
 static int32_t s_events_in = 0;
 static int32_t s_events_out = 0;
 
+static kernel_cs_t s_input_lock;
+static kernel_sig_t s_input_signal;
+static int32_t s_have_gpio = 0;
+
 static void tb_input_interrupt(uint32_t source)
 {
-	rt_i2c_write(0x0a, TRACKBALL_REG_INT, 0);
-
-	uint8_t data[5] = { 0, 0, 0, 0, 0 };
-	rt_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5);
-
-	#define TB_DATA(N) \
-		(int32_t)((data[N] > 1) ? (data[N] * TB_SPEED) : data[N])
-
-	const int32_t dx = TB_DATA(0) - TB_DATA(1);
-	const int32_t dy = TB_DATA(2) - TB_DATA(3);
-
-	const int32_t f0 = 64;
-	s_filteredDeltaX = (dx * f0 + s_filteredDeltaX * (255 - f0)) / 256;
-	s_filteredDeltaY = (dy * f0 + s_filteredDeltaY * (255 - f0)) / 256;
-
-	s_absX += s_filteredDeltaX;
-	s_absY += s_filteredDeltaY;
-
-	s_deltaX += s_filteredDeltaX;
-	s_deltaY += s_filteredDeltaY;
-
-	const int32_t f1 = 240;
-	s_filteredDeltaX = (s_filteredDeltaX * f1) / 256;
-	s_filteredDeltaY = (s_filteredDeltaY * f1) / 256;
-
-	// Clamp absolute position to the size of the current resolution.
-	const int32_t width = hal_video_get_resolution_width();
-	const int32_t height = hal_video_get_resolution_height();
-
-	if (s_absX < 0)
-		s_absX = 0;
-	else if (s_absX > width - 1)
-		s_absX = width - 1;
-
-	if (s_absY < 0)
-		s_absY = 0;
-	else if (s_absY > height - 1)
-		s_absY = height - 1;
-
-	// Place position of first sprite as a mouse cursor;
-	// offset to ensure center of sprite is a mouse position.
-	hal_sprite_set_position(0, s_absX - s_hotX, s_absY - s_hotY);
-
-	if (data[0] || data[1] || data[2] || data[3])
-	{
-		rt_event_t* ev = &s_events[s_events_in];
-		ev->button = 0;
-		ev->pressed = 0;
-		ev->x = s_absX;
-		ev->y = s_absY;
-		s_events_in = (s_events_in + 1) & (NEVENTS - 1);
-		if (s_events_in == s_events_out)
-			s_events_out = (s_events_out + 1) & (NEVENTS - 1);		
-	}
-
-	const uint32_t pressed = s_pressed;
-
-	if (data[4])
-		s_pressed |= RT_INPUT_TB;
-	else
-		s_pressed &= ~RT_INPUT_TB;
-
-	if (pressed != s_pressed)
-	{
-		rt_event_t* ev = &s_events[s_events_in];
-		ev->button = RT_INPUT_TB;
-		ev->pressed = (RT_INPUT_TB & s_pressed) ? 1 : 0;
-		ev->x = s_absX;
-		ev->y = s_absY;
-		s_events_in = (s_events_in + 1) & (NEVENTS - 1);
-		if (s_events_in == s_events_out)
-			s_events_out = (s_events_out + 1) & (NEVENTS - 1);
-	}
-
-	rt_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN);
+	rt_kernel_sig_raise(&s_input_signal);
 }
 
 static void gpio_input_interrupt(uint32_t source)
 {
-	uint16_t data = 0;
-	rt_i2c_read(0x20, 0x00, (uint8_t*)&data, 2);
-	data = ~data;
+	s_have_gpio = 1;
+	rt_kernel_sig_raise(&s_input_signal);
+}
 
-	#define S(bit, mask) \
-		if (data & bit) { s_pressed |= mask; } else { s_pressed &= ~mask; }
+static float max(float a, float b)
+{
+	return (a > b) ? a : b;
+}
 
-	const uint32_t pressed = s_pressed;
-	S(0x0020, RT_INPUT_DPAD_S);
-	S(0x0040, RT_INPUT_DPAD_E);
-	S(0x0080, RT_INPUT_DPAD_W);
-	S(0x0010, RT_INPUT_DPAD_N);
-	S(0x0100, RT_INPUT_BUTTON_S1);
-	S(0x0200, RT_INPUT_BUTTON_S2);
-	S(0x0001, RT_INPUT_BUTTON_D);
-	S(0x0008, RT_INPUT_BUTTON_A);
-	S(0x0004, RT_INPUT_BUTTON_B);
-	S(0x0002, RT_INPUT_BUTTON_C);
+static float min(float a, float b)
+{
+	return (a < b) ? a : b;
+}
 
-	#undef S
+static float abs(float a)
+{
+	return a >= 0.0f ? a : -a;
+}
 
-	if (pressed != s_pressed)
+static void input_thread()
+{
+	int32_t absX, absY;
+	for (;;)
 	{
-		const uint32_t m = s_pressed ^ pressed;
-		for (int32_t i = 0; i < 11; ++i)
+		// Wait for signal.
+		rt_i2c_write(0x0a, TRACKBALL_REG_INT, 0);
+		rt_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN);
+		rt_kernel_sig_try_wait(&s_input_signal, 10);
+
+		// Trackball
 		{
-			const uint32_t btn = 1 << i;
-			if ((btn & m) != 0)
+			uint8_t data[5] = { 0, 0, 0, 0, 0 };
+			rt_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5);
+
+			#define TB_DATA(N) ((int32_t)data[N])
+
+			const float dx = TB_DATA(0) - TB_DATA(1);
+			const float dy = TB_DATA(2) - TB_DATA(3);
+
+			const float f0 = 0.1f;
+			s_filteredDeltaX = dx * f0 + s_filteredDeltaX * (1.0f - f0);
+			s_filteredDeltaY = dy * f0 + s_filteredDeltaY * (1.0f - f0);
+
+			float fm = 0.0f;
+			fm = max(fm, abs(s_filteredDeltaX));
+			fm = max(fm, abs(s_filteredDeltaY));
+			fm = min(fm, 1.0f);
+
+			const float f1 = fm * 10.0f + (1.0f - fm) * 4.0f;
+			s_absX += s_filteredDeltaX * f1;
+			s_absY += s_filteredDeltaY * f1;
+			s_deltaX += s_filteredDeltaX * f1;
+			s_deltaY += s_filteredDeltaY * f1;
+
+			const float f2 = 0.925f;
+			s_filteredDeltaX *= f2;
+			s_filteredDeltaY *= f2;
+
+			// Clamp absolute position to the size of the current resolution.
+			const int32_t width = hal_video_get_resolution_width();
+			const int32_t height = hal_video_get_resolution_height();
+
+			if (s_absX < 0)
+				s_absX = 0;
+			else if (s_absX > width - 1)
+				s_absX = width - 1;
+
+			if (s_absY < 0)
+				s_absY = 0;
+			else if (s_absY > height - 1)
+				s_absY = height - 1;
+
+			// Convert to integer.
+			absX = (int32_t)s_absX;
+			absY = (int32_t)s_absY;
+
+			// Place position of first sprite as a mouse cursor;
+			// offset to ensure center of sprite is a mouse position.
+			hal_sprite_set_position(0, absX - s_hotX, absY - s_hotY);
+		
+			if (absX != s_lastAbsX || absY != s_lastAbsY)
 			{
+				rt_kernel_cs_lock(&s_input_lock);
+
 				rt_event_t* ev = &s_events[s_events_in];
-				ev->button = btn;
-				ev->pressed = (btn & s_pressed) ? 1 : 0;
-				ev->x = s_absX;
-				ev->y = s_absY;
+				ev->button = 0;
+				ev->pressed = 0;
+				ev->x = absX;
+				ev->y = absY;
 				s_events_in = (s_events_in + 1) & (NEVENTS - 1);
 				if (s_events_in == s_events_out)
 					s_events_out = (s_events_out + 1) & (NEVENTS - 1);
+
+				rt_kernel_cs_unlock(&s_input_lock);
+
+				s_lastAbsX = absX;
+				s_lastAbsY = absY;
+			}
+
+			const uint32_t pressed = s_pressed;
+
+			if (data[4])
+				s_pressed |= RT_INPUT_TB;
+			else
+				s_pressed &= ~RT_INPUT_TB;
+
+			if (pressed != s_pressed)
+			{
+				rt_kernel_cs_lock(&s_input_lock);
+
+				rt_event_t* ev = &s_events[s_events_in];
+				ev->button = RT_INPUT_TB;
+				ev->pressed = (RT_INPUT_TB & s_pressed) ? 1 : 0;
+				ev->x = absX;
+				ev->y = absY;
+				s_events_in = (s_events_in + 1) & (NEVENTS - 1);
+				if (s_events_in == s_events_out)
+					s_events_out = (s_events_out + 1) & (NEVENTS - 1);
+
+				rt_kernel_cs_unlock(&s_input_lock);
+			}
+		}
+
+		// Buttons
+		if (s_have_gpio)
+		{
+			uint16_t data = 0;
+			rt_i2c_read(0x20, 0x00, (uint8_t*)&data, 2);
+			data = ~data;
+
+			s_have_gpio = 0;
+
+			#define S(bit, mask) \
+				if (data & bit) { s_pressed |= mask; } else { s_pressed &= ~mask; }
+
+			const uint32_t pressed = s_pressed;
+			S(0x0020, RT_INPUT_DPAD_S);
+			S(0x0040, RT_INPUT_DPAD_E);
+			S(0x0080, RT_INPUT_DPAD_W);
+			S(0x0010, RT_INPUT_DPAD_N);
+			S(0x0100, RT_INPUT_BUTTON_S1);
+			S(0x0200, RT_INPUT_BUTTON_S2);
+			S(0x0001, RT_INPUT_BUTTON_D);
+			S(0x0008, RT_INPUT_BUTTON_A);
+			S(0x0004, RT_INPUT_BUTTON_B);
+			S(0x0002, RT_INPUT_BUTTON_C);
+
+			#undef S
+
+			if (pressed != s_pressed)
+			{
+				const uint32_t m = s_pressed ^ pressed;
+				for (int32_t i = 0; i < 11; ++i)
+				{
+					const uint32_t btn = 1 << i;
+					if ((btn & m) != 0)
+					{
+						rt_kernel_cs_lock(&s_input_lock);
+
+						rt_event_t* ev = &s_events[s_events_in];
+						ev->button = btn;
+						ev->pressed = (btn & s_pressed) ? 1 : 0;
+						ev->x = absX;
+						ev->y = absY;
+						s_events_in = (s_events_in + 1) & (NEVENTS - 1);
+						if (s_events_in == s_events_out)
+							s_events_out = (s_events_out + 1) & (NEVENTS - 1);
+
+						rt_kernel_cs_unlock(&s_input_lock);
+					}
+				}
 			}
 		}
 	}
@@ -187,6 +254,21 @@ int32_t rt_input_init()
 {
 	uint8_t data[5] = { 0, 0, 0, 0, 0 };
 	uint8_t found = 0;
+
+	// Ensure everything is reset.
+	s_filteredDeltaX = 0.0f;
+	s_filteredDeltaY = 0.0f;
+	s_absX = 0.0f;
+	s_absY = 0.0f;
+	s_deltaX = 0.0f;
+	s_deltaY = 0.0f;
+	s_lastAbsX = 0;
+	s_lastAbsY = 0;
+	s_pressed = 0;
+	s_hotX = 0;
+	s_hotY = 0;
+	s_events_in = 0;
+	s_events_out = 0;
 
 	// Locate trackball by reading it's identification.
 	for (int32_t i = 0; i < 10; ++i)
@@ -199,6 +281,11 @@ int32_t rt_input_init()
 		}
 		hal_timer_wait_ms(100);
 	}
+
+	// Create input queue thread.
+	rt_kernel_cs_init(&s_input_lock);
+	rt_kernel_sig_init(&s_input_signal);
+	rt_kernel_create_thread(input_thread);
 
 	// Setup trackball.
 	// if (found)
@@ -224,6 +311,7 @@ int32_t rt_input_init()
 
 	// Setup button inputs.
 	hal_interrupt_set_handler(IRQ_SOURCE_PLIC_1, gpio_input_interrupt);
+
 	return 0;
 }
 
@@ -236,14 +324,14 @@ void rt_input_set_absolute_position(int32_t x, int32_t y)
 
 void rt_input_get_absolute_position(int32_t* pos)
 {
-	pos[0] = s_absX;
-	pos[1] = s_absY;
+	pos[0] = (int32_t)s_absX;
+	pos[1] = (int32_t)s_absY;
 }
 
 void rt_input_get_delta_position(int32_t* pos)
 {
-	pos[0] = s_deltaX;
-	pos[1] = s_deltaY;
+	pos[0] = (int32_t)s_deltaX;
+	pos[1] = (int32_t)s_deltaY;
 	s_deltaX = 0;
 	s_deltaY = 0;
 }
@@ -255,26 +343,15 @@ uint32_t rt_input_get_state()
 
 uint32_t rt_input_get_event(rt_event_t* ev)
 {
-	// uint32_t RA;
-	// __asm__ volatile (
-	// 	"mv %0, ra	\n"
-	// 	: "=r" (RA)
-	// 	:
-	// );
-
-	// printf("rt_input_get_event\n");
-	// printf("s_events %p\n", s_events);
-	// printf("s_events_in %d\n", s_events_in);
-	// printf("s_events_out %d\n", s_events_out);
-	// printf("ev %p\n", ev);
-	// printf("RA %08x\n", RA);
-
 	if (s_events_in == s_events_out)
 		return 0;
+
+	rt_kernel_cs_lock(&s_input_lock);
 
 	memcpy(ev, &s_events[s_events_out], sizeof(rt_event_t));
 	s_events_out = (s_events_out + 1) & (NEVENTS - 1);
 
+	rt_kernel_cs_unlock(&s_input_lock);
 	return 1;
 }
 
@@ -283,24 +360,24 @@ void rt_input_set_tb_color(int32_t clr)
 	switch (clr)
 	{
 	case RT_TB_RED:
-		rt_i2c_write(0x0a, TRACKBALL_REG_LED_RED, 0xff);
-		rt_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0x00);
-		rt_i2c_write(0x0a, TRACKBALL_REG_LED_BLU, 0x00);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_RED, 0xff);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_GRN, 0x00);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_BLU, 0x00);
 		break;
 	case RT_TB_GREEN:
-		rt_i2c_write(0x0a, TRACKBALL_REG_LED_RED, 0x00);
-		rt_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0xff);
-		rt_i2c_write(0x0a, TRACKBALL_REG_LED_BLU, 0x00);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_RED, 0x00);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_GRN, 0xff);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_BLU, 0x00);
 		break;
 	case RT_TB_BLUE:
-		rt_i2c_write(0x0a, TRACKBALL_REG_LED_RED, 0x00);
-		rt_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0x00);
-		rt_i2c_write(0x0a, TRACKBALL_REG_LED_BLU, 0xff);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_RED, 0x00);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_GRN, 0x00);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_BLU, 0xff);
 		break;
 	default:
-		rt_i2c_write(0x0a, TRACKBALL_REG_LED_RED, 0x00);
-		rt_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0x00);
-		rt_i2c_write(0x0a, TRACKBALL_REG_LED_BLU, 0x00);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_RED, 0x00);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_GRN, 0x00);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_BLU, 0x00);
 		break;
 	}
 }

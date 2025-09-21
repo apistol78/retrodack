@@ -20,6 +20,11 @@ void rt_i2c_write(uint8_t deviceAddr, uint8_t controlAddr, uint8_t controlData)
 		rt_kernel_yield();
 }
 
+uint32_t rt_i2c_write_async(uint8_t deviceAddr, uint8_t controlAddr, uint8_t controlData)
+{
+    return hal_i2c_write(deviceAddr, controlAddr, controlData);
+}
+
 void rt_i2c_read(uint8_t deviceAddr, uint8_t controlAddr, uint8_t* outControlData, uint8_t nbytes)
 {
     const uint32_t tag = hal_i2c_read(deviceAddr, controlAddr, nbytes);

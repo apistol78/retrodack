@@ -6,10 +6,12 @@
  License, v. 2.0. If a copy of the MPL was not distributed with this
  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <HAL/DMA.h>
+#include <HAL/Interrupt.h>
 
 #include "Runtime/Kernel.h"
 #include "Runtime/Video.h"
@@ -17,10 +19,20 @@
 #define DMA_CHANNEL 1
 
 static uint32_t s_dma_tag = 0;
+static kernel_sig_t s_vblank_signal;
 
-int32_t rt_video_init()
+static void video_interrupt(uint32_t source)
 {
-	return hal_video_init();
+	rt_kernel_sig_raise(&s_vblank_signal);
+}
+
+void rt_video_init()
+{
+	hal_video_init();
+
+	// Register vblank interrupt.
+	rt_kernel_sig_init(&s_vblank_signal);
+	hal_interrupt_set_handler(IRQ_SOURCE_PLIC_2, video_interrupt);
 }
 
 int32_t rt_video_set_mode(int32_t mode)
@@ -96,11 +108,7 @@ void rt_video_wait()
 
 void rt_video_present(uint8_t waitVBlank)
 {
-	if (waitVBlank)
-	{
-		const uint32_t fc = hal_video_get_frame_counter();
-		while (hal_video_get_frame_counter() == fc)
-			rt_kernel_yield();
-	}
+	for (uint8_t i = 0; i < waitVBlank; ++i)
+		rt_kernel_sig_wait(&s_vblank_signal);
 	hal_video_present();
 }

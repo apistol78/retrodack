@@ -10,7 +10,7 @@
 
 #include <HAL/Video.h>
 
-EXTERN_C int32_t rt_video_init();
+EXTERN_C void rt_video_init();
 
 EXTERN_C int32_t rt_video_set_mode(int32_t mode);
 

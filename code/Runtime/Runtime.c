@@ -12,7 +12,7 @@
 #include <HAL/SD.h>
 #include <HAL/Timer.h>
 #include <HAL/UART.h>
-#include <HAL/Video.h>
+// #include <HAL/Video.h>
 
 #include "Runtime/Audio.h"
 #include "Runtime/CRT.h"
@@ -22,6 +22,7 @@
 #include "Runtime/Kernel.h"
 #include "Runtime/Runtime.h"
 #include "Runtime/Timer.h"
+#include "Runtime/Video.h"
 
 // Needed by custom printf implementation.
 void _putchar(char character)
@@ -41,8 +42,7 @@ int32_t runtime_init()
 	rt_kernel_init();
 
 	printf("** Initialize Video **\n");
-	if (hal_video_init() != 0)
-		printf("Video init failed!\n");
+	rt_video_init();
 
 	printf("** Initialize Audio **\n");
 	rt_audio_init();

@@ -20,7 +20,7 @@
 #define TIMER_COUNTDOWN				(volatile uint32_t*)(TIMER_BASE + 0x5 * 0x04)
 
 #define KERNEL_MAIN_CLOCK 			100000000
-#define KERNEL_SCHEDULE_FREQUENCY	150
+#define KERNEL_SCHEDULE_FREQUENCY	60
 #define KERNEL_TIMER_RATE 			(KERNEL_MAIN_CLOCK / KERNEL_SCHEDULE_FREQUENCY)
 
 typedef struct
@@ -30,7 +30,7 @@ typedef struct
 	uint32_t sp;
 	uint32_t epc;
 	uint32_t sleep;
-	kernel_sig_t* waiting;
+	volatile kernel_sig_t* waiting;
 }
 kernel_thread_t;
 
@@ -424,12 +424,12 @@ void rt_kernel_leave_critical()
 	hal_csr_write_mie(mie);
 }
 
-void rt_kernel_cs_init(kernel_cs_t* cs)
+void rt_kernel_cs_init(volatile kernel_cs_t* cs)
 {
 	cs->counter = 0;
 }
 
-void rt_kernel_cs_lock(kernel_cs_t* cs)
+void rt_kernel_cs_lock(volatile kernel_cs_t* cs)
 {
 	for (;;)
 	{
@@ -447,7 +447,7 @@ void rt_kernel_cs_lock(kernel_cs_t* cs)
 	}
 }
 
-void rt_kernel_cs_unlock(kernel_cs_t* cs)
+void rt_kernel_cs_unlock(volatile kernel_cs_t* cs)
 {
 	rt_kernel_enter_critical();
 	if (cs->counter > 0)
@@ -455,18 +455,18 @@ void rt_kernel_cs_unlock(kernel_cs_t* cs)
 	rt_kernel_leave_critical();
 }
 
-void rt_kernel_sig_init(kernel_sig_t* sig)
+void rt_kernel_sig_init(volatile kernel_sig_t* sig)
 {
 	sig->counter = 0;
 }
 
-void rt_kernel_sig_raise(kernel_sig_t* sig)
+void rt_kernel_sig_raise(volatile kernel_sig_t* sig)
 {
 	sig->counter = 1;
 	rt_kernel_yield();
 }
 
-void rt_kernel_sig_wait(kernel_sig_t* sig)
+void rt_kernel_sig_wait(volatile kernel_sig_t* sig)
 {
 	rt_kernel_enter_critical();
 	kernel_thread_t* t = &g_threads[g_current];
@@ -484,7 +484,7 @@ void rt_kernel_sig_wait(kernel_sig_t* sig)
 	rt_kernel_leave_critical();
 }
 
-int32_t rt_kernel_sig_try_wait(kernel_sig_t* sig, uint32_t timeout)
+int32_t rt_kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 {
 	const uint32_t fin_ms = hal_timer_get_ms() + timeout;
 

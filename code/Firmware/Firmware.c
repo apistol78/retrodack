@@ -236,10 +236,10 @@ void kickstart_main()
 	// prevent linker from including unused code.
 	rt_timer_init();
 	hal_interrupt_init();
-	hal_video_init();
+	rt_video_init();
 	rt_kernel_init();
-	rt_input_init();
 	rt_console_init();
+	rt_input_init();
 
 	rt_video_set_palette(2, 0xffffff);
 	rt_video_set_palette(3, 0x000000);

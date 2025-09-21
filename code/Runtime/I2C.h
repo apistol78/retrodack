@@ -12,4 +12,6 @@
 
 EXTERN_C void rt_i2c_write(uint8_t deviceAddr, uint8_t controlAddr, uint8_t controlData);
 
+EXTERN_C uint32_t rt_i2c_write_async(uint8_t deviceAddr, uint8_t controlAddr, uint8_t controlData);
+
 EXTERN_C void rt_i2c_read(uint8_t deviceAddr, uint8_t controlAddr, uint8_t* outControlData, uint8_t nbytes);

@@ -94,7 +94,7 @@ int main()
 
 	rt_console_printf("playing...\n");
 
-	rt_kernel_create_thread(thread_player);
+	// rt_kernel_create_thread(thread_player);
 
 	for (;;)
 	{
