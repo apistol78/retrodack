@@ -30,15 +30,15 @@ typedef struct
 	uint32_t sp;
 	uint32_t epc;
 	uint32_t sleep;
-	volatile kernel_sig_t* waiting;
+	kernel_sig_t* waiting;
 }
 kernel_thread_t;
 
-static volatile kernel_thread_t g_threads[16];
-static volatile int32_t g_current = 0;
-static volatile int32_t g_count = 0;
-static volatile int32_t g_critical = 0;
-static volatile int32_t g_schedule = 0;
+static kernel_thread_t g_threads[16];
+static int32_t g_current = 0;
+static int32_t g_count = 0;
+static int32_t g_critical = 0;
+static int32_t g_schedule = 0;
 static uint32_t g_next_id = 1;
 
 static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel_scheduler(uint32_t source)
@@ -115,7 +115,7 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel
 
 	// Save current interrupt return address and stack pointer.
 	{
-		volatile kernel_thread_t* t = &g_threads[g_current];
+		kernel_thread_t* t = &g_threads[g_current];
 		__asm__ volatile (
 			"csrr	%0, mepc\n"
 			"mv 	%1, sp\n"
@@ -139,7 +139,7 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel
 		{
 			if (++next >= g_count)
 				next = 0;
-			volatile kernel_thread_t* t = &g_threads[next];
+			kernel_thread_t* t = &g_threads[next];
 			if (t->waiting != 0)
 			{
 				if (t->sleep == 0 || ms < t->sleep)
@@ -170,7 +170,7 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel
 				if (++next >= g_count)
 					next = 0;
 
-				volatile kernel_thread_t* t = &g_threads[next];
+				kernel_thread_t* t = &g_threads[next];
 #ifdef SIGNAL_AWARE
 				if (t->waiting == 0 && t->sleep <= ms)
 					break;
@@ -198,7 +198,7 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel
 
 	// Restore new thread.
 	{
-		volatile kernel_thread_t* t = &g_threads[g_current];
+		kernel_thread_t* t = &g_threads[g_current];
 		__asm__ volatile (
 			"csrw	mepc, %0\n"
 			"mv		sp, %1\n"
@@ -297,7 +297,7 @@ static void* rt_kernel_alloc_stack()
 
 void rt_kernel_init()
 {
-	volatile kernel_thread_t* t;
+	kernel_thread_t* t;
 
 	// Initialize main thread.
 	t = &g_threads[0];
@@ -327,7 +327,7 @@ uint32_t rt_kernel_create_thread(kernel_thread_fn_t fn)
 {
 	rt_kernel_enter_critical();
 	
-	volatile kernel_thread_t* t = &g_threads[g_count];
+	kernel_thread_t* t = &g_threads[g_count];
 	t->id = g_next_id++;
 	t->stack = rt_kernel_alloc_stack();
 	t->sp = (uint32_t)t->stack;
@@ -345,7 +345,7 @@ void rt_kernel_destroy_thread(uint32_t tid)
 {
 	rt_kernel_enter_critical();
 
-	volatile kernel_thread_t* t = 0;
+	kernel_thread_t* t = 0;
 	uint32_t i = 0;
 
 	// Find thread entry.
@@ -393,7 +393,7 @@ void rt_kernel_sleep(uint32_t ms)
 	fin_ms += ms;
 	
 	rt_kernel_enter_critical();
-	volatile kernel_thread_t* t = &g_threads[g_current];
+	kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = 0;
 	t->sleep = fin_ms;
 	rt_kernel_leave_critical();
@@ -466,7 +466,7 @@ void rt_kernel_sig_raise(volatile kernel_sig_t* sig)
 void rt_kernel_sig_wait(volatile kernel_sig_t* sig)
 {
 	rt_kernel_enter_critical();
-	volatile kernel_thread_t* t = &g_threads[g_current];
+	kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = sig;
 	t->sleep = 0;
 	rt_kernel_leave_critical();
@@ -486,7 +486,7 @@ int32_t rt_kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 	const uint32_t fin_ms = hal_timer_get_ms() + timeout;
 
 	rt_kernel_enter_critical();
-	volatile kernel_thread_t* t = &g_threads[g_current];
+	kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = sig;
 	t->sleep = fin_ms;
 	rt_kernel_leave_critical();
