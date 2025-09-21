@@ -168,7 +168,8 @@ int main(int argc, const char** argv)
 	::Timer tmr;
 	PLIC plic;
 	Audio audio;
-	DMA dma;
+	DMA dma0;
+	DMA dma1;
 	Unknown sprite;
 
 	TrackBallDevice tb;
@@ -187,8 +188,9 @@ int main(int argc, const char** argv)
 	bus.map(0x60000000, 0x60000100, false, true, &audio);
 	bus.map(0x70000000, 0x70ffffff, false, true, &plic);
 	bus.map(0x80000000, 0x81000000, false, false, &video);
-	bus.map(0x90000000, 0x90000100, false, true, &dma);
-	bus.map(0xa0000000, 0xa0010000, false, false, &sprite);
+	bus.map(0x90000000, 0x90000100, false, true, &dma0);
+	bus.map(0xa0000000, 0xa0000100, false, true, &dma1);
+	bus.map(0xb0000000, 0xb0010000, false, false, &sprite);
 
 	Ref< OutputStream > os = nullptr;	
 	if (cmdLine.hasOption(L't', L"trace"))

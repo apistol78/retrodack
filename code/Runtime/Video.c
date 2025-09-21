@@ -14,6 +14,8 @@
 #include "Runtime/Kernel.h"
 #include "Runtime/Video.h"
 
+#define DMA_CHANNEL 1
+
 static uint32_t s_dma_tag = 0;
 
 int32_t rt_video_init()
@@ -74,7 +76,7 @@ void rt_video_clear(uint8_t idx)
 	uint8_t* target = (uint8_t*)hal_video_get_secondary_target();
 	
 	const uint32_t value = (idx << 24) | (idx << 16) | (idx << 8) | idx;
-	s_dma_tag = hal_dma_write(target, size >> 2, value);
+	s_dma_tag = hal_dma_write(DMA_CHANNEL, target, size >> 2, value);
 }
 
 void rt_video_blit(const void* source)
@@ -83,12 +85,12 @@ void rt_video_blit(const void* source)
 	uint8_t* target = (uint8_t*)hal_video_get_secondary_target();
 	
 	__asm__ volatile ( "fence" );
-	s_dma_tag = hal_dma_copy(target, source, size >> 2);
+	s_dma_tag = hal_dma_copy(DMA_CHANNEL, target, source, size >> 2);
 }
 
 void rt_video_wait()
 {
-	while (hal_dma_retired() < s_dma_tag)
+	while (hal_dma_retired(DMA_CHANNEL) < s_dma_tag)
 		rt_kernel_yield();
 }
 

@@ -14,6 +14,7 @@
 #include <HAL/DMA.h>
 #include <HAL/Timer.h>
 
+#define DMA_CHANNEL 0
 #define TLV320_ADDR 0x18
 
 static uint32_t s_dma_tag = 0;
@@ -127,11 +128,11 @@ uint32_t rt_audio_get_queued()
 void rt_audio_play_stereo(const void* samples, uint32_t nsamples)
 {
 	__asm__ volatile ( "fence" );
-	s_dma_tag = hal_dma_feed((void*)AUDIO_BASE, samples, nsamples);
+	s_dma_tag = hal_dma_feed(DMA_CHANNEL, (void*)AUDIO_BASE, samples, nsamples);
 }
 
 void rt_audio_wait()
 {
-	while (hal_dma_retired() < s_dma_tag)
+	while (hal_dma_retired(DMA_CHANNEL) < s_dma_tag)
 		rt_kernel_yield();
 }
