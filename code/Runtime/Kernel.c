@@ -411,22 +411,25 @@ void rt_kernel_sleep(uint32_t ms)
 
 void rt_kernel_enter_critical()
 {
-	if (g_critical++ == 0)
-		hal_csr_clr_bits_mstatus(MIE_MTI_BIT_MASK);
+	hal_csr_read_clr_bits_mie(MIE_MTI_BIT_MASK);
+	g_critical++;
 }
 
 void rt_kernel_leave_critical()
 {
+	// Clear timer interrupt enable so we can safely access g_critical.
+	uint32_t mie = hal_csr_read_clr_bits_mie(MIE_MTI_BIT_MASK);
 	if (--g_critical == 0)
-		hal_csr_set_bits_mstatus(MIE_MTI_BIT_MASK);
+		mie |= MIE_MTI_BIT_MASK;
+	hal_csr_write_mie(mie);
 }
 
-void rt_kernel_cs_init(volatile kernel_cs_t* cs)
+void rt_kernel_cs_init(kernel_cs_t* cs)
 {
 	cs->counter = 0;
 }
 
-void rt_kernel_cs_lock(volatile kernel_cs_t* cs)
+void rt_kernel_cs_lock(kernel_cs_t* cs)
 {
 	for (;;)
 	{
@@ -444,7 +447,7 @@ void rt_kernel_cs_lock(volatile kernel_cs_t* cs)
 	}
 }
 
-void rt_kernel_cs_unlock(volatile kernel_cs_t* cs)
+void rt_kernel_cs_unlock(kernel_cs_t* cs)
 {
 	rt_kernel_enter_critical();
 	if (cs->counter > 0)
@@ -452,18 +455,18 @@ void rt_kernel_cs_unlock(volatile kernel_cs_t* cs)
 	rt_kernel_leave_critical();
 }
 
-void rt_kernel_sig_init(volatile kernel_sig_t* sig)
+void rt_kernel_sig_init(kernel_sig_t* sig)
 {
 	sig->counter = 0;
 }
 
-void rt_kernel_sig_raise(volatile kernel_sig_t* sig)
+void rt_kernel_sig_raise(kernel_sig_t* sig)
 {
 	sig->counter = 1;
 	rt_kernel_yield();
 }
 
-void rt_kernel_sig_wait(volatile kernel_sig_t* sig)
+void rt_kernel_sig_wait(kernel_sig_t* sig)
 {
 	rt_kernel_enter_critical();
 	kernel_thread_t* t = &g_threads[g_current];
@@ -481,7 +484,7 @@ void rt_kernel_sig_wait(volatile kernel_sig_t* sig)
 	rt_kernel_leave_critical();
 }
 
-int32_t rt_kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
+int32_t rt_kernel_sig_try_wait(kernel_sig_t* sig, uint32_t timeout)
 {
 	const uint32_t fin_ms = hal_timer_get_ms() + timeout;
 
