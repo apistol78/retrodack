@@ -1,0 +1,21 @@
+/.cvsignore/1.1/Wed Aug 21 16:28:19 2002//Trelease-0-6-0
+/charset.cpp/1.27/Tue Jan  6 12:45:31 2004//Trelease-0-6-0
+/debug.cpp/1.31/Tue Jan  6 12:45:31 2004//Trelease-0-6-0
+/debug.h/1.16/Tue Jan  6 12:45:31 2004//Trelease-0-6-0
+/debugger.cpp/1.11/Thu Jan 29 19:37:59 2004//Trelease-0-6-0
+/debugger.h/1.4/Wed Jan 28 02:42:23 2004//Trelease-0-6-0
+/intern.h/1.29/Tue Jan  6 12:45:31 2004//Trelease-0-6-0
+/items.cpp/1.110/Fri Feb 13 06:06:29 2004//Trelease-0-6-0
+/midi.cpp/1.61/Tue Jan  6 12:45:31 2004//Trelease-0-6-0
+/midi.h/1.24/Tue Jan  6 12:45:31 2004//Trelease-0-6-0
+/midiparser_s1d.cpp/1.9/Tue Jan  6 12:45:31 2004//Trelease-0-6-0
+/module.mk/1.9/Fri Jan 30 21:54:28 2004//Trelease-0-6-0
+/res.cpp/1.28/Tue Jan  6 12:45:31 2004//Trelease-0-6-0
+/simon.cpp/1.422.2.1/Thu Feb 26 12:08:22 2004//Trelease-0-6-0
+/simon.h/1.123/Fri Jan 30 03:26:47 2004//Trelease-0-6-0
+/sound.cpp/1.64/Mon Jan 19 17:50:38 2004//Trelease-0-6-0
+/sound.h/1.17/Tue Jan  6 12:45:31 2004//Trelease-0-6-0
+/verb.cpp/1.23/Tue Jan  6 12:45:31 2004//Trelease-0-6-0
+/vga.cpp/1.114/Mon Feb  9 05:11:54 2004//Trelease-0-6-0
+/vga.h/1.5/Tue Jan  6 12:45:31 2004//Trelease-0-6-0
+D

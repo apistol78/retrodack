@@ -843,9 +843,10 @@
 						<item>DISABLE_ADLIB</item>
 						<item>ENGINE_SCUMM5</item>
 						<item>ENGINE_SCUMM6</item>
+						<item>ENGINE_SIMON</item>
 						<item>SINGLEGAME</item>
 						<item>GAME_ATLANTIS</item>
-						<item>DISABLE_SIMON</item>
+						<!--<item>DISABLE_SIMON</item>-->
 						<item>DISABLE_SKY</item>
 						<item>DISABLE_SWORD1</item>
 						<item>DISABLE_SWORD2</item>
@@ -885,9 +886,10 @@
 						<item>DISABLE_ADLIB</item>
 						<item>ENGINE_SCUMM5</item>
 						<item>ENGINE_SCUMM6</item>
+						<item>ENGINE_SIMON</item>
 						<item>SINGLEGAME</item>
 						<item>GAME_ATLANTIS</item>
-						<item>DISABLE_SIMON</item>
+						<!--<item>DISABLE_SIMON</item>-->
 						<item>DISABLE_SKY</item>
 						<item>DISABLE_SWORD1</item>
 						<item>DISABLE_SWORD2</item>
@@ -1086,6 +1088,21 @@
 							<excludeFilter/>
 							<items/>
 						</item>
+					</items>
+				</item>
+				<item type="traktor.sb.Filter">
+					<name>simon</name>
+					<items>
+						<item type="traktor.sb.File" version="1">
+							<fileName>simon/*.cpp</fileName>
+							<excludeFilter/>
+							<items/>
+						</item>
+						<item type="traktor.sb.File" version="1">
+							<fileName>simon/*.h</fileName>
+							<excludeFilter/>
+							<items/>
+						</item>					
 					</items>
 				</item>
 				<item type="traktor.sb.Filter">

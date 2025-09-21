@@ -297,9 +297,6 @@ void SoundMixer::playInputStream(PlayingSoundHandle *handle, AudioStream *input,
 void SoundMixer::mix(int16 *buf, uint len) {
 	Common::StackLock lock(_mutex);
 
-	//  zero the buf
-	memset(buf, 0, 2 * len * sizeof(int16));
-
 	if (!_paused) {
 		if (_premixProc)
 			_premixProc(_premixParam, buf, len);
@@ -313,6 +310,8 @@ void SoundMixer::mix(int16 *buf, uint len) {
 				} else if (!_channels[i]->isPaused())
 					_channels[i]->mix(buf, len);
 			}
+	} else {
+		memset(buf, 0, 2 * len * sizeof(int16));
 	}
 }
 

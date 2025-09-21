@@ -441,7 +441,7 @@ void OSystem_RebelV::update_sound()
 
 	if (m_soundProc)
 	{
-		for (int32_t i = 0; i < 16; ++i)
+		for (int32_t i = 0; i < 4; ++i)
 		{
 			m_soundProc(m_soundParam, (byte*)buf[toggle], sizeof(buf[toggle]));
 			
@@ -452,7 +452,7 @@ void OSystem_RebelV::update_sound()
 		}
 	}
 
-	rt_kernel_sleep(4);
+	rt_kernel_sleep(1);
 }
 
 void OSystem_RebelV::update_timer()
@@ -487,8 +487,6 @@ void OSystem_RebelV::update_frame()
 
 	rt_video_wait();
 	rt_video_present(1);
-
-	rt_kernel_sleep(10);
 }
 
 OSystem *OSystem_RebelV_create()
