@@ -56,6 +56,7 @@
 #include <Emulator2/Devices/Memory.h>
 #include <Emulator2/Devices/PLIC.h>
 #include <Emulator2/Devices/SD.h>
+#include <Emulator2/Devices/Sprite.h>
 #include <Emulator2/Devices/Timer.h>
 #include <Emulator2/Devices/UART.h>
 #include <Emulator2/Devices/Video.h>
@@ -170,13 +171,15 @@ int main(int argc, const char** argv)
 	Audio audio;
 	DMA dma0;
 	DMA dma1;
-	Unknown sprite;
+	Sprite sprite;
 
 	TrackBallDevice tb;
 	i2c.addSlave(0x0a, &tb);
 
 	GPIOExtender gpio;
 	i2c.addSlave(0x20, &gpio);
+
+	video.setSprite(&sprite);
 
 	Bus bus;
 	bus.map(0x00000000, 0x00000000 + rom.getCapacity(), false, false, &rom);
@@ -302,8 +305,14 @@ int main(int argc, const char** argv)
 			tb.setButton(false);
 	});
 	image->addEventHandler< ui::MouseMoveEvent >([&](ui::MouseMoveEvent* event) {
-		const auto d = event->getPosition() - mousePosition;
-		mousePosition = event->getPosition();
+
+		ui::Point pt = event->getPosition();
+		pt.x /= 2;
+		pt.y /= 2;
+
+		const ui::Size d = pt - mousePosition;
+		mousePosition = pt;
+
 		tb.accumulateMovement(d.cx, d.cy);
 	});
 	image->addEventHandler< ui::KeyDownEvent >([&](ui::KeyDownEvent* event) {
@@ -387,11 +396,12 @@ int main(int argc, const char** argv)
 			os = new FileOutputStream(f, new Utf8Encoding()); 
 	}
 
-	Thread* th = ThreadManager::getInstance().create([&]()
+	// CPU execution thread.
+	Thread* threadCpu = ThreadManager::getInstance().create([&]()
 	{
 		uint32_t pc = ~0U;
 
-		while(!th->stopped())
+		while(!threadCpu->stopped())
 		{
 			// vcd.tick();
 			// vcd.set(0, false);
@@ -423,13 +433,13 @@ int main(int argc, const char** argv)
 							pc = cpu->getPC();
 							gdbs->setMode(GDBServer::ModeStopped);
 						}
-						th->sleep(0);
+						threadCpu->sleep(0);
 					}
 					break;
 
 				case 2:	// Stopped
 				case 3:	// Killed
-					th->sleep(0);
+					threadCpu->sleep(0);
 					break;
 				}
 			}
@@ -462,10 +472,10 @@ int main(int argc, const char** argv)
 			// }
 		}
 	});
-	th->start();
+	threadCpu->start();
 
 	traktor::Timer timer;
-	while (g_going && !th->wait(0))
+	while (g_going && !threadCpu->wait(0))
 	{
 		if (!ui::Application::getInstance()->process())
 			break;
@@ -496,8 +506,8 @@ int main(int argc, const char** argv)
 		}			
 	}
 
-	th->stop();
-	ThreadManager::getInstance().destroy(th);
+	threadCpu->stop();
+	ThreadManager::getInstance().destroy(threadCpu);
 
 	if (form)
 	{
