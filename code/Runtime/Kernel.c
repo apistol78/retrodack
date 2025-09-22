@@ -319,8 +319,9 @@ void rt_kernel_init()
 	*TIMER_COUNTDOWN = KERNEL_TIMER_RATE;
 
 	// Ensure interrupts are enabled.
-	hal_csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
-	hal_csr_clr_bits_mstatus(MIP_MTI_BIT_MASK);
+	hal_csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);	// Global interrupts enable.
+	hal_csr_clr_bits_mstatus(MIP_MTI_BIT_MASK);		// Clear timer interrupt pending.
+	hal_csr_set_bits_mie(MIE_MTI_BIT_MASK);			// Enable timer interrupts.	
 }
 
 uint32_t rt_kernel_create_thread(kernel_thread_fn_t fn)

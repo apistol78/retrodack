@@ -69,6 +69,9 @@
 #include "Emulator/LoadHEX.h"
 #include "Emulator/TrackBallDevice.h"
 
+#define MSTATUS_MIE_BIT_MASK 0x8
+#define MIE_MTI_BIT_MASK     0x80
+
 using namespace traktor;
 
 bool g_going = true;
@@ -190,7 +193,7 @@ int main(int argc, const char** argv)
 	bus.map(0x50000000, 0x50000100, false, true, &tmr);
 	bus.map(0x60000000, 0x60000100, false, true, &audio);
 	bus.map(0x70000000, 0x70ffffff, false, true, &plic);
-	bus.map(0x80000000, 0x81000000, false, false, &video);
+	bus.map(0x80000000, 0x81000000, false, true, &video);
 	bus.map(0x90000000, 0x90000100, false, true, &dma0);
 	bus.map(0xa0000000, 0xa0000100, false, true, &dma1);
 	bus.map(0xb0000000, 0xb0010000, false, false, &sprite);
@@ -241,7 +244,8 @@ int main(int argc, const char** argv)
 	tmr.setCallback([&](){ vcd.set(0, true); cpu->interrupt(TIMER); });
 	tb.setCallback([&](){ plic.raise(0); }); // Input interrupt
 	gpio.setCallback([&](){ plic.raise(1); }); // GPIO interrupt
-	audio.setCallback([&]() { plic.raise(2); }); // Audio interrupt
+	video.setCallback([&]() { plic.raise(2); }); // Video interrupt
+	// audio.setCallback([&]() { plic.raise(3); }); // Audio interrupt
 
 	if (cmdLine.hasOption(L'e', L"elf"))
 	{
@@ -289,7 +293,9 @@ int main(int argc, const char** argv)
 
 	Ref< ui::StatusBar > statusBar = new ui::StatusBar();
 	statusBar->create(form);
-	statusBar->addColumn(200);
+	statusBar->addColumn(100);
+	statusBar->addColumn(100);
+	statusBar->addColumn(100);
 
 	form->update();
 	form->show();
@@ -501,6 +507,14 @@ int main(int argc, const char** argv)
 
 			if (gdbs)
 				statusBar->setText(0, gdbs->getMode() == 0 ? L"Running" : L"Halted");
+
+			const uint32_t mstatus = cpu->getCSR(CSR::MSTATUS);
+			const uint32_t mie = cpu->getCSR(CSR::MIE);
+
+			const bool interruptsEnable = (bool)((mstatus & MSTATUS_MIE_BIT_MASK) != 0);
+			const bool timerInterruptEnable = (bool)((mie & MIE_MTI_BIT_MASK) != 0);
+			statusBar->setText(1, interruptsEnable ? L"I enable" : L"I disabled");
+			statusBar->setText(2, timerInterruptEnable ? L"TI enable" : L"TI disabled");
 
 			timer.reset();
 		}			
