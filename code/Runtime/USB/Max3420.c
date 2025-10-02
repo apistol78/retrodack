@@ -386,11 +386,11 @@ usbEvent_t max3420_get_usb_event()
 	uint8_t usbIrq;
 	
 	/* wait for interrupt from MAX3420 or Vbus power loss */
-	rt_kernel_sig_wait(&s_usb_signal);
+	if (rt_kernel_sig_try_wait(&s_usb_signal, 100) == 0)
+		return USB_NO_EVENT;
+
 	if (!vBusHi())
-	{
 		return USB_VBUS_LOST;
-	}
 	 
 	/* update local IRQ register copies and status flags */
 	epIrq = max3420_read_byte(MAX_EPIRQ);

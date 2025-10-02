@@ -6,13 +6,14 @@
 
 typedef enum usbEvent
 {
+    USB_NO_EVENT,
     USB_VBUS_LOST,
     BUS_RESET,
     SETUP_PACKET_AVAILABLE,
     EP0_OUT_DATA,
     EP1_OUT_DATA,
     USB_SUSPEND,
-    USB_EVENT_ERROR,
+    USB_EVENT_ERROR
 }
 usbEvent_t;
 

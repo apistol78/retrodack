@@ -483,17 +483,17 @@ void scsi_process_command(scsiTransaction_t *x)
 	switch (xact->cdb[0])
 	{
 		case SCSI_COMMAND_TEST_UNIT_READY:
-			printf("... SCSI_COMMAND_TEST_UNIT_READY\n");
+			// printf("... SCSI_COMMAND_TEST_UNIT_READY\n");
 			xact->cmdStatus = 0;
 			break;
 			
 		case SCSI_COMMAND_REQUEST_SENSE:
-			printf("... SCSI_COMMAND_REQUEST_SENSE\n");
+			// printf("... SCSI_COMMAND_REQUEST_SENSE\n");
 			scsi_request_sense();
 			break;
 
 		case SCSI_COMMAND_FORMAT_UNIT:
-			printf("... SCSI_COMMAND_FORMAT_UNIT\n");
+			// printf("... SCSI_COMMAND_FORMAT_UNIT\n");
 			if (writeEnabled)
 			{
 				scsi_format_unit();
@@ -505,12 +505,12 @@ void scsi_process_command(scsiTransaction_t *x)
 			break;
 			
 		case SCSI_COMMAND_READ_6:
-			printf("... SCSI_COMMAND_READ_6\n");
+			// printf("... SCSI_COMMAND_READ_6\n");
 			scsi_read_6();
 			break;
 			
 		case SCSI_COMMAND_WRITE_6:
-			printf("... SCSI_COMMAND_WRITE_6\n");
+			// printf("... SCSI_COMMAND_WRITE_6\n");
 			if (writeEnabled)
 			{
 				scsi_write_6();
@@ -522,47 +522,47 @@ void scsi_process_command(scsiTransaction_t *x)
 			break;
 			
 		case SCSI_COMMAND_INQUIRY:
-			printf("... SCSI_COMMAND_INQUIRY\n");
+			// printf("... SCSI_COMMAND_INQUIRY\n");
 			scsi_inquiry();
 			break;
 
 		case SCSI_COMMAND_MODE_SENSE:
-			printf("... SCSI_COMMAND_MODE_SENSE\n");
+			// printf("... SCSI_COMMAND_MODE_SENSE\n");
 			scsi_mode_sense();
 			break;
 
 		case SCSI_COMMAND_START_STOP_UNIT:
-			printf("... SCSI_COMMAND_START_STOP_UNIT\n");
+			// printf("... SCSI_COMMAND_START_STOP_UNIT\n");
 			scsi_start_stop_unit();
 			break;
 			
 		case SCSI_COMMAND_SEND_DIAGNOSTIC:
-			printf("... SCSI_COMMAND_SEND_DIAGNOSTIC\n");
+			// printf("... SCSI_COMMAND_SEND_DIAGNOSTIC\n");
 			xact->cmdStatus = 0;
 			break;
 
 		case SCSI_COMMAND_PREVENT_ALLOW_MEDIUM_REMOVAL:
-			printf("... SCSI_COMMAND_PREVENT_ALLOW_MEDIUM_REMOVAL\n");
+			// printf("... SCSI_COMMAND_PREVENT_ALLOW_MEDIUM_REMOVAL\n");
 			xact->cmdStatus = 0;
 			break;
 
 		case SCSI_COMMAND_READ_FORMAT_CAPACITY:
-			printf("... SCSI_COMMAND_READ_FORMAT_CAPACITY\n");
+			// printf("... SCSI_COMMAND_READ_FORMAT_CAPACITY\n");
 			scsi_read_format_capacity();
 			break;
 		
 		case SCSI_COMMAND_READ_CAPACITY_10:
-			printf("... SCSI_COMMAND_READ_CAPACITY_10\n");
+			// printf("... SCSI_COMMAND_READ_CAPACITY_10\n");
 			scsi_read_capacity_10();
 			break;
 			
 		case SCSI_COMMAND_READ_10:
-			printf("... SCSI_COMMAND_READ_10\n");
+			// printf("... SCSI_COMMAND_READ_10\n");
 			scsi_read_10();
 			break;
 				
 		case SCSI_COMMAND_WRITE_10:
-			printf("... SCSI_COMMAND_WRITE_10\n");
+			// printf("... SCSI_COMMAND_WRITE_10\n");
 			if (writeEnabled)
 			{
 				scsi_write_10();
@@ -574,12 +574,12 @@ void scsi_process_command(scsiTransaction_t *x)
 			break;
 			
 		case SCSI_COMMAND_REPORT_LUNS:
-			printf("... SCSI_COMMAND_REPORT_LUNS\n");
+			// printf("... SCSI_COMMAND_REPORT_LUNS\n");
 			scsi_report_luns();
 			break;
 			
 		default:
-			printf("... scsi_unsupported_command %d\n", xact->cdb[0]);
+			printf("SCSI_unsupported_command %d\n", xact->cdb[0]);
 			scsi_unsupported_command();
 			break;
 	}
