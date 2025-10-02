@@ -344,6 +344,10 @@ uint32_t rt_kernel_create_thread(kernel_thread_fn_t fn)
 
 void rt_kernel_destroy_thread(uint32_t tid)
 {
+	// Cannot destroy base thread.
+	if (tid == 0)
+		return;
+
 	rt_kernel_enter_critical();
 
 	kernel_thread_t* t = 0;
@@ -363,7 +367,7 @@ void rt_kernel_destroy_thread(uint32_t tid)
 	{
 		free(t->stack);
 
-		if (i >= g_current)
+		if (i < g_current)
 			g_current--;
 
 		// Replace with last thread entry.
@@ -463,7 +467,9 @@ void rt_kernel_sig_init(volatile kernel_sig_t* sig)
 
 void rt_kernel_sig_raise(volatile kernel_sig_t* sig)
 {
+	rt_kernel_enter_critical();
 	sig->counter = 1;
+	rt_kernel_leave_critical();
 	rt_kernel_yield();
 }
 
@@ -475,11 +481,11 @@ void rt_kernel_sig_wait(volatile kernel_sig_t* sig)
 	t->sleep = 0;
 	rt_kernel_leave_critical();
 	
-	sig->counter = 0;
 	while (sig->counter == 0)
 		rt_kernel_yield();
 
 	rt_kernel_enter_critical();
+	sig->counter = 0;
 	t->waiting = 0;
 	t->sleep = 0;
 	rt_kernel_leave_critical();
@@ -495,7 +501,6 @@ int32_t rt_kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 	t->sleep = fin_ms;
 	rt_kernel_leave_critical();
 
-	sig->counter = 0;
 	while (sig->counter == 0)
 	{
 		rt_kernel_yield();
@@ -503,9 +508,15 @@ int32_t rt_kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 			break;
 	}
 
-	const int32_t result = (sig->counter != 0) ? 1 : 0;
-
 	rt_kernel_enter_critical();
+	
+	int32_t result = 0;
+	if (sig->counter != 0)
+	{
+		sig->counter = 0;
+		result = 1;
+	}
+
 	t->waiting = 0;
 	t->sleep = 0;
 	rt_kernel_leave_critical();

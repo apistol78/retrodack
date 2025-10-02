@@ -1,5 +1,5 @@
-SODIMM,Designator,FPGA,Signal,Direction
-57,PT27B,B7,USB_HCI_INT,input
+SODIMM,Designator,FPGA,Signal,Direction,PullMode
+57,PT27B,B7,USB_HCI_INT,input,UP
 59,PT18B,A6,USB_HCI_MOSI,output
 61,PT22B,B6,USB_HCI_MISO,input
 63,PT18A,A5,USB_HCI_SS_n,output

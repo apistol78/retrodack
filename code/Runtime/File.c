@@ -14,25 +14,14 @@
 #include <ff.h>
 #include <diskio.h>
 
-#include <HAL/SD.h>
-
+#include "Runtime/Disk.h"
 #include "Runtime/File.h"
 #include "Runtime/Kernel.h"
 
 // FatFs hooks
 
-#define CACHE_SIZE 16
-
-uint32_t s_cacheSectors[CACHE_SIZE];
-uint8_t* s_cacheSectorBufs[CACHE_SIZE];
-
 DSTATUS disk_initialize(BYTE pdrv)
 {
-	for (uint32_t i = 0; i < CACHE_SIZE; ++i)
-	{
-		s_cacheSectors[i] = ~0;
-		s_cacheSectorBufs[i] = 0;
-	}
 	return 0;
 }
 
@@ -43,59 +32,23 @@ DSTATUS disk_status(BYTE pdrv)
 
 DRESULT disk_read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 {
-	rt_kernel_enter_critical();
 	for (UINT i = 0; i < count; ++i)
 	{
-		const uint32_t s = sector + i;
-		const uint32_t c = s & (CACHE_SIZE - 1);
-
-		// Check if sector is cached.
-		if (s_cacheSectors[c] == s)
-		{
-			memcpy(buff, s_cacheSectorBufs[c], 512);
-			goto __cache_hit;
-		}
-
-		// Not cached, load from SD.
-		if (hal_sd_read_block512(s, buff, 512) != 512)
-		{
-			rt_kernel_leave_critical();
+		if (rt_disk_read_block512(sector + i, buff, 512) != 512)
 			return RES_ERROR;
-		}
-
-		if (s_cacheSectorBufs[c] == 0)
-			s_cacheSectorBufs[c] = malloc(512);
-
-		memcpy(s_cacheSectorBufs[c], buff, 512);
-		s_cacheSectors[c] = s;
-
-__cache_hit:;
 		buff += 512;
 	}
-	rt_kernel_leave_critical();
 	return RES_OK;
 }
 
 DRESULT disk_write(BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count)
 {
-	rt_kernel_enter_critical();
 	for (UINT i = 0; i < count; ++i)
 	{
-		const uint32_t s = sector + i;
-		const uint32_t c = s & (CACHE_SIZE - 1);
-
-		if (s_cacheSectors[c] == s)
-			s_cacheSectors[c] = ~0;
-
-		if (hal_sd_write_block512(s, buff, 512) != 512)
-		{
-			rt_kernel_leave_critical();
+		if (rt_disk_write_block512(sector + i, buff, 512) != 512)
 			return RES_ERROR;
-		}
-
 		buff += 512;
 	}
-	rt_kernel_leave_critical();
 	return RES_OK;
 }
 

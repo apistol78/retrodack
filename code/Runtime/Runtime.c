@@ -16,6 +16,7 @@
 
 #include "Runtime/Audio.h"
 #include "Runtime/CRT.h"
+#include "Runtime/Disk.h"
 #include "Runtime/File.h"
 #include "Runtime/I2C.h"
 #include "Runtime/Input.h"
@@ -46,6 +47,9 @@ int32_t runtime_init()
 
 	printf("** Initialize Audio **\n");
 	rt_audio_init();
+
+	printf("** Initialize Disk **\n");
+	rt_disk_init();
 
 	printf("** Initialize SD card **\n");
 	if (hal_sd_init(SD_MODE_SW) != 0)	// HW is only available on HW (duh), not emulator...

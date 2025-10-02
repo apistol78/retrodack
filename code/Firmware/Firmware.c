@@ -22,6 +22,7 @@
 #include "Runtime/Audio.h"
 #include "Runtime/Console.h"
 #include "Runtime/CRT.h"
+#include "Runtime/Disk.h"
 #include "Runtime/ELF.h"
 #include "Runtime/File.h"
 #include "Runtime/I2C.h"
@@ -30,6 +31,10 @@
 #include "Runtime/Timer.h"
 #include "Runtime/Kernel.h"
 #include "Runtime/Video.h"
+
+#include "Runtime/USB/Max3420.h"
+#include "Runtime/USB/UsbMassStorage.h"
+#include "Runtime/USB/ScsiCommands.h"
 
 typedef void (*call_fn_t)();
 
@@ -173,25 +178,58 @@ static void remote_control()
 
 static void load(const char* game)
 {
-	if (hal_sd_init(SD_MODE_SW) == SD_RESULT_OK)
-	{
-		// Try to execute BOOT executable from SD
-		// card, if available.
-		rt_console_printf("Loading \"%s\"...\n", game);
-		rt_kernel_sleep(200);
+	// Try to execute BOOT executable from SD
+	// card, if available.
+	rt_console_printf("Loading \"%s\"...\n", game);
+	rt_kernel_sleep(200);
 
-		file_init();
-		rt_elf_launch(game);
+	rt_elf_launch(game);
 
-		// No BOOT executable found.
-		rt_console_printf("\"%s\" not found!\n", game);
-	}
-	else
-	{
-		// No SD card inserted.
-		rt_console_printf("No SD card inserted.\n");
-		rt_kernel_sleep(200);
-	}
+	// No BOOT executable found.
+	rt_console_printf("\"%s\" not found!\n", game);
+}
+
+static void usb_thread()
+{
+    max3420_init_usb();
+ 	scsi_write_enable(1);
+    
+    /* get and process USB event while Vbus is present */
+    while (vBusHi())
+    {
+        const usbEvent_t event = max3420_get_usb_event();
+        switch (event)
+        {
+            case USB_VBUS_LOST:
+				printf("USB_VBUS_LOST\n");
+                break;
+                
+            case BUS_RESET:
+				printf("BUS_RESET\n");
+                usb_mass_process_bus_reset();
+                break;
+                
+            case SETUP_PACKET_AVAILABLE:
+				printf("SETUP_PACKET_AVAILABLE\n");
+                usb_mass_process_setup_packet();
+                break;
+                
+            case EP1_OUT_DATA:
+				printf("EP1_OUT_DATA\n");
+                usb_mass_process_bulk_out_transaction();
+                break;
+                
+            case USB_SUSPEND:
+				printf("USB_SUSPEND\n");
+                max3420_usb_suspend();
+                break;
+                
+            default:
+                break;
+        }
+    }
+    
+    max3420_terminate_usb();
 }
 
 const uint8_t c_mouseCursor[32][32] =
@@ -241,6 +279,8 @@ void kickstart_main()
 	rt_console_init();
 	rt_input_init();
 
+	max3420_init_device();
+
 	rt_video_set_palette(2, 0xffffff);
 	rt_video_set_palette(3, 0x000000);
 
@@ -263,26 +303,63 @@ void kickstart_main()
 		c_mouseCursor
 	);
 
+
+	int32_t card = SD_RESULT_NO_CARD;
+	uint32_t thrd = 0;
+
 	for (;;)
 	{
+		const int32_t chk = hal_sd_card_inserted();
+		if (chk != card)
+		{
+			if (chk == SD_RESULT_OK)
+			{
+				rt_console_printf("\nCard inserted...\n");
+				
+				rt_console_printf("initialize SD...\n");
+				hal_sd_init(SD_MODE_SW);
+				
+				rt_console_printf("initialize DISK...\n");
+				rt_disk_init();
+				
+				rt_console_printf("initialize FILE...\n");
+				file_init();
+
+				rt_console_printf("initialize USB...\n");
+				thrd = rt_kernel_create_thread(&usb_thread);
+			}
+			else
+			{
+				rt_console_printf("\nCard removed.\n");
+				rt_kernel_destroy_thread(thrd);
+				thrd = 0;
+			}
+			card = chk;
+		}
+
 		rt_event_t ev;
 		while (rt_input_get_event(&ev))
 		{
-			if (ev.button == RT_INPUT_BUTTON_S1)
-				load("doom");
-			else if (ev.button == RT_INPUT_BUTTON_S2)
-				load("scummrv");
-			else if (ev.button == RT_INPUT_BUTTON_A)
-				load("quake");
+			if (card == SD_RESULT_OK)
+			{
+				if (ev.button == RT_INPUT_BUTTON_S1)
+					load("doom");
+				else if (ev.button == RT_INPUT_BUTTON_S2)
+					load("scummrv");
+				else if (ev.button == RT_INPUT_BUTTON_A)
+					load("quake");
+			}
 		}
 		
-		rt_kernel_sleep(100);
+		rt_kernel_sleep(500);
 
 		if (!hal_uart_rx_empty())
 		{
 			rt_console_printf("\nEntering remote control...\n");
 			remote_control();
 		}
+
+		rt_console_printf("<tick>\n");
 	}
 }
 

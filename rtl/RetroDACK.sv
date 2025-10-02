@@ -27,10 +27,16 @@ module RetroDACK(
 
 	// Unimplemeneted pins.
 	assign LCD_CS = 1'b0;
-	assign USB_HCI_SS_n = 1'b1;
-	assign USB_HCI_SCLK = 1'b0;
 	assign USB_HCI_RESET_n = ~reset;
-	assign USB_HCI_MOSI = 1'b0;
+
+
+	// assign LCD_R[0] = USB_HCI_MOSI;
+	// assign LCD_R[1] = USB_HCI_MISO;
+	// assign LCD_R[2] = USB_HCI_SS_n;
+	// assign LCD_R[3] = USB_HCI_SCLK;
+	// assign LCD_R[4] = USB_HCI_INT;
+	// assign LCD_R[5] = 1'b0;
+	
 
 
 	//====================================================
@@ -432,6 +438,11 @@ module RetroDACK(
 		vbi <= { vbi[0], vga_vblank };
 	end
 
+	bit [1:0] ubi = 2'b00;
+	always_ff @(posedge clock) begin
+		ubi <= { ubi[0], ~USB_HCI_INT };
+	end
+
 	CPU_PLIC plic(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -439,7 +450,7 @@ module RetroDACK(
 		.i_interrupt_0(tbi == 2'b01),
 		.i_interrupt_1(kpi == 2'b01),
 		.i_interrupt_2(vbi == 2'b01),
-		.i_interrupt_3(1'b0),	// AUDIO_INTERRUPT
+		.i_interrupt_3(ubi == 2'b01),
 
 		.i_interrupt_enable(1'b1),
 		.o_interrupt(cpu_external_interrupt),
@@ -770,9 +781,37 @@ module RetroDACK(
 
 
 	//====================================================
+	// SPI
+	wire spi_request;
+	wire spi_rw;
+	wire [31:0] spi_address;
+	wire [31:0] spi_wdata;
+	wire [31:0] spi_rdata;
+	wire spi_ready;
+
+	SPI #(
+		.DELAY(0)
+	) spi (
+		.i_reset(reset),
+		.i_clock(clock),
+		.i_request(spi_request),
+		.i_rw(spi_rw),
+		.i_address(spi_address[3:2]),
+		.i_wdata(spi_wdata),
+		.o_rdata(spi_rdata),
+		.o_ready(spi_ready),
+		// ---
+		.SPI_SS_n(USB_HCI_SS_n),
+		.SPI_SCLK(USB_HCI_SCLK),
+		.SPI_MOSI(USB_HCI_MOSI),
+		.SPI_MISO(USB_HCI_MISO)
+	);
+
+
+	//====================================================
 	// XBAR
 
-	XBAR_4_12 xbar(
+	XBAR_4_13 xbar(
 		.i_reset(reset),
 		.i_clock(clock),
 
@@ -905,6 +944,14 @@ module RetroDACK(
 		.o_s11_address(video_sprite_address),
 		.i_s11_rdata(32'h0),
 		.o_s11_wdata(video_sprite_wdata),
+
+		// 32'hcxxx_xxxx : SPI
+		.o_s12_rw(spi_rw),
+		.o_s12_request(spi_request),
+		.i_s12_ready(spi_ready),
+		.o_s12_address(spi_address),
+		.i_s12_rdata(spi_rdata),
+		.o_s12_wdata(spi_wdata)
 	);
 
 

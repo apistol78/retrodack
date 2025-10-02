@@ -114,6 +114,16 @@
 						</item>
 					</items>
 				</item>
+				<item type="traktor.sb.Filter">
+					<name>USB</name>
+					<items>
+						<item type="traktor.sb.File" version="1">
+							<fileName>USB/*.*</fileName>
+							<excludeFilter/>
+							<items/>
+						</item>
+					</items>
+				</item>
 			</items>
 			<dependencies>
 				<item type="traktor.sb.ExternalDependency" version="3">
@@ -846,7 +856,6 @@
 						<item>ENGINE_SIMON</item>
 						<item>SINGLEGAME</item>
 						<item>GAME_ATLANTIS</item>
-						<!--<item>DISABLE_SIMON</item>-->
 						<item>DISABLE_SKY</item>
 						<item>DISABLE_SWORD1</item>
 						<item>DISABLE_SWORD2</item>
@@ -889,7 +898,6 @@
 						<item>ENGINE_SIMON</item>
 						<item>SINGLEGAME</item>
 						<item>GAME_ATLANTIS</item>
-						<!--<item>DISABLE_SIMON</item>-->
 						<item>DISABLE_SKY</item>
 						<item>DISABLE_SWORD1</item>
 						<item>DISABLE_SWORD2</item>
@@ -1102,7 +1110,7 @@
 							<fileName>simon/*.h</fileName>
 							<excludeFilter/>
 							<items/>
-						</item>					
+						</item>
 					</items>
 				</item>
 				<item type="traktor.sb.Filter">
