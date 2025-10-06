@@ -1,0 +1,71 @@
+import(traktor)
+
+local function fraction(r)
+    local I, F = math.modf(r)
+    return F
+end
+
+local function valid(mdac, dosr, rc)
+    -- MDAC × DOSR / 32 ≥ RC
+    return mdac * dosr / 32 > rc
+end
+
+function main()
+    --[[
+    
+    MDAC    1-128
+    NDAC    1-128   (large as possible)
+    
+    ]]
+
+    local FREQUENCY < const > = 100000000
+    local RATE = 22050
+    local RC < const > = 0.1
+
+    local MODE_PLL < const > = 0
+    local MODE_MCLK < const > = 1
+    local mode = MODE_MCLK
+    
+    local MCLK_PRESCALER = math.floor(FREQUENCY / (256 * RATE))
+    local MCLK = FREQUENCY / (MCLK_PRESCALER + 1)
+
+    stdout:printLn("MCLK = " .. MCLK)
+
+    if mode == MODE_PLL then
+
+        local PLL_CLKIN = MCLK
+        local P = 1
+        local R = 1
+        local J = 2
+        local D = 22
+        local J_D = J + fraction(D / 10000)
+        local PLL_CLK = math.floor( (PLL_CLKIN * R * J_D) / P )
+
+        local MDAC = 40
+        local NDAC = 188
+        local DOSR = 104
+        local CODEC_CLKIN = PLL_CLK --
+        local DAC_fs = CODEC_CLKIN / ( NDAC * MDAC * DOSR )
+
+        stdout:printLn("PLL_CLKIN = " .. PLL_CLKIN)
+        stdout:printLn("PLL_CLK = " .. PLL_CLK)
+        stdout:printLn("CODEC_CLKIN = " .. CODEC_CLKIN)
+        stdout:printLn("DAC_fs = " .. DAC_fs)
+        stdout:printLn("valid = " .. tostring(valid(MDAC, DOSR, RC)))
+
+    end
+
+    if mode == MODE_MCLK then
+
+        local MDAC = 1
+        local NDAC = 14
+        local DOSR = 18
+        local CODEC_CLKIN = MCLK --
+        local DAC_fs = CODEC_CLKIN / ( NDAC * MDAC * DOSR )
+
+        stdout:printLn("CODEC_CLKIN = " .. CODEC_CLKIN)
+        stdout:printLn("DAC_fs = " .. DAC_fs)
+        stdout:printLn("valid = " .. tostring(valid(MDAC, DOSR, RC)))
+
+    end
+end
