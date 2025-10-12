@@ -2,6 +2,8 @@
 
 #include <Core/Log/Log.h>
 #include <Core/Misc/String.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/ThreadManager.h>
 
 using namespace traktor;
 
@@ -74,7 +76,7 @@ bool sendWrite(traktor::IStream* target, uint32_t base, const uint8_t* line, uin
 	for (uint32_t i = 0; i < length; ++i)
 		cs ^= line[i];
 
-	for (int32_t tr = 0; tr < 4; ++tr)
+	for (int32_t tr = 0; tr < 10; ++tr)
 	{
 		CW(writeChar(target, 'W'));
 		CW(writeU32(target, base));
@@ -88,6 +90,24 @@ bool sendWrite(traktor::IStream* target, uint32_t base, const uint8_t* line, uin
 			return true;
 
 		log::warning << L"Error reply, trying again..." << Endl;
+
+		// Purge incoming data.
+		for (;;)
+		{
+			ThreadManager::getInstance().getCurrentThread()->sleep(20);
+			if (target->available() == 0)
+				break;
+			while (target->available() > 0)
+			{
+				uint8_t ch;
+				if (target->read(&ch, 1) <= 0)
+				{
+					log::error << L"Serial device error while purging." << Endl;
+					return false;
+				}
+			}
+		}
+
 	}
 
 	log::error << L"Error reply, got " << str(L"0x%02x", reply) << Endl;
