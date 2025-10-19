@@ -67,10 +67,12 @@
 #include "Emulator/GPIOExtender.h"
 #include "Emulator/LoadELF.h"
 #include "Emulator/LoadHEX.h"
+#include "Emulator/SignalView.h"
 #include "Emulator/TrackBallDevice.h"
 
-#define MSTATUS_MIE_BIT_MASK 0x8
-#define MIE_MTI_BIT_MASK     0x80
+#define MSTATUS_MIE_BIT_MASK	0x8
+#define MSTATUS_MPIE_BIT_MASK	0x80
+#define MIE_MTI_BIT_MASK		0x80
 
 using namespace traktor;
 
@@ -281,7 +283,7 @@ int main(int argc, const char** argv)
 
 	// Create user interface.
 	Ref< ui::Form > form = new ui::Form();
-	form->create(L"RetroDACK", 720_ut, 720_ut, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"100%,*", 0_ut, 0_ut));
+	form->create(L"RetroDACK", 220_ut, 220_ut, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"70%,10%,10%,10%", 0_ut, 0_ut));
 
 	Ref< ui::Bitmap > uiImage = new ui::Bitmap(720, 720);
 
@@ -291,12 +293,14 @@ int main(int argc, const char** argv)
 	Ref< ui::Image > image = new ui::Image();
 	image->create(container, uiImage, ui::Image::WsScale | ui::Image::WsNearestFilter);
 
-	Ref< ui::StatusBar > statusBar = new ui::StatusBar();
-	statusBar->create(form);
-	statusBar->addColumn(100);
-	statusBar->addColumn(100);
-	statusBar->addColumn(100);
-
+	Ref< SignalView > signalViews[3];
+	signalViews[0] = new SignalView();
+	signalViews[0]->create(form, 0);
+	signalViews[1] = new SignalView();
+	signalViews[1]->create(form, 0);
+	signalViews[2] = new SignalView();
+	signalViews[2]->create(form, 1);
+	
 	form->update();
 	form->show();
 
@@ -419,7 +423,7 @@ int main(int argc, const char** argv)
 				{
 				case 0:	// Run
 					{
-						if (!cpu->tick(10000) || bus.error())
+						if (!cpu->tick(1) || bus.error())
 						{
 							pc = cpu->getPC();
 							gdbs->setMode(GDBServer::ModeStopped);
@@ -467,6 +471,19 @@ int main(int argc, const char** argv)
 
 					break;
 				}
+
+				const uint32_t mstatus = cpu->getCSR(CSR::MSTATUS);
+				const uint32_t mie = cpu->getCSR(CSR::MIE);
+				const uint32_t mscratch = cpu->getCSR(CSR::MSCRATCH);
+
+				const bool interruptsEnable = (bool)((mstatus & MSTATUS_MIE_BIT_MASK) != 0);
+				const bool previousInterruptsEnable = (bool)((mstatus & MSTATUS_MPIE_BIT_MASK) != 0);
+				const bool timerInterruptEnable = (bool)((mie & MIE_MTI_BIT_MASK) != 0);
+
+				signalViews[0]->set(0, (interruptsEnable || previousInterruptsEnable) ? 1 : 0);
+				signalViews[1]->set(0, timerInterruptEnable ? 1 : 0);
+				signalViews[2]->set(0, mscratch);
+
 			}
 
 			// if (os)
@@ -481,12 +498,15 @@ int main(int argc, const char** argv)
 	threadCpu->start();
 
 	traktor::Timer timer;
+	double lastVideoT = 0.0;
+	double lastStatus = 0.0;
 	while (g_going && !threadCpu->wait(0))
 	{
 		if (!ui::Application::getInstance()->process())
 			break;
 
-		if (timer.getElapsedTime() > 1.0f / 60.0f)
+		
+		if ((timer.getElapsedTime() - lastVideoT) > 1.0f / 60.0f)
 		{
 			drawing::Image* videoImage = video.getImage();
 			if (videoImage)
@@ -504,19 +524,16 @@ int main(int argc, const char** argv)
 				}
 				image->setImage(uiImage);
 			}
+			lastVideoT = timer.getElapsedTime();
+		}
 
-			if (gdbs)
-				statusBar->setText(0, gdbs->getMode() == 0 ? L"Running" : L"Halted");
+		if ((timer.getElapsedTime() - lastStatus) > 1.0f / 120.0f)
+		{
+			signalViews[0]->update();
+			signalViews[1]->update();
+			signalViews[2]->update();
 
-			const uint32_t mstatus = cpu->getCSR(CSR::MSTATUS);
-			const uint32_t mie = cpu->getCSR(CSR::MIE);
-
-			const bool interruptsEnable = (bool)((mstatus & MSTATUS_MIE_BIT_MASK) != 0);
-			const bool timerInterruptEnable = (bool)((mie & MIE_MTI_BIT_MASK) != 0);
-			statusBar->setText(1, interruptsEnable ? L"I enable" : L"I disabled");
-			statusBar->setText(2, timerInterruptEnable ? L"TI enable" : L"TI disabled");
-
-			timer.reset();
+			lastStatus = timer.getElapsedTime();
 		}			
 	}
 
