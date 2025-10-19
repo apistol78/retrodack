@@ -208,13 +208,15 @@ void OSystem_RebelV::set_mouse_cursor(const byte *buf, uint w, uint h, int hotsp
 	uint8_t tmp[32][32];
 	for (int y = 0; y < 32; ++y)
 	{
-		for (int x = 0; x < 32; ++x)
+		for (int x = 0; x < w; ++x)
 		{
-			if (x < w && y < h)
+			if (y < h)
 				tmp[y][x] = *buf++;
 			else
 				tmp[y][x] = 0xff;
 		}
+		for (int x = w; x < 32; ++x)
+			tmp[y][x] = 0xff;
 	}
 	hal_sprite_set_bits(0, tmp);
 	rt_input_set_hotspot(hotspot_x, hotspot_y);
@@ -436,7 +438,7 @@ void OSystem_RebelV::quit()
 void OSystem_RebelV::update_sound()
 {
 	const int32_t NumSamples = 1024;
-	static int32_t buf[16][NumSamples];
+	static int32_t buf[64][NumSamples];
 	int32_t toggle = 0;
 
 	if (m_soundProc)
@@ -448,11 +450,11 @@ void OSystem_RebelV::update_sound()
 			rt_audio_wait();
 			rt_audio_play_stereo(buf[toggle], NumSamples);
 
-			toggle = (toggle + 1) & 15;
+			toggle = (toggle + 1) & 63;
 		}
 	}
 
-	rt_kernel_sleep(1);
+	// rt_kernel_sleep(1);
 }
 
 void OSystem_RebelV::update_timer()

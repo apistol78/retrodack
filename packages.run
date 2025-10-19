@@ -64,5 +64,15 @@ PACKAGES =
 		name = "pocketmod",
 		url = "https://github.com/rombankzero/pocketmod.git"
 	},
+	{
+		type = "GIT",
+		name = "xmega-usb",
+		url = "https://github.com/martin-c/xmega-usb.git"
+	},
+	{
+		type = "GIT",
+		name = "libxmp",
+		url = "https://github.com/libxmp/libxmp.git"
+	},
 }
 

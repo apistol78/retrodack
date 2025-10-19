@@ -30,11 +30,17 @@ module RetroDACK(
 	assign USB_HCI_RESET_n = ~reset;
 
 
-	// assign LCD_R[0] = USB_HCI_MOSI;
+	// assign LCD_R[0] = I2S_SCLK;
+	// assign LCD_R[1] = I2S_MCLK;
+	// assign LCD_R[2] = I2S_LRCK;
+	// assign LCD_R[3] = I2S_SDOUT;
+	// assign LCD_R[4] = audio_busy;
+
 	// assign LCD_R[1] = USB_HCI_MISO;
 	// assign LCD_R[2] = USB_HCI_SS_n;
 	// assign LCD_R[3] = USB_HCI_SCLK;
 	// assign LCD_R[4] = USB_HCI_INT;
+
 	// assign LCD_R[5] = 1'b0;
 	
 
@@ -113,9 +119,9 @@ module RetroDACK(
 	CPU #(
 		.STACK_POINTER(32'h12000000 - 4),
 		.FREQUENCY(`FREQUENCY),
-		.DCACHE_SIZE(12),
+		.DCACHE_SIZE(13),
 		.DCACHE_REGISTERED(1),
-		.DCACHE_WB_QUEUE(0),
+		.DCACHE_WB_QUEUE(1),
 		.ICACHE_SIZE(12),
 		.ICACHE_REGISTERED(1)		
 	) cpu(
@@ -363,7 +369,7 @@ module RetroDACK(
 
 	//====================================================
 	// AUDIO
-	wire audio_output_busy;
+	wire audio_output_sample_clock;
 	wire [31:0] audio_output_sample_rate;
 	wire [15:0] audio_output_sample_left;
 	wire [15:0] audio_output_sample_right;
@@ -376,7 +382,7 @@ module RetroDACK(
 		.FREQUENCY(`FREQUENCY)
 	) audio_i2s_output(
 		.i_clock(clock),
-		.o_busy(audio_output_busy),
+		.o_sample_clock(audio_output_sample_clock),
 		.i_sample_rate(audio_output_sample_rate),
 		.i_sample_left(audio_output_sample_left),
 		.i_sample_right(audio_output_sample_right),
@@ -392,7 +398,6 @@ module RetroDACK(
 	wire [31:0] audio_wdata;
 	wire [31:0] audio_rdata;
 	wire audio_ready;
-	wire audio_interrupt;
 
 	AUDIO_controller audio_controller(
 		.i_reset(reset),
@@ -404,9 +409,8 @@ module RetroDACK(
 		.i_wdata(audio_wdata),
 		.o_rdata(audio_rdata),
 		.o_ready(audio_ready),
-		.o_interrupt(audio_interrupt),
 
-		.i_output_busy(audio_output_busy),
+		.i_output_sample_clock(audio_output_sample_clock),
 		.o_output_sample_rate(audio_output_sample_rate),
 		.o_output_sample_left(audio_output_sample_left),
 		.o_output_sample_right(audio_output_sample_right)

@@ -24,26 +24,28 @@ function main()
 
     local MODE_PLL < const > = 0
     local MODE_MCLK < const > = 1
-    local mode = MODE_MCLK
+    local mode = MODE_PLL
     
-    local MCLK_PRESCALER = math.floor(FREQUENCY / (256 * RATE))
-    local MCLK = FREQUENCY / (MCLK_PRESCALER + 1)
+    -- local MCLK_PRESCALER = math.floor(FREQUENCY / (256 * RATE)) + 1
+    -- local MCLK = FREQUENCY / (MCLK_PRESCALER * 4)
 
-    stdout:printLn("MCLK = " .. MCLK)
+    local MCLK = 6250000 -- FREQUENCY / 10
+
+    stdout:printLn("MCLK = " .. MCLK)   -- 1.39
 
     if mode == MODE_PLL then
 
         local PLL_CLKIN = MCLK
-        local P = 1
-        local R = 1
-        local J = 2
-        local D = 22
+        local P = 2
+        local R = 2
+        local J = 1
+        local D = 7778
         local J_D = J + fraction(D / 10000)
         local PLL_CLK = math.floor( (PLL_CLKIN * R * J_D) / P )
 
-        local MDAC = 40
-        local NDAC = 188
-        local DOSR = 104
+        local MDAC = 1
+        local NDAC = 4
+        local DOSR = 64
         local CODEC_CLKIN = PLL_CLK --
         local DAC_fs = CODEC_CLKIN / ( NDAC * MDAC * DOSR )
 
@@ -52,14 +54,15 @@ function main()
         stdout:printLn("CODEC_CLKIN = " .. CODEC_CLKIN)
         stdout:printLn("DAC_fs = " .. DAC_fs)
         stdout:printLn("valid = " .. tostring(valid(MDAC, DOSR, RC)))
-
+        
+        -- 43403
     end
 
     if mode == MODE_MCLK then
 
         local MDAC = 1
-        local NDAC = 14
-        local DOSR = 18
+        local NDAC = 4
+        local DOSR = 128
         local CODEC_CLKIN = MCLK --
         local DAC_fs = CODEC_CLKIN / ( NDAC * MDAC * DOSR )
 

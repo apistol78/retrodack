@@ -6,6 +6,7 @@
  License, v. 2.0. If a copy of the MPL was not distributed with this
  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
+#include "Runtime/Audio.h"
 #include "Runtime/I2C.h"
 #include "Runtime/Input.h"
 #include "Runtime/Kernel.h"
@@ -30,21 +31,30 @@ int32_t rt_audio_init()
 	rt_i2c_write(TLV320_ADDR, 0x01, 0x01);
 	hal_timer_wait_ms(200);
 
-	// Program clock settings.
-	rt_i2c_write(TLV320_ADDR, 0x04, 0x03);	// (PLL_clkin = MCLK, codec_clkin = PLL_CLK).
-	rt_i2c_write(TLV320_ADDR, 0x06, 0x08);
-	rt_i2c_write(TLV320_ADDR, 0x07, 0x00);
-	rt_i2c_write(TLV320_ADDR, 0x08, 0x00);
+	// // Program clock settings.
+	// rt_i2c_write(TLV320_ADDR, 0x04, 0x03);	// (PLL_clkin = MCLK, codec_clkin = PLL_CLK).
+	// rt_i2c_write(TLV320_ADDR, 0x06, 0x08);
+	// rt_i2c_write(TLV320_ADDR, 0x07, 0x00);
+	// rt_i2c_write(TLV320_ADDR, 0x08, 0x00);
 
-	// Power up PLL.
-	rt_i2c_write(TLV320_ADDR, 0x05, 0x91);
+	// // Power up PLL.
+	// rt_i2c_write(TLV320_ADDR, 0x05, 0x91);
+
+	// // Program and power up NDAC.
+	// rt_i2c_write(TLV320_ADDR, 0x0b, 0x88);
+
+	// // Program and power up MDAC.
+	// rt_i2c_write(TLV320_ADDR, 0x0c, 0x82);
+
+	// Program clock settings.
+	rt_i2c_write(TLV320_ADDR, 0x04, 0b00000000);	// (PLL_clkin = MCLK, codec_clkin = MCLK).
 
 	// Program and power up NDAC.
-	rt_i2c_write(TLV320_ADDR, 0x0b, 0x88);
+	rt_i2c_write(TLV320_ADDR, 0x0b, 0x80 | 4);
 
 	// Program and power up MDAC.
-	rt_i2c_write(TLV320_ADDR, 0x0c, 0x82);
-
+	rt_i2c_write(TLV320_ADDR, 0x0c, 0x80 | 2);
+		
 	// Program OSR value.
 	rt_i2c_write(TLV320_ADDR, 0x0d, 0x00);
 	rt_i2c_write(TLV320_ADDR, 0x0e, 0x80);
@@ -53,10 +63,10 @@ int32_t rt_audio_init()
 	rt_i2c_write(TLV320_ADDR, 0x1b, 0x00);
 
 	// Program the processing block to be used (PRB_P11).
-	rt_i2c_write(TLV320_ADDR, 0x3c, 0x0b);
-	rt_i2c_write(TLV320_ADDR, 0x00, 0x08);
-	rt_i2c_write(TLV320_ADDR, 0x01, 0x04);
-	rt_i2c_write(TLV320_ADDR, 0x00, 0x00);
+	// rt_i2c_write(TLV320_ADDR, 0x3c, 1);
+	// rt_i2c_write(TLV320_ADDR, 0x00, 0x08);
+	// rt_i2c_write(TLV320_ADDR, 0x01, 0x04);
+	// rt_i2c_write(TLV320_ADDR, 0x00, 0x00);
 
 	// Misc page 0 controls.
 	rt_i2c_write(TLV320_ADDR, 0x74, 0x00); // DAC volume control thru pin disable.
@@ -87,8 +97,9 @@ int32_t rt_audio_init()
 	// Set register page to 0.
 	rt_i2c_write(TLV320_ADDR, 0x00, 0x00);
 
-	// Power up DAC and set digital gain.
-	rt_i2c_write(TLV320_ADDR, 0x3f, 0xd4);
+	// Power up DAC.
+	//rt_i2c_write(TLV320_ADDR, 0x3f, 0xd4);
+	rt_i2c_write(TLV320_ADDR, 0x3f, 0b11111100);
 
 	const int8_t vol = -16;
 	rt_i2c_write(TLV320_ADDR, 0x41, *(uint8_t*)&vol);
@@ -102,6 +113,9 @@ int32_t rt_audio_init()
 
 	// Enable headset detection.
 	rt_i2c_write(TLV320_ADDR, 0x43, 0x80);
+
+	// Select initial filter.
+	rt_audio_set_filter(0);
 
 	// Initialize audio controller.
 	hal_audio_init();
@@ -120,6 +134,15 @@ void rt_audio_set_playback_rate(uint32_t rate)
 	hal_audio_set_playback_rate(rate);
 }
 
+void rt_audio_set_filter(uint8_t filter)
+{
+	if (filter >= 0 && filter < 10)
+	{
+		rt_i2c_write(TLV320_ADDR, 0x00, 0);
+		rt_i2c_write(TLV320_ADDR, 0x3c, filter + 1);
+	}
+}
+
 uint32_t rt_audio_get_queued()
 {
 	return hal_audio_get_queued();
@@ -127,12 +150,15 @@ uint32_t rt_audio_get_queued()
 
 void rt_audio_play_stereo(const void* samples, uint32_t nsamples)
 {
-	__asm__ volatile ( "fence" );
-	s_dma_tag = hal_dma_feed(DMA_CHANNEL, (void*)AUDIO_BASE, samples, nsamples);
+	if (nsamples > 0)
+	{
+		__asm__ volatile ( "fence" );
+		s_dma_tag = hal_dma_feed(DMA_CHANNEL, (void*)AUDIO_BASE, samples, nsamples);
+	}
 }
 
 void rt_audio_wait()
 {
-	while (hal_dma_retired(DMA_CHANNEL) < s_dma_tag)
+	while (hal_dma_is_full(DMA_CHANNEL))
 		rt_kernel_yield();
 }

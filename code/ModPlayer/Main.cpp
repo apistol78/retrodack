@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #include "Runtime/Audio.h"
@@ -7,70 +8,35 @@
 #include "Runtime/CRT.h"
 #include "Runtime/File.h"
 #include "Runtime/Runtime.h"
+#include "Runtime/Timer.h"
 #include "Runtime/Kernel.h"
 
-#define POCKETMOD_IMPLEMENTATION
-#define POCKETMOD_NO_INTERPOLATION
-#include "pocketmod.h"
+#include <xmp.h>
 
-#define SAMPLE_RATE 22050
-
-pocketmod_context context;
-
-void thread_player()
-{
-	float buffer[1024][2];
-	uint32_t output[32][4096];
-	int32_t count = 0;
-
-	for (;;)
-	{
-		int32_t rendered_bytes = pocketmod_render(&context, buffer, sizeof(buffer));
-		int32_t rendered_samples = rendered_bytes / sizeof(float[2]);
-
-		uint32_t* ptr = output[count];
-
-		for (int32_t i = 0; i < rendered_samples; i++)
-		{
-			const int16_t lh = (int16_t)(buffer[i][0] * 0x7fff);
-			const int16_t rh = (int16_t)(buffer[i][1] * 0x7fff);
-
-			const uint32_t ulh = *(const uint16_t*)&lh;
-			const uint32_t urh = *(const uint16_t*)&rh;
-
-			ptr[i] = (ulh << 16) | urh;
-		}
-		
-		rt_audio_wait();
-		rt_audio_play_stereo(ptr, rendered_samples);
-
-		count = (count + 1) & 31;
-	}
-}
+xmp_context ctx;
 
 int main()
 {
 	FILE *file;
 	char *mod_data;
 
+#define SAMPLE_RATE 22050
+
 	runtime_init();
 	rt_audio_set_playback_rate(SAMPLE_RATE);
 	rt_console_init();
 
-	rt_console_printf("reading mod file...\n");
 
-	if (!(file = fopen("song.mod", "rb")))
+	printf("reading mod file...\n");
+	if (!(file = fopen("2nd_pm.s3m", "rb")))
 	{
 		//printf("error: can't open '%s' for reading\n", argv[1]);
 		return -1;
 	}
-	
 	fseek(file, 0, SEEK_END);
 	const int32_t mod_size = ftell(file);
 	rewind(file);
-
-	rt_console_printf("size %d bytes...\n", mod_size);
-
+	printf("size %d bytes...\n", mod_size);
 	if (!(mod_data = malloc(mod_size)))
 	{
 		rt_console_printf("error: %d-byte memory allocation failed\n", mod_size);
@@ -83,23 +49,60 @@ int main()
 	}
 	fclose(file);
 
-	rt_console_printf("initialize pocketmod...\n");
 
-	/* Initialize the renderer */
-	if (!pocketmod_init(&context, mod_data, mod_size, SAMPLE_RATE))
-	{
-		//printf("error: '%s' is not a valid MOD file\n", argv[1]);
-		return -1;
-	}
 
-	rt_console_printf("playing...\n");
+	printf("initialize XMP...\n");
 
-	// rt_kernel_create_thread(thread_player);
+	ctx = xmp_create_context();
+
+	printf("preparing XMP...\n");
+	// xmp_load_module(ctx, "song.mod");
+	xmp_load_module_from_memory(ctx, mod_data, mod_size);
+
+
+	printf("playing...\n");
+	xmp_start_player(ctx, SAMPLE_RATE, 0);
+	xmp_set_player(ctx, XMP_PLAYER_INTERP, XMP_INTERP_NEAREST);
+	xmp_set_player(ctx, XMP_PLAYER_DSP, 0);
+
+	struct xmp_frame_info fi;
+
+	rt_kernel_enter_critical();
+
+
+	
+	uint8_t buffer[256][1024 * 2 * sizeof(int16_t)];
+	int32_t i = 0;
 
 	for (;;)
 	{
-		rt_kernel_sleep(1000);
-		rt_console_printf(".");
+		
+
+		// if (xmp_play_frame(ctx) != 0)
+		// 	break;
+
+		// xmp_get_frame_info(ctx, &fi);
+
+		// rt_audio_wait();
+		// rt_audio_play_stereo(fi.buffer, fi.buffer_size >> 2);
+
+
+		xmp_play_buffer(ctx, buffer[i], 1024 * 2 * sizeof(int16_t), 0);
+		rt_audio_wait();
+		rt_audio_play_stereo(buffer[i], 1024);
+
+		i = (i + 1) & 255;
+
+
+
+		// uint32_t t1 = rt_timer_get_ms();
+		// if ((t1 - t0) > 4000)
+		// {
+		// 	printf("filter %d\n", filter);
+		// 	rt_audio_set_filter(filter);
+		// 	filter = (filter + 1) % 11;
+		// 	t0 = t1;
+		// }
 	}
 
 	return 0;
