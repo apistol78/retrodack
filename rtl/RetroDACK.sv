@@ -120,7 +120,7 @@ module RetroDACK(
 		.STACK_POINTER(32'h12000000 - 4),
 		.FREQUENCY(`FREQUENCY),
 		.DCACHE_SIZE(13),
-		.DCACHE_REGISTERED(1),
+		.DCACHE_REGISTERED(0),
 		.DCACHE_WB_QUEUE(1),
 		.ICACHE_SIZE(12),
 		.ICACHE_REGISTERED(1)		
@@ -147,10 +147,6 @@ module RetroDACK(
 		.o_dbus_wdata(cpu_dbus_wdata),
 
 		// Debug
-		.o_icache_hit(),
-		.o_icache_miss(),
-		.o_dcache_hit(),
-		.o_dcache_miss(),
 		.o_execute_busy(),
 		.o_memory_busy(),
 		.o_fault(cpu_fault)

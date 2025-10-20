@@ -56,6 +56,7 @@
 #include <Emulator2/Devices/Memory.h>
 #include <Emulator2/Devices/PLIC.h>
 #include <Emulator2/Devices/SD.h>
+#include <Emulator2/Devices/SPI.h>
 #include <Emulator2/Devices/Sprite.h>
 #include <Emulator2/Devices/Timer.h>
 #include <Emulator2/Devices/UART.h>
@@ -177,6 +178,7 @@ int main(int argc, const char** argv)
 	DMA dma0;
 	DMA dma1;
 	Sprite sprite;
+	SPI spi;
 
 	TrackBallDevice tb;
 	i2c.addSlave(0x0a, &tb);
@@ -199,6 +201,7 @@ int main(int argc, const char** argv)
 	bus.map(0x90000000, 0x90000100, false, true, &dma0);
 	bus.map(0xa0000000, 0xa0000100, false, true, &dma1);
 	bus.map(0xb0000000, 0xb0010000, false, false, &sprite);
+	bus.map(0xc0000000, 0xc0010000, false, false, &spi);
 
 	Ref< OutputStream > os = nullptr;	
 	if (cmdLine.hasOption(L't', L"trace"))
@@ -423,7 +426,7 @@ int main(int argc, const char** argv)
 				{
 				case 0:	// Run
 					{
-						if (!cpu->tick(1) || bus.error())
+						if (!cpu->tick(1000) || bus.error())
 						{
 							pc = cpu->getPC();
 							gdbs->setMode(GDBServer::ModeStopped);
