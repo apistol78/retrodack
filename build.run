@@ -279,7 +279,18 @@ function main()
 		stdout:printLn("Synthesize...")
 		stdout:printLn("==============================")
 		local tmr = Timer()
-		local xc = run:execute("yosys -l build/" .. rtl .. ".log -p \"opt; share -aggressive; synth_ecp5 -abc9 -json build/" .. rtl .. ".json\" " .. f, "build/" .. rtl .. ".yosys.log")
+
+		writeFile(
+			"build/" .. rtl .. ".yosys.script",
+			{
+				"proc; opt -full; memory; opt -full; fsm; opt -full",
+				"techmap; opt -full",
+				"share -aggressive",
+				"synth_ecp5 -abc9 -iopad -json build/" .. rtl .. ".json"
+			}
+		)
+
+		local xc = run:execute("yosys -l build/" .. rtl .. ".log -s build/" .. rtl .. ".yosys.script " .. f, "build/" .. rtl .. ".yosys.log")
 		if xc ~= 0 then
 			stderr:printLn("yosys failed; build aborted.")
 			return 1
@@ -291,7 +302,23 @@ function main()
 		stdout:printLn("Place and route...")
 		stdout:printLn("==============================")
 		local tmr = Timer()
-		local xc = run:execute("nextpnr-ecp5 --25k --package CABGA256 --speed 6 --timing-allow-fail --top " .. rtl .. " --json build/" .. rtl .. ".json --textcfg build/" .. rtl .. ".config --lpf rtl/Constraints.lpf --report build/" .. rtl .. ".report.json --freq " .. FREQUENCY, "build/" .. rtl .. ".nextpnr.log")
+		local xc = run:execute(
+			"nextpnr-ecp5 " ..
+				"--25k " ..
+				"--package CABGA256 " ..
+				"--speed 6 " ..
+				"--timing-allow-fail " ..
+				-- "--placer sa " ..
+				"--parallel-refine " ..
+				"--top " .. rtl .. " " ..
+				"--json build/" .. rtl .. ".json " ..
+				"--textcfg build/" .. rtl .. ".config " ..
+				"--lpf rtl/Constraints.lpf " ..
+				"--report build/" .. rtl .. ".report.json " ..
+				"--placed-svg build/" .. rtl .. "placed.svg " ..
+				"--freq " .. FREQUENCY,
+			"build/" .. rtl .. ".nextpnr.log"
+		)
 		if xc ~= 0 then
 			stderr:printLn("nextpnr-ecp5 failed; build aborted.")
 			return 1

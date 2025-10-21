@@ -205,20 +205,7 @@ void OSystem_RebelV::warp_mouse(int x, int y)
 
 void OSystem_RebelV::set_mouse_cursor(const byte *buf, uint w, uint h, int hotspot_x, int hotspot_y)
 {
-	uint8_t tmp[32][32];
-	for (int y = 0; y < 32; ++y)
-	{
-		for (int x = 0; x < w; ++x)
-		{
-			if (y < h)
-				tmp[y][x] = *buf++;
-			else
-				tmp[y][x] = 0xff;
-		}
-		for (int x = w; x < 32; ++x)
-			tmp[y][x] = 0xff;
-	}
-	hal_sprite_set_bits(0, tmp);
+	hal_sprite_set_bits(0, buf, (int32_t)w, (int32_t)h);
 	rt_input_set_hotspot(hotspot_x, hotspot_y);
 }
 
@@ -454,7 +441,7 @@ void OSystem_RebelV::update_sound()
 		}
 	}
 
-	// rt_kernel_sleep(1);
+	rt_kernel_sleep(1);
 }
 
 void OSystem_RebelV::update_timer()

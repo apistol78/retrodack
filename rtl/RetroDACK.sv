@@ -119,8 +119,8 @@ module RetroDACK(
 	CPU #(
 		.STACK_POINTER(32'h12000000 - 4),
 		.FREQUENCY(`FREQUENCY),
-		.DCACHE_SIZE(13),
-		.DCACHE_REGISTERED(0),
+		.DCACHE_SIZE(12),
+		.DCACHE_REGISTERED(1),
 		.DCACHE_WB_QUEUE(1),
 		.ICACHE_SIZE(12),
 		.ICACHE_REGISTERED(1)		
@@ -638,13 +638,13 @@ module RetroDACK(
 	wire video_overlay_mask;
 
 	VIDEO_sprite #(
-		.WIDTH(32),
-		.HEIGHT(32)
+		.WIDTH(64),
+		.HEIGHT(64)
 	) video_sprite (
 		.i_clock(clock),
 
 		.i_request(video_sprite_request),
-		.i_address(video_sprite_address[15:0]),
+		.i_address(video_sprite_address),
 		.i_wdata(video_sprite_wdata),
 		.o_ready(video_sprite_ready),
 

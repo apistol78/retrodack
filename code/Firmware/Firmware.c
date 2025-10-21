@@ -259,7 +259,7 @@ void kickstart_main()
 	rt_kernel_sleep(200);
 
 	hal_sprite_set_visible(0, 0xff);
-	hal_sprite_set_bits(0, c_mouseCursor);
+	hal_sprite_set_bits(0, c_mouseCursor, 32, 32);
 
 	int32_t card = SD_RESULT_NO_CARD;
 
