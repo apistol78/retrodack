@@ -122,6 +122,17 @@ void dumpCallStack(const ICPU* cpu, const Bus* bus, OutputStream& os)
 	*/	
 }
 
+void dumpMemory(const Bus* bus)
+{
+	Ref< IStream > fs = FileSystem::getInstance().open(L"memory.bin", File::FmWrite);
+	for (uint32_t addr = 0x10000000; addr < 0x12000000; addr += 4)
+	{
+		const uint32_t data = bus->readU32(addr);
+		fs->write(&data, 4);
+	}
+	fs->close();
+}
+
 int main(int argc, const char** argv)
 {
 	const CommandLine cmdLine(argc, argv);
@@ -284,6 +295,9 @@ int main(int argc, const char** argv)
 	if (!gdbs)
 		rom.setReadOnly(true);
 
+	// Dump memory content after setup.
+	
+
 	// Create user interface.
 	Ref< ui::Form > form = new ui::Form();
 	form->create(L"RetroDACK", 220_ut, 220_ut, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"70%,10%,10%,10%", 0_ut, 0_ut));
@@ -413,11 +427,19 @@ int main(int argc, const char** argv)
 	Thread* threadCpu = ThreadManager::getInstance().create([&]()
 	{
 		uint32_t pc = ~0U;
+		bool first = true;
 
 		while(!threadCpu->stopped())
 		{
 			// vcd.tick();
 			// vcd.set(0, false);
+
+			if (!gdbs || gdbs->getMode() == 0)
+			{
+				if (first)
+					dumpMemory(&bus);
+				first = false;
+			}
 
 			if (gdbs)
 			{

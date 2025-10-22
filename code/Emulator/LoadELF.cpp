@@ -10,8 +10,6 @@
 
 #include <Emulator2/CPU/Bus.h>
 #include <Emulator2/CPU/ICPU.h>
-#include <Emulator2/CPU/HL/BusAccess.h>
-#include <Emulator2/CPU/HL/DCache.h>
 
 #include "Emulator/LoadELF.h"
 
@@ -85,10 +83,6 @@ bool loadELF(const std::wstring& fileName, ICPU& cpu, Bus& bus)
 {
 	AlignedVector< uint8_t > elf;
 
-	// Temporary dcache & bus access so we can write bytes.
-	DCache dcache(&bus);
-	BusAccess busAccess(&dcache);
-
 	// Read entire ELF into memory.
 	{
 		Ref< IStream > f = FileSystem::getInstance().open(fileName, File::FmRead);
@@ -118,11 +112,11 @@ bool loadELF(const std::wstring& fileName, ICPU& cpu, Bus& bus)
 	{
 		if (phdr[i].p_type == 0x01) // PT_LOAD
 		{
-			const auto pbits = (const uint8_t*)(elf.c_ptr() + phdr[i].p_offset);
+			const uint8_t* pbits = (const uint8_t*)(elf.c_ptr() + phdr[i].p_offset);
 			const uint32_t addr = phdr[i].p_paddr;
-			for (uint32_t j = 0; j < phdr[i].p_filesz; ++j)
+			for (uint32_t j = 0; j < phdr[i].p_filesz; j += 4)
 			{
-				busAccess.writeU8(0, addr + j, pbits[j]);
+				bus.writeU32(addr + j, *(const uint32_t*)(pbits + j));
 				if (bus.error())
 					return false;
 			}
@@ -145,6 +139,5 @@ bool loadELF(const std::wstring& fileName, ICPU& cpu, Bus& bus)
 		}
 	}
 
-	dcache.flush();
 	return true;
 }
