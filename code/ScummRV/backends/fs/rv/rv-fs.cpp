@@ -11,30 +11,37 @@
 
 #include <Runtime/File.h>
 
+static const char *lastPathComponent(const Common::String &str)
+{
+	const char *start = str.c_str();
+	const char *cur = start + str.size() - 2;
+	
+	while (cur > start && *cur != '/')
+	{
+		--cur;
+	}
+	
+	return cur+1;
+}
+
 class RvFilesystemNode : public FilesystemNode
 {
 public:
 	RvFilesystemNode() = default;
 	RvFilesystemNode(const RvFilesystemNode *node);
 
-	virtual String displayName() const
-	{
-		std::string data = m_fileName;
-		std::transform(data.begin(), data.end(), data.begin(), [](unsigned char c){ return std::tolower(c); });		
-		return data.c_str();
-	}
-
+	virtual String displayName() const { return m_displayName; }
 	virtual bool isValid() const { return true; }
 	virtual bool isDirectory() const { return m_isDirectory; }
-	virtual String path() const { return m_path.c_str(); }
+	virtual String path() const { return m_path; }
 
 	virtual FSList *listDir(ListMode) const;
 	virtual FilesystemNode *parent() const;
 	virtual FilesystemNode *clone() const { return new RvFilesystemNode(this); }
 
 private:
-	std::string m_path = "";
-	std::string m_fileName = "";
+	String m_path = "";
+	String m_displayName = "";
 	bool m_isDirectory = true;
 };
 
@@ -45,7 +52,7 @@ FilesystemNode *FilesystemNode::getRoot()
 
 RvFilesystemNode::RvFilesystemNode(const RvFilesystemNode* node)
 :	m_path(node->m_path)
-,	m_fileName(node->m_fileName)
+,	m_displayName(node->m_displayName)
 ,	m_isDirectory(node->m_isDirectory)
 {
 }
@@ -68,14 +75,16 @@ FSList *RvFilesystemNode::listDir(ListMode mode) const
 		if (strcmp(filename, ".") == 0 || strcmp(filename, "..") == 0)
 			return;
 
+		printf("..RvFilesystemNode, adding file \"%s\"\n", filename);
+
 		RvFilesystemNode entry;
-		
-		entry.m_path = up->parent->m_path.empty() ? filename : up->parent->m_path + "\\" + std::string(filename);
-		entry.m_fileName = filename;
 
-		// printf("... path %s\n", entry.m_path.c_str());
-		// printf("... name %s\n", entry.m_fileName.c_str());
+		entry.m_path = up->parent->m_path;
+		if (!entry.m_path.isEmpty())
+			entry.m_path += "/";
+		entry.m_path += filename;
 
+		entry.m_displayName = filename;
 		entry.m_isDirectory = (bool)(directory != 0);
 
 		up->list->push_back(entry);
@@ -88,24 +97,21 @@ FilesystemNode *RvFilesystemNode::parent() const
 {
 	RvFilesystemNode* p = new RvFilesystemNode();
 
-	size_t s = m_path.find_last_of('\\');
-	if (s != m_path.npos)
+	if (m_path != "/")
 	{
-		p->m_path = m_path.substr(0, s);
-		p->m_fileName = m_path.substr(s + 1);
-		p->m_isDirectory = true;
+		const char *start = m_path.c_str();
+		const char *end = lastPathComponent(m_path);
+
+		p->m_path = String(start, end - start);
+		p->m_displayName = lastPathComponent(p->m_path);
 	}
 	else
 	{
-		p->m_path = "";
-		p->m_fileName = m_path;
-		p->m_isDirectory = true;
+		p->m_path = m_path;
+		p->m_displayName = m_displayName;
 	}
 
-	// printf("parent\n");
-	// printf("... path %s\n", p->m_path.c_str());
-	// printf("... name %s\n", p->m_fileName.c_str());
-
+	p->m_isDirectory = true;
 	return p;
 }
 
