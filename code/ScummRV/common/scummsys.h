@@ -40,8 +40,8 @@
 
 #if defined(__RV__)
 
-	#define scumm_stricmp strcmp
-	#define scumm_strnicmp strncmp
+	#define scumm_stricmp strcasecmp
+	#define scumm_strnicmp strncasecmp
 	
 	#define CHECK_HEAP
 	#define SCUMM_LITTLE_ENDIAN
