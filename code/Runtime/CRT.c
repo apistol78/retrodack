@@ -17,6 +17,7 @@
 
 #include "Runtime/File.h"
 #include "Runtime/Kernel.h"
+#include "Runtime/Timer.h"
 
 extern int _end;
 
@@ -31,6 +32,18 @@ void* _sbrk(int incr)
 		heap += (incr & ~3) + 4;
 	rt_kernel_leave_critical();
 	return prev_heap;
+}
+
+__attribute__((section(".keep_rt_crt")))
+int _gettimeofday(struct timeval *tv, void *tz)
+{
+	if (tv)
+	{
+		const uint32_t ms = rt_timer_get_ms();
+		tv->tv_sec = ms / 1000;
+		tv->tv_usec = (ms % 1000) * 1000;
+	}
+	return 0;
 }
 
 __attribute__((section(".keep_rt_crt")))

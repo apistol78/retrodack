@@ -86,42 +86,6 @@ void abortHandler(int s)
 }
 #endif
 
-void dumpCallStack(const ICPU* cpu, const Bus* bus, OutputStream& os)
-{
-	uint32_t fp = cpu->getRegister(8);
-	uint32_t sp = cpu->getRegister(2);
-	// uint32_t pc = cpu->getPC();
-
-	os << L"Call stack (FP " << str(L"%08x", fp) << L"):" << Endl;
-
-	for (int i = 0; i < 8; ++i)
-	{
-		uint32_t f_ra = bus->readU32(fp - 8);
-		uint32_t f_fp = bus->readU32(fp - 4);
-
-		os << L"   " << i << L": FP "  << str(L"%08x", f_fp) << L", RA " << str(L"%08x", f_ra) << Endl;
-
-		fp = f_fp;
-	}
-
-	/*
-	int max_depth = 16;
-	int depth = 0;
-
-	while (fp && depth < max_depth)
-	{
-		uint32_t ra = bus->readU32(fp - 4);
-		if (ra == 0)
-			break;
-
-		os << L"   " << depth << L": " << str(L"%08x", ra) << Endl;
-
-		fp = bus->readU32(fp - 8);
-		depth++;
-	}
-	*/	
-}
-
 void dumpMemory(const Bus* bus)
 {
 	Ref< IStream > fs = FileSystem::getInstance().open(L"memory.bin", File::FmWrite);
@@ -261,7 +225,7 @@ int main(int argc, const char** argv)
 	tb.setCallback([&](){ plic.raise(0); }); // Input interrupt
 	gpio.setCallback([&](){ plic.raise(1); }); // GPIO interrupt
 	video.setCallback([&]() { plic.raise(2); }); // Video interrupt
-	// audio.setCallback([&]() { plic.raise(3); }); // Audio interrupt
+	// usb.setCallback([&]() { plic.raise(3); }); // USB interrupt
 
 	if (cmdLine.hasOption(L'e', L"elf"))
 	{
@@ -295,12 +259,9 @@ int main(int argc, const char** argv)
 	if (!gdbs)
 		rom.setReadOnly(true);
 
-	// Dump memory content after setup.
-	
-
 	// Create user interface.
 	Ref< ui::Form > form = new ui::Form();
-	form->create(L"RetroDACK", 220_ut, 220_ut, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"70%,10%,10%,10%", 0_ut, 0_ut));
+	form->create(L"RetroDACK", 220_ut, 220_ut, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"70%,10%,10%", 0_ut, 0_ut));
 
 	Ref< ui::Bitmap > uiImage = new ui::Bitmap(720, 720);
 
@@ -310,13 +271,11 @@ int main(int argc, const char** argv)
 	Ref< ui::Image > image = new ui::Image();
 	image->create(container, uiImage, ui::Image::WsScale | ui::Image::WsNearestFilter);
 
-	Ref< SignalView > signalViews[3];
+	Ref< SignalView > signalViews[2];
 	signalViews[0] = new SignalView();
 	signalViews[0]->create(form, 0);
 	signalViews[1] = new SignalView();
 	signalViews[1]->create(form, 0);
-	signalViews[2] = new SignalView();
-	signalViews[2]->create(form, 1);
 	
 	form->update();
 	form->show();
@@ -448,7 +407,7 @@ int main(int argc, const char** argv)
 				{
 				case 0:	// Run
 					{
-						if (!cpu->tick(1000) || bus.error())
+						if (!cpu->tick(10000) || bus.error())
 						{
 							pc = cpu->getPC();
 							gdbs->setMode(GDBServer::ModeStopped);
@@ -485,39 +444,16 @@ int main(int argc, const char** argv)
 					cpu->flushCaches();
 
 					log::error << L"CPU tick failed at PC " << str(L"%08x", cpu->getPC()) << Endl;
-
-					log::info << str(L"%-5S", L"PC") << L" : " << str(L"%08x", cpu->getPC()) << Endl;
-					log::info << L"---" << Endl;
-
+					log::error << str(L"%-5S", L"PC") << L" : " << str(L"%08x", cpu->getPC()) << Endl;
+					log::error << L"---" << Endl;
 					for (uint32_t i = 0; i < 32; ++i)
-						log::info << str(L"%-5S", getRegisterName(i)) << L" : " << str(L"%08x", cpu->getRegister(i)) << Endl;
-
-					dumpCallStack(cpu, &bus, log::info);
-
+						log::error << str(L"%-5S", getRegisterName(i)) << L" : " << str(L"%08x", cpu->getRegister(i)) << Endl;
 					break;
 				}
-
-				const uint32_t mstatus = cpu->getCSR(CSR::MSTATUS);
-				const uint32_t mie = cpu->getCSR(CSR::MIE);
-				const uint32_t mscratch = cpu->getCSR(CSR::MSCRATCH);
-
-				const bool interruptsEnable = (bool)((mstatus & MSTATUS_MIE_BIT_MASK) != 0);
-				const bool previousInterruptsEnable = (bool)((mstatus & MSTATUS_MPIE_BIT_MASK) != 0);
-				const bool timerInterruptEnable = (bool)((mie & MIE_MTI_BIT_MASK) != 0);
-
-				signalViews[0]->set(0, (interruptsEnable || previousInterruptsEnable) ? 1 : 0);
-				signalViews[1]->set(0, timerInterruptEnable ? 1 : 0);
-				signalViews[2]->set(0, mscratch);
-
 			}
 
-			// if (os)
-			// {
-			// 	(*os) << str(L"%08x", cpu->getPC());
-			// 	for (uint32_t i = 0; i < 32; ++i)
-			// 		(*os) << L":" << str(L"%08x", cpu->getRegister(i));
-			// 	(*os) << Endl;
-			// }
+			signalViews[0]->set(0, plic.issued(0) ? 1 : 0);
+			signalViews[1]->set(0, plic.issued(1) ? 1 : 0);
 		}
 	});
 	threadCpu->start();
@@ -530,7 +466,6 @@ int main(int argc, const char** argv)
 		if (!ui::Application::getInstance()->process())
 			break;
 
-		
 		if ((timer.getElapsedTime() - lastVideoT) > 1.0f / 60.0f)
 		{
 			drawing::Image* videoImage = video.getImage();
@@ -556,7 +491,6 @@ int main(int argc, const char** argv)
 		{
 			signalViews[0]->update();
 			signalViews[1]->update();
-			signalViews[2]->update();
 
 			lastStatus = timer.getElapsedTime();
 		}			

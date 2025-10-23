@@ -426,19 +426,16 @@ void OSystem_RebelV::update_sound()
 {
 	const int32_t NumSamples = 1024;
 	static int32_t buf[64][NumSamples];
-	int32_t toggle = 0;
+	static int32_t toggle = 0;
 
 	if (m_soundProc)
 	{
-		for (int32_t i = 0; i < 4; ++i)
-		{
-			m_soundProc(m_soundParam, (byte*)buf[toggle], sizeof(buf[toggle]));
-			
-			rt_audio_wait();
-			rt_audio_play_stereo(buf[toggle], NumSamples);
+		m_soundProc(m_soundParam, (byte*)buf[toggle], sizeof(buf[toggle]));
+		
+		rt_audio_wait();
+		rt_audio_play_stereo(buf[toggle], NumSamples);
 
-			toggle = (toggle + 1) & 63;
-		}
+		toggle = (toggle + 1) & 63;
 	}
 
 	rt_kernel_sleep(1);

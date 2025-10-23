@@ -126,17 +126,17 @@ local function buildRV()
 	if run:execute("make -f RetroDACK.mak ReleaseStatic") ~= 0 then return false end
 	run:popd()
 
-	-- Create binary and dump files of firmware.
+	-- Create binary and dump files of firmware; the binary file is used 
+	-- for programming the SPI flash of the target device.	
 	run:execute("riscv32-unknown-elf-objcopy -O binary build/rv/ReleaseStatic/Firmware build/rv/ReleaseStatic/Firmware.bin")
 	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Firmware", "build/rv/ReleaseStatic/Firmware.dump")
+	run:execute("riscv32-unknown-elf-objdump -D build/rv/DebugStatic/Firmware", "build/rv/DebugStatic/Firmware.dump")
 
-	--[[
-	-- Create dump files of dashboard.
-	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Dashboard", "build/rv/ReleaseStatic/Dashboard.dump")
-	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Doom", "build/rv/ReleaseStatic/Doom.dump")
-	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/ScummRV", "build/rv/ReleaseStatic/ScummRV.dump")
+	-- Create dump files.
+	-- run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Dashboard", "build/rv/ReleaseStatic/Dashboard.dump")
+	-- run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Doom", "build/rv/ReleaseStatic/Doom.dump")
+	-- run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/ScummRV", "build/rv/ReleaseStatic/ScummRV.dump")
 	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/ModPlayer", "build/rv/ReleaseStatic/ModPlayer.dump")
-	]]
 
 	return true
 end

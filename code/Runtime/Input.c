@@ -96,12 +96,14 @@ static float abs(float a)
 static void input_thread()
 {
 	int32_t absX, absY;
+	int32_t wait = 500;
+
 	for (;;)
 	{
 		// Wait for signal.
 		rt_i2c_write(0x0a, TRACKBALL_REG_INT, 0);
 		rt_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN);
-		rt_kernel_sig_try_wait(&s_input_signal, 10);
+		rt_kernel_sig_try_wait(&s_input_signal, wait);
 
 		// Trackball
 		{
@@ -110,12 +112,15 @@ static void input_thread()
 
 			#define TB_DATA(N) ((int32_t)data[N])
 
-			const float dx = TB_DATA(0) - TB_DATA(1);
-			const float dy = TB_DATA(2) - TB_DATA(3);
+			const int32_t dx = TB_DATA(0) - TB_DATA(1);
+			const int32_t dy = TB_DATA(2) - TB_DATA(3);
+
+			const float fdx = (float)dx;
+			const float fdy = (float)dy;
 
 			const float f0 = 0.1f;
-			s_filteredDeltaX = dx * f0 + s_filteredDeltaX * (1.0f - f0);
-			s_filteredDeltaY = dy * f0 + s_filteredDeltaY * (1.0f - f0);
+			s_filteredDeltaX = fdx * f0 + s_filteredDeltaX * (1.0f - f0);
+			s_filteredDeltaY = fdy * f0 + s_filteredDeltaY * (1.0f - f0);
 
 			float fm = 0.0f;
 			fm = max(fm, abs(s_filteredDeltaX));
@@ -131,6 +136,17 @@ static void input_thread()
 			const float f2 = 0.925f;
 			s_filteredDeltaX *= f2;
 			s_filteredDeltaY *= f2;
+
+			// Calculate wait time until next read based on filtered movement,
+			// if completely stopped then we can wait longer for an interrupt.            
+			if (fm < 0.01f)
+			{
+				s_filteredDeltaX = 0.0f;
+				s_filteredDeltaY = 0.0f;
+				wait = 500;
+			}
+			else
+				wait = 10;
 
 			// Clamp absolute position to the size of the current resolution.
 			const int32_t width = hal_video_get_resolution_width();

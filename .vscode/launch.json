@@ -3,12 +3,13 @@
 	"configurations": [
 
 		{
-			"name": "Emulator HL",
+			"name": "... Emulator HL",
 			"request": "launch",
 			"type": "cppdbg",
 			"program": "${workspaceRoot}/build/linux/ReleaseStatic/RetroDACK.Emulator",
 			"args": [
-				"--hl"
+				"--hl",
+				"--gdb"
 			],
 			"stopAtEntry": false,
 			"cwd": "${workspaceRoot}",
@@ -25,12 +26,14 @@
 		},
 
 		{
-			"name": "Emulator GL",
+			"name": "... Emulator GL",
 			"request": "launch",
 			"type": "cppdbg",
 			"program": "${workspaceRoot}/build/linux/ReleaseStatic/RetroDACK.Emulator",
 			"args": [
-				"--gl"
+				"--gl",
+				//"--fst",
+				"--gdb"
 			],
 			"stopAtEntry": false,
 			"cwd": "${workspaceRoot}",
@@ -49,7 +52,20 @@
 		{
 			"type": "gdb",
 			"request": "attach",
-			"name": "RV Firmware",
+			"name": "... RV Firmware (Debug)",
+			"executable": "${workspaceRoot}/build/rv/DebugStatic/Firmware",
+			"target": ":12345",
+			"remote": true,
+			"cwd": "${workspaceRoot}",
+			"gdbpath": "/opt/riscv/bin/riscv32-unknown-elf-gdb",
+			"autorun": [
+				"load"
+			]
+		},
+		{
+			"type": "gdb",
+			"request": "attach",
+			"name": "... RV Firmware (Release)",
 			"executable": "${workspaceRoot}/build/rv/DebugStatic/Firmware",
 			"target": ":12345",
 			"remote": true,
@@ -63,8 +79,21 @@
 		{
 			"type": "gdb",
 			"request": "attach",
-			"name": "RV Doom",
+			"name": "... RV Doom (Debug)",
 			"executable": "${workspaceRoot}/build/rv/DebugStatic/Doom",
+			"target": ":12345",
+			"remote": true,
+			"cwd": "${workspaceRoot}",
+			"gdbpath": "/opt/riscv/bin/riscv32-unknown-elf-gdb",
+			"autorun": [
+				"load"
+			]
+		},
+		{
+			"type": "gdb",
+			"request": "attach",
+			"name": "... RV Doom (Release)",
+			"executable": "${workspaceRoot}/build/rv/ReleaseStatic/Doom",
 			"target": ":12345",
 			"remote": true,
 			"cwd": "${workspaceRoot}",
@@ -77,8 +106,21 @@
 		{
 			"type": "gdb",
 			"request": "attach",
-			"name": "RV ModPlayer",
+			"name": "... RV ModPlayer (Debug)",
 			"executable": "${workspaceRoot}/build/rv/DebugStatic/ModPlayer",
+			"target": ":12345",
+			"remote": true,
+			"cwd": "${workspaceRoot}",
+			"gdbpath": "/opt/riscv/bin/riscv32-unknown-elf-gdb",
+			"autorun": [
+				"load"
+			]
+		},
+		{
+			"type": "gdb",
+			"request": "attach",
+			"name": "... RV ModPlayer (Release)",
+			"executable": "${workspaceRoot}/build/rv/ReleaseStatic/ModPlayer",
 			"target": ":12345",
 			"remote": true,
 			"cwd": "${workspaceRoot}",
@@ -91,7 +133,20 @@
 		{
 			"type": "gdb",
 			"request": "attach",
-			"name": "RV ScummRV",
+			"name": "... RV ScummRV (Debug)",
+			"executable": "${workspaceRoot}/build/rv/DebugStatic/ScummRV",
+			"target": ":12345",
+			"remote": true,
+			"cwd": "${workspaceRoot}",
+			"gdbpath": "/opt/riscv/bin/riscv32-unknown-elf-gdb",
+			"autorun": [
+				"load"
+			]
+		},
+		{
+			"type": "gdb",
+			"request": "attach",
+			"name": "... RV ScummRV (Release)",
 			"executable": "${workspaceRoot}/build/rv/ReleaseStatic/ScummRV",
 			"target": ":12345",
 			"remote": true,
@@ -102,19 +157,87 @@
 			]
 		},
 
+		// {
+		// 	"type": "gdb",
+		// 	"request": "attach",
+		// 	"name": "RV Quake",
+		// 	"executable": "${workspaceRoot}/build/rv/ReleaseStatic/Quake",
+		// 	"target": ":12345",
+		// 	"remote": true,
+		// 	"cwd": "${workspaceRoot}",
+		// 	"gdbpath": "/opt/riscv/bin/riscv32-unknown-elf-gdb",
+		// 	"autorun": [
+		// 		"load"
+		// 	]
+		// },
+	],
+	"compounds": [
 		{
-			"type": "gdb",
-			"request": "attach",
-			"name": "RV Quake",
-			"executable": "${workspaceRoot}/build/rv/ReleaseStatic/Quake",
-			"target": ":12345",
-			"remote": true,
-			"cwd": "${workspaceRoot}",
-			"gdbpath": "/opt/riscv/bin/riscv32-unknown-elf-gdb",
-			"autorun": [
-				"load"
-			]
+			"name": "Firmware (Debug)",
+			"configurations": [
+				"... Emulator HL",
+				"... RV Firmware (Debug)"
+			],
+			"stopAll": true
+		},
+		{
+			"name": "Firmware (Release)",
+			"configurations": [
+				"... Emulator HL",
+				"... RV Firmware (Release)"
+			],
+			"stopAll": true
 		},
 
+		{
+			"name": "Doom (Debug)",
+			"configurations": [
+				"... Emulator HL",
+				"... RV Doom (Debug)"
+			],
+			"stopAll": true
+		},
+		{
+			"name": "Doom (Release)",
+			"configurations": [
+				"... Emulator HL",
+				"... RV Doom (Release)"
+			],
+			"stopAll": true
+		},
+		
+		{
+			"name": "ModPlayer (Debug)",
+			"configurations": [
+				"... Emulator HL",
+				"... RV ModPlayer (Debug)"
+			],
+			"stopAll": true
+		},
+		{
+			"name": "ModPlayer (Release)",
+			"configurations": [
+				"... Emulator HL",
+				"... RV ModPlayer (Release)"
+			],
+			"stopAll": true
+		},
+
+		{
+			"name": "ScummRV (Debug)",
+			"configurations": [
+				"... Emulator HL",
+				"... RV ScummRV (Debug)"
+			],
+			"stopAll": true
+		},
+		{
+			"name": "ScummRV (Release)",
+			"configurations": [
+				"... Emulator HL",
+				"... RV ScummRV (Release)"
+			],
+			"stopAll": true
+		},
 	]
 }
