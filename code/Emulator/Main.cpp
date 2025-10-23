@@ -208,12 +208,11 @@ int main(int argc, const char** argv)
 	}
 
 	// Create GDB server.
-	Ref< GDBServer > gdbs;
+	Ref< GDBServer > gdbServer;
 	if (cmdLine.hasOption(L"gdb"))
 	{
-		gdbs = new GDBServer(cpu, &bus);
-		gdbs->create();
-		bus.map(0, 0, false, true, gdbs);
+		gdbServer = new GDBServer(cpu, &bus);
+		gdbServer->create();
 	}
 
 	cpu->setSP(0x12000000 - 4);
@@ -256,7 +255,7 @@ int main(int argc, const char** argv)
 	}
 
 	// Do not set read-only if a GDB server is attached.
-	if (!gdbs)
+	if (!gdbServer)
 		rom.setReadOnly(true);
 
 	// Create user interface.
@@ -386,53 +385,54 @@ int main(int argc, const char** argv)
 	Thread* threadCpu = ThreadManager::getInstance().create([&]()
 	{
 		uint32_t pc = ~0U;
-		bool first = true;
-
 		while(!threadCpu->stopped())
 		{
 			// vcd.tick();
 			// vcd.set(0, false);
 
-			if (!gdbs || gdbs->getMode() == 0)
+			if (gdbServer)
 			{
-				if (first)
-					dumpMemory(&bus);
-				first = false;
-			}
-
-			if (gdbs)
-			{
-				gdbs->process();
-				switch (gdbs->getMode())
+				gdbServer->process();
+				switch (gdbServer->getMode())
 				{
-				case 0:	// Run
+				case GDBServer::ModeRun:
 					{
-						if (!cpu->tick(10000) || bus.error())
+						for (int32_t i = 0; i < 10000; ++i)
 						{
-							pc = cpu->getPC();
-							gdbs->setMode(GDBServer::ModeStopped);
+							if (!cpu->tick(1) || bus.error())
+							{
+								pc = cpu->getPC();
+								gdbServer->setMode(GDBServer::ModeStopped);
+								break;
+							}
+
+							gdbServer->tick();
+							if (gdbServer->getMode() != GDBServer::ModeRun)
+								break;
 						}
 					}
 					break;
 
-				case 1:	// Step
+				case GDBServer::ModeStep:
 					{
 						if (!cpu->tick(1) || bus.error())
 						{
 							pc = cpu->getPC();
-							gdbs->setMode(GDBServer::ModeStopped);
+							gdbServer->setMode(GDBServer::ModeStopped);
 						}
 						if (pc != cpu->getPC())
 						{
 							pc = cpu->getPC();
-							gdbs->setMode(GDBServer::ModeStopped);
+							gdbServer->setMode(GDBServer::ModeStopped);
 						}
+						gdbServer->tick();
 						threadCpu->sleep(0);
 					}
 					break;
 
-				case 2:	// Stopped
-				case 3:	// Killed
+				case GDBServer::ModeStopped:
+				case GDBServer::ModeKilled:
+				default:
 					threadCpu->sleep(0);
 					break;
 				}
