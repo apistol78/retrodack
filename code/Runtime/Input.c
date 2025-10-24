@@ -65,16 +65,9 @@ static int32_t s_events_out = 0;
 
 static kernel_cs_t s_input_lock;
 static kernel_sig_t s_input_signal;
-static int32_t s_have_gpio = 0;
 
-static void tb_input_interrupt(uint32_t source)
+static void input_interrupt(uint32_t source)
 {
-	rt_kernel_sig_raise(&s_input_signal);
-}
-
-static void gpio_input_interrupt(uint32_t source)
-{
-	s_have_gpio = 1;
 	rt_kernel_sig_raise(&s_input_signal);
 }
 
@@ -103,7 +96,7 @@ static void input_thread()
 		// Wait for signal.
 		rt_i2c_write(0x0a, TRACKBALL_REG_INT, 0);
 		rt_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN);
-		rt_kernel_sig_try_wait(&s_input_signal, wait);
+		const int32_t gotSignal = rt_kernel_sig_try_wait(&s_input_signal, wait);
 
 		// Trackball
 		{
@@ -214,13 +207,11 @@ static void input_thread()
 		}
 
 		// Buttons
-		if (s_have_gpio)
+		if (gotSignal)
 		{
 			uint16_t data = 0;
 			rt_i2c_read(0x20, 0x00, (uint8_t*)&data, 2);
 			data = ~data;
-
-			s_have_gpio = 0;
 
 			#define S(bit, mask) \
 				if (data & bit) { s_pressed |= mask; } else { s_pressed &= ~mask; }
@@ -306,8 +297,6 @@ int32_t rt_input_init()
 	// Setup trackball.
 	// if (found)
 	{
-		hal_interrupt_set_handler(IRQ_SOURCE_PLIC_0, tb_input_interrupt);
-
 		// Turn on green backlight to indicate success.
 		rt_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0xff);
 
@@ -325,9 +314,8 @@ int32_t rt_input_init()
 		}
 	}
 
-	// Setup button inputs.
-	hal_interrupt_set_handler(IRQ_SOURCE_PLIC_1, gpio_input_interrupt);
-
+	// Setup interrupt handler.
+	hal_interrupt_set_handler(IRQ_SOURCE_PLIC_0, input_interrupt);
 	return 0;
 }
 

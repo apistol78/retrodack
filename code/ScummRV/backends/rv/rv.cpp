@@ -260,6 +260,22 @@ bool OSystem_RebelV::poll_event(Event *event)
 				event->kbd.keycode = 319;
 				event->kbd.ascii = 319;
 			}
+			else if (ev.button == RT_INPUT_DPAD_W)
+			{
+				// Simon quicksave 0
+				event->event_code = ev.pressed ? EVENT_KEYDOWN : EVENT_KEYUP;
+				event->kbd.keycode = '0';
+				event->kbd.ascii = '0';				
+				event->kbd.flags = OSystem::KBD_ALT;
+			}
+			else if (ev.button == RT_INPUT_DPAD_E)
+			{
+				// Simon quickload 0
+				event->event_code = ev.pressed ? EVENT_KEYDOWN : EVENT_KEYUP;
+				event->kbd.keycode = '0';
+				event->kbd.ascii = '0';				
+				event->kbd.flags = OSystem::KBD_CTRL;
+			}			
 			else
 				return false;
 
@@ -312,13 +328,13 @@ OSystem::MutexRef OSystem_RebelV::create_mutex()
 void OSystem_RebelV::lock_mutex(MutexRef mutex)
 {
 	kernel_cs_t* cs = (kernel_cs_t*)mutex;
-	rt_kernel_cs_lock(cs);
+	// rt_kernel_cs_lock(cs);
 }
 
 void OSystem_RebelV::unlock_mutex(MutexRef mutex)
 {
 	kernel_cs_t* cs = (kernel_cs_t*)mutex;
-	rt_kernel_cs_unlock(cs);
+	// rt_kernel_cs_unlock(cs);
 }
 
 void OSystem_RebelV::delete_mutex(MutexRef mutex)
@@ -430,12 +446,15 @@ void OSystem_RebelV::update_sound()
 
 	if (m_soundProc)
 	{
-		m_soundProc(m_soundParam, (byte*)buf[toggle], sizeof(buf[toggle]));
-		
-		rt_audio_wait();
-		rt_audio_play_stereo(buf[toggle], NumSamples);
+		for (int32_t i = 0; i < 4; ++i)
+		{
+			m_soundProc(m_soundParam, (byte*)buf[toggle], sizeof(buf[toggle]));
+			
+			rt_audio_wait();
+			rt_audio_play_stereo(buf[toggle], NumSamples);
 
-		toggle = (toggle + 1) & 63;
+			toggle = (toggle + 1) & 63;
+		}
 	}
 
 	rt_kernel_sleep(1);

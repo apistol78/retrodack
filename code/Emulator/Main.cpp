@@ -222,7 +222,7 @@ int main(int argc, const char** argv)
 
 	tmr.setCallback([&](){ vcd.set(0, true); cpu->interrupt(TIMER); });
 	tb.setCallback([&](){ plic.raise(0); }); // Input interrupt
-	gpio.setCallback([&](){ plic.raise(1); }); // GPIO interrupt
+	gpio.setCallback([&](){ plic.raise(0); }); // GPIO interrupt
 	video.setCallback([&]() { plic.raise(2); }); // Video interrupt
 	// usb.setCallback([&]() { plic.raise(3); }); // USB interrupt
 

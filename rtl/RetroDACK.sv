@@ -447,8 +447,8 @@ module RetroDACK(
 		.i_reset(reset),
 		.i_clock(clock),
 
-		.i_interrupt_0(tbi == 2'b01),
-		.i_interrupt_1(kpi == 2'b01),
+		.i_interrupt_0((tbi == 2'b01) || (kpi == 2'b01)),
+		.i_interrupt_1(1'b0),
 		.i_interrupt_2(vbi == 2'b01),
 		.i_interrupt_3(ubi == 2'b01),
 

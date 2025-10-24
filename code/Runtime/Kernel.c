@@ -496,9 +496,20 @@ int32_t rt_kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 	const uint32_t fin_ms = hal_timer_get_ms() + timeout;
 
 	rt_kernel_enter_critical();
+
+	// Check if already been signaled; no need to yield this thread.
+	if (sig->counter != 0)
+	{
+		sig->counter = 0;
+		rt_kernel_leave_critical();
+		return 1;
+	}	
+
+	// Attach signal to current thread and start waiting.
 	kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = sig;
 	t->sleep = fin_ms;
+
 	rt_kernel_leave_critical();
 
 	while (sig->counter == 0)
@@ -509,7 +520,11 @@ int32_t rt_kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 	}
 
 	rt_kernel_enter_critical();
+
+	t->waiting = 0;
+	t->sleep = 0;
 	
+	// Check result if we got the signal or timed out.
 	int32_t result = 0;
 	if (sig->counter != 0)
 	{
@@ -517,8 +532,6 @@ int32_t rt_kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 		result = 1;
 	}
 
-	t->waiting = 0;
-	t->sleep = 0;
 	rt_kernel_leave_critical();
 
 	return result;
