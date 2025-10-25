@@ -275,8 +275,8 @@
 					<link>LnkYes</link>
 					<project type="traktor.sb.Project" version="1">
 						<enable>true</enable>
-						<name>SDL</name>
-						<sourcePath>code/SDL</sourcePath>
+						<name>lvgl</name>
+						<sourcePath>3rdp/lvgl/src</sourcePath>
 						<configurations>
 							<item type="traktor.sb.Configuration" version="5">
 								<name>DebugStatic</name>
@@ -284,9 +284,12 @@
 								<targetProfile>TpDebug</targetProfile>
 								<precompiledHeader/>
 								<includePaths>
-									<item>code/SDL</item>
+									<item>code</item>
+									<item>3rdp/lvgl/src</item>
 								</includePaths>
-								<definitions/>
+								<definitions>
+									<item>LV_CONF_INCLUDE_SIMPLE</item>
+								</definitions>
 								<libraryPaths/>
 								<libraries/>
 								<warningLevel>WlCompilerDefault</warningLevel>
@@ -305,9 +308,12 @@
 								<targetProfile>TpRelease</targetProfile>
 								<precompiledHeader/>
 								<includePaths>
-									<item>code/SDL</item>
+									<item>code</item>
+									<item>3rdp/lvgl/src</item>
 								</includePaths>
-								<definitions/>
+								<definitions>
+									<item>LV_CONF_INCLUDE_SIMPLE</item>
+								</definitions>
 								<libraryPaths/>
 								<libraries/>
 								<warningLevel>WlCompilerDefault</warningLevel>
@@ -323,23 +329,657 @@
 						</configurations>
 						<items>
 							<item type="traktor.sb.Filter">
-								<name>SDL2</name>
+								<name>core</name>
 								<items>
 									<item type="traktor.sb.File" version="1">
-										<fileName>SDL2/*.*</fileName>
+										<fileName>core/*.*</fileName>
 										<excludeFilter/>
 										<items/>
 									</item>
 								</items>
 							</item>
-						</items>
-						<dependencies>
-							<item type="traktor.sb.ProjectDependency" version="3">
-								<inheritIncludePaths>true</inheritIncludePaths>
-								<link>LnkYes</link>
-								<project ref="/object/projects/item"/>
+							<item type="traktor.sb.Filter">
+								<name>display</name>
+								<items>
+									<item type="traktor.sb.File" version="1">
+										<fileName>display/*.*</fileName>
+										<excludeFilter/>
+										<items/>
+									</item>
+								</items>
 							</item>
-						</dependencies>
+							<item type="traktor.sb.Filter">
+								<name>draw</name>
+								<items>
+									<item type="traktor.sb.File" version="1">
+										<fileName>draw/*.*</fileName>
+										<excludeFilter/>
+										<items/>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>convert</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>draw/convert/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>sw</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>draw/sw/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+											<item type="traktor.sb.Filter">
+												<name>blend</name>
+												<items>
+													<item type="traktor.sb.File" version="1">
+														<fileName>draw/sw/blend/*.*</fileName>
+														<excludeFilter/>
+														<items/>
+													</item>
+												</items>
+											</item>
+										</items>
+									</item>
+								</items>
+							</item>
+							<item type="traktor.sb.File" version="1">
+								<fileName>*.*</fileName>
+								<excludeFilter/>
+								<items/>
+							</item>
+							<item type="traktor.sb.Filter">
+								<name>font</name>
+								<items>
+									<item type="traktor.sb.File" version="1">
+										<fileName>font/*.*</fileName>
+										<excludeFilter/>
+										<items/>
+									</item>
+								</items>
+							</item>
+							<item type="traktor.sb.Filter">
+								<name>indev</name>
+								<items>
+									<item type="traktor.sb.File" version="1">
+										<fileName>indev/*.*</fileName>
+										<excludeFilter/>
+										<items/>
+									</item>
+								</items>
+							</item>
+							<item type="traktor.sb.Filter">
+								<name>layouts</name>
+								<items>
+									<item type="traktor.sb.Filter">
+										<name>flex</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>layouts/flex/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>grid</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>layouts/grid/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.File" version="1">
+										<fileName>layouts/*.*</fileName>
+										<excludeFilter/>
+										<items/>
+									</item>
+								</items>
+							</item>
+							<item type="traktor.sb.Filter">
+								<name>misc</name>
+								<items>
+									<item type="traktor.sb.Filter">
+										<name>cache</name>
+										<items>
+											<item type="traktor.sb.Filter">
+												<name>class</name>
+												<items>
+													<item type="traktor.sb.File" version="1">
+														<fileName>misc/cache/class/*.*</fileName>
+														<excludeFilter/>
+														<items/>
+													</item>
+												</items>
+											</item>
+											<item type="traktor.sb.Filter">
+												<name>instance</name>
+												<items>
+													<item type="traktor.sb.File" version="1">
+														<fileName>misc/cache/instance/*.*</fileName>
+														<excludeFilter/>
+														<items/>
+													</item>
+												</items>
+											</item>
+											<item type="traktor.sb.File" version="1">
+												<fileName>misc/cache/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.File" version="1">
+										<fileName>misc/*.*</fileName>
+										<excludeFilter/>
+										<items/>
+									</item>
+								</items>
+							</item>
+							<item type="traktor.sb.Filter">
+								<name>osal</name>
+								<items>
+									<item type="traktor.sb.File" version="1">
+										<fileName>osal/lv_os_none.*</fileName>
+										<excludeFilter/>
+										<items/>
+									</item>
+									<item type="traktor.sb.File" version="1">
+										<fileName>osal/lv_os.*</fileName>
+										<excludeFilter/>
+										<items/>
+									</item>
+								</items>
+							</item>
+							<item type="traktor.sb.Filter">
+								<name>stdlib</name>
+								<items>
+									<item type="traktor.sb.Filter">
+										<name>clib</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>stdlib/clib/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.File" version="1">
+										<fileName>stdlib/*.*</fileName>
+										<excludeFilter/>
+										<items/>
+									</item>
+								</items>
+							</item>
+							<item type="traktor.sb.Filter">
+								<name>tick</name>
+								<items>
+									<item type="traktor.sb.File" version="1">
+										<fileName>tick/*.*</fileName>
+										<excludeFilter/>
+										<items/>
+									</item>
+								</items>
+							</item>
+							<item type="traktor.sb.Filter">
+								<name>widgets</name>
+								<items>
+									<item type="traktor.sb.Filter">
+										<name>3dtexture</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/3dtexture/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>animimage</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/animimage/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>arc</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/arc/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>arclabel</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/arclabel/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>bar</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/bar/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>button</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/button/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>buttonmatrix</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/buttonmatrix/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>calendar</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/calendar/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>canvas</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/canvas/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>chart</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/chart/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>checkbox</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/checkbox/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>dropdown</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/dropdown/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>image</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/image/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>imagebutton</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/imagebutton/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>keyboard</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/keyboard/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>label</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/label/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>led</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/led/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>line</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/line/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>list</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/list/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>lottie</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/lottie/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>menu</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/menu/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>msgbox</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/msgbox/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>objx_templ</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/objx_templ/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>property</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/property/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>roller</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/roller/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>scale</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/scale/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>slider</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/slider/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>span</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/span/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>spinbox</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/spinbox/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>spinner</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/spinner/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>switch</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/switch/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>table</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/table/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>tabview</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/tabview/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>textarea</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/textarea/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>tileview</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/tileview/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>win</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>widgets/win/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+								</items>
+							</item>
+							<item type="traktor.sb.Filter">
+								<name>themes</name>
+								<items>
+									<item type="traktor.sb.Filter">
+										<name>default</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>themes/default/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>mono</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>themes/mono/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>simple</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>themes/simple/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.File" version="1">
+										<fileName>themes/*.*</fileName>
+										<excludeFilter/>
+										<items/>
+									</item>
+								</items>
+							</item>
+							<item type="traktor.sb.Filter">
+								<name>others</name>
+								<items>
+									<item type="traktor.sb.Filter">
+										<name>sysmon</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>others/sysmon/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.Filter">
+										<name>observer</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>others/observer/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+									<item type="traktor.sb.File" version="1">
+										<fileName>others/*.*</fileName>
+										<excludeFilter/>
+										<items/>
+									</item>
+								</items>
+							</item>
+							<item type="traktor.sb.Filter">
+								<name>libs</name>
+								<items>
+									<item type="traktor.sb.Filter">
+										<name>bin_decoder</name>
+										<items>
+											<item type="traktor.sb.File" version="1">
+												<fileName>libs/bin_decoder/*.*</fileName>
+												<excludeFilter/>
+												<items/>
+											</item>
+										</items>
+									</item>
+								</items>
+							</item>
+						</items>
+						<dependencies/>
 					</project>
 				</item>
 			</dependencies>
@@ -1312,7 +1952,74 @@
 				</item>
 			</dependencies>
 		</item>
-		<item ref="/object/projects/item[2]/dependencies/item[1]/project"/>
+		<item type="traktor.sb.Project" version="1">
+			<enable>true</enable>
+			<name>SDL</name>
+			<sourcePath>code/SDL</sourcePath>
+			<configurations>
+				<item type="traktor.sb.Configuration" version="5">
+					<name>DebugStatic</name>
+					<targetFormat>TfStaticLibrary</targetFormat>
+					<targetProfile>TpDebug</targetProfile>
+					<precompiledHeader/>
+					<includePaths>
+						<item>code/SDL</item>
+					</includePaths>
+					<definitions/>
+					<libraryPaths/>
+					<libraries/>
+					<warningLevel>WlCompilerDefault</warningLevel>
+					<additionalCompilerOptions/>
+					<additionalLinkerOptions/>
+					<debugExecutable/>
+					<debugArguments/>
+					<debugEnvironment/>
+					<debugWorkingDirectory/>
+					<aggregationItems/>
+					<consumerLibraryPath/>
+				</item>
+				<item type="traktor.sb.Configuration" version="5">
+					<name>ReleaseStatic</name>
+					<targetFormat>TfStaticLibrary</targetFormat>
+					<targetProfile>TpRelease</targetProfile>
+					<precompiledHeader/>
+					<includePaths>
+						<item>code/SDL</item>
+					</includePaths>
+					<definitions/>
+					<libraryPaths/>
+					<libraries/>
+					<warningLevel>WlCompilerDefault</warningLevel>
+					<additionalCompilerOptions/>
+					<additionalLinkerOptions/>
+					<debugExecutable/>
+					<debugArguments/>
+					<debugEnvironment/>
+					<debugWorkingDirectory/>
+					<aggregationItems/>
+					<consumerLibraryPath/>
+				</item>
+			</configurations>
+			<items>
+				<item type="traktor.sb.Filter">
+					<name>SDL2</name>
+					<items>
+						<item type="traktor.sb.File" version="1">
+							<fileName>SDL2/*.*</fileName>
+							<excludeFilter/>
+							<items/>
+						</item>
+					</items>
+				</item>
+			</items>
+			<dependencies>
+				<item type="traktor.sb.ProjectDependency" version="3">
+					<inheritIncludePaths>true</inheritIncludePaths>
+					<link>LnkYes</link>
+					<project ref="/object/projects/item"/>
+				</item>
+			</dependencies>
+		</item>
 		<item type="traktor.sb.Project" version="1">
 			<enable>true</enable>
 			<name>Quake</name>
@@ -1386,5 +2093,6 @@
 			</dependencies>
 		</item>
 		<item ref="/object/projects/item[5]/dependencies/item[1]/project"/>
+		<item ref="/object/projects/item[2]/dependencies/item[1]/project"/>
 	</projects>
 </object>

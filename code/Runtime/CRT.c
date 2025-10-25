@@ -188,7 +188,7 @@ int _read(int file, char* ptr, int len)
 	else
 	{
 		for (int i = 0; i < len; ++i)
-			*ptr++ = hal_uart_rx_u8(0);
+			*ptr++ = hal_uart_rx_u8();
 		return len;
 	}
 }

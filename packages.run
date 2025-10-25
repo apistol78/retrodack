@@ -74,5 +74,10 @@ PACKAGES =
 		name = "libxmp",
 		url = "https://github.com/libxmp/libxmp.git"
 	},
+	{
+		type = "GIT",
+		name = "lvgl",
+		url = "https://github.com/lvgl/lvgl.git"
+	},
 }
 

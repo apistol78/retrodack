@@ -81,7 +81,7 @@ static float min(float a, float b)
 	return (a < b) ? a : b;
 }
 
-static float abs(float a)
+static float s_abs(float a)
 {
 	return a >= 0.0f ? a : -a;
 }
@@ -116,8 +116,8 @@ static void input_thread()
 			s_filteredDeltaY = fdy * f0 + s_filteredDeltaY * (1.0f - f0);
 
 			float fm = 0.0f;
-			fm = max(fm, abs(s_filteredDeltaX));
-			fm = max(fm, abs(s_filteredDeltaY));
+			fm = max(fm, s_abs(s_filteredDeltaX));
+			fm = max(fm, s_abs(s_filteredDeltaY));
 			fm = min(fm, 1.0f);
 
 			const float f1 = fm * 10.0f + (1.0f - fm) * 4.0f;
