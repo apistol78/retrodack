@@ -17421,7 +17421,7 @@
 		)
 		(uuid "c8caf056-5d8f-408e-8a9d-4bce6cd8c9e8")
 	)
-	(text "TODO\nBattery ADC\nCharge signal to FPGA (open drain?)\nWhat if battery/USB are connected at the same time as \"ice\" USB?\nPower switch, larger?\nHeadphone detection, MIC/VOLDET need to be pulled down from a R to MIC\nHeadphone caps on +/- \nDone\nImproved bulk and filter of 5V"
+	(text "TODO\n-GPIO with debounce?\n+Battery ADC\n-Charge signal to FPGA (open drain?)\n-What if battery/USB are connected at the same time as \"ice\" USB?\n-Power switch, larger?\n+Headphone detection, MIC/VOLDET need to be pulled down from a R to MIC\n+Headphone caps on +/- \n+Improved bulk and filter of 5V"
 		(exclude_from_sim no)
 		(at 179.832 634.238 0)
 		(effects

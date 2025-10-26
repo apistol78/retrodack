@@ -2656,7 +2656,7 @@
 		(property "Reference" "D1"
 			(at -0.0375 -1.8 0)
 			(layer "F.SilkS")
-			(uuid "f58b9e7b-b3dd-4062-b347-ff60f8b3164f")
+			(uuid "ec0af4bd-e948-4cac-863b-5b7aff3f40fb")
 			(effects
 				(font
 					(size 1 1)
@@ -2667,7 +2667,7 @@
 		(property "Value" "LED"
 			(at 0 1.65 0)
 			(layer "F.Fab")
-			(uuid "b6380d72-bdfb-4979-bc4c-11858d788171")
+			(uuid "def386b9-6b94-4546-8c78-dfd117776847")
 			(effects
 				(font
 					(size 1 1)
@@ -2679,7 +2679,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "da613e04-3e24-4d4b-8470-c05d315a4cea")
+			(uuid "52417b98-0227-4f31-a04b-f60383f4c2e8")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2691,7 +2691,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "cd23d7a1-39c5-4724-a0de-830ac3c6fea1")
+			(uuid "3bac866f-1181-4f14-8451-26ab8aab65b2")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6979,7 +6979,7 @@
 		(uuid "2e31732a-ed24-4926-b24b-a59260a15bb3")
 		(at 148 281.7 180)
 		(property "Reference" "U11"
-			(at 5 16.5 180)
+			(at -2.2 12.1 90)
 			(unlocked yes)
 			(layer "F.SilkS")
 			(uuid "9a9e8df5-3c50-4a39-81fd-4c3c35afd182")
@@ -11265,7 +11265,7 @@
 		(descr "Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal with elongated pad for handsoldering. (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing), generated with kicad-footprint-generator")
 		(tags "capacitor handsolder")
 		(property "Reference" "C46"
-			(at 0 1.8 0)
+			(at 0.4 1.8 0)
 			(layer "F.SilkS")
 			(uuid "9a42ebe1-0f26-450c-b587-986256c3ca13")
 			(effects
@@ -16946,7 +16946,7 @@
 		(descr "TSSOP10: plastic thin shrink small outline package; 10 leads; body width 3 mm; (see NXP SSOP-TSSOP-VSO-REFLOW.pdf and sot552-1_po.pdf)")
 		(tags "SSOP 0.5")
 		(property "Reference" "U12"
-			(at -5.1 0 90)
+			(at 0 2.5 180)
 			(layer "F.SilkS")
 			(uuid "47de9f1a-55bc-400d-9aad-273ee57e685b")
 			(effects
@@ -19539,7 +19539,7 @@
 		(descr "USB 2.0 Type C Receptacle, GCT, 16P, top mounted, horizontal, 5A: https://gct.co/files/drawings/usb4105.pdf")
 		(tags "USB C Type-C Receptacle SMD USB 2.0 16P 16C USB4105-15-A USB4105-15-A-060 USB4105-15-A-120 USB4105-GF-A USB4105-GF-A-060 USB4105-GF-A-120")
 		(property "Reference" "J3"
-			(at -6.5 -4.025 0)
+			(at -5.9525 -5.9 0)
 			(unlocked yes)
 			(layer "F.SilkS")
 			(uuid "773be566-87de-4c54-bebb-49ce40b64a8f")
@@ -24833,7 +24833,7 @@
 		(descr "VQFN, 16 Pin (http://www.ti.com/lit/ds/symlink/cdclvp1102.pdf#page=28), generated with kicad-footprint-generator ipc_noLead_generator.py")
 		(tags "VQFN NoLead")
 		(property "Reference" "U7"
-			(at 3.45 2.25 180)
+			(at 4.15 0.25 180)
 			(layer "F.SilkS")
 			(uuid "a0697d56-55d4-4a46-9314-aeeb98f4bd42")
 			(effects
@@ -27048,7 +27048,7 @@
 		(descr "Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal with elongated pad for handsoldering. (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing), generated with kicad-footprint-generator")
 		(tags "capacitor handsolder")
 		(property "Reference" "C47"
-			(at -2.6 -0.3 90)
+			(at 0.4 -1.7 180)
 			(layer "F.SilkS")
 			(uuid "17a20565-8fe8-46cc-86b4-99f4b7c9192c")
 			(effects
@@ -29957,7 +29957,7 @@
 		(uuid "e02df7cb-a730-431a-847c-47a9c720909e")
 		(at 155.1 242.8 -90)
 		(property "Reference" "U3"
-			(at -3.4 5.1 270)
+			(at -1.4 5.1 270)
 			(layer "F.SilkS")
 			(uuid "a8ffeed0-c358-4c91-aa1b-33de6c179c48")
 			(effects
@@ -33682,6 +33682,16 @@
 		(layer "F.SilkS")
 		(uuid "18cca1dd-144f-40a2-84b9-b11951241506")
 	)
+	(gr_line
+		(start 138 252.4)
+		(end 134.8 252.4)
+		(stroke
+			(width 0.15)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "2b6ebeaa-aa56-4703-8e7e-c572a2ddf3ea")
+	)
 	(gr_rect
 		(start 169.25 235.9)
 		(end 192.2 253.9)
@@ -33692,6 +33702,16 @@
 		(fill no)
 		(layer "F.SilkS")
 		(uuid "2fb4b862-f74a-4768-8243-252e022f9308")
+	)
+	(gr_line
+		(start 136.7 252.8)
+		(end 138 252.8)
+		(stroke
+			(width 0.15)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "37351185-fc16-4b51-9af9-5f634bd91b8e")
 	)
 	(gr_poly
 		(pts
@@ -33847,6 +33867,16 @@
 		(fill yes)
 		(layer "F.SilkS")
 		(uuid "54cfe53c-72c0-476b-8e91-8e742d8b921d")
+	)
+	(gr_line
+		(start 134.8 252.4)
+		(end 134.8 252.8)
+		(stroke
+			(width 0.15)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "635b8455-2c45-4684-962c-1ff710aed95d")
 	)
 	(gr_poly
 		(pts
@@ -34074,6 +34104,16 @@
 		(fill yes)
 		(layer "F.SilkS")
 		(uuid "9a322078-81b7-4477-9453-68e062f98604")
+	)
+	(gr_line
+		(start 153.2 249.4)
+		(end 154.6 249.4)
+		(stroke
+			(width 0.15)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "9aea6f01-699b-4107-ba6d-3bbae9712cba")
 	)
 	(gr_poly
 		(pts
@@ -34983,6 +35023,16 @@
 		(layer "F.SilkS")
 		(uuid "f42e5870-b2ff-4b7c-b5a2-d79b2994db05")
 	)
+	(gr_line
+		(start 141.2 252.8)
+		(end 141.6 252.8)
+		(stroke
+			(width 0.15)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "fc385ad6-af7a-4b07-bb4a-5756a3b6b10c")
+	)
 	(gr_rect
 		(start 137.184202 205.55)
 		(end 177.184202 255.55)
@@ -35450,7 +35500,7 @@
 		(uuid "fda3de00-0737-43d1-bfa7-d2ac1b0b9a18")
 	)
 	(gr_text "PGOOD"
-		(at 149.6 276.2 0)
+		(at 149.6 275.6 0)
 		(layer "F.SilkS")
 		(uuid "011fa944-4535-46cc-b9b3-3b6bf05c2c35")
 		(effects
@@ -35471,18 +35521,6 @@
 				(thickness 0.15)
 			)
 			(justify right)
-		)
-	)
-	(gr_text "+"
-		(at 160.1 280 0)
-		(layer "F.SilkS")
-		(uuid "139b1954-b072-46c7-8f8b-b43756ad169c")
-		(effects
-			(font
-				(size 1 1)
-				(thickness 0.15)
-			)
-			(justify left bottom)
 		)
 	)
 	(gr_text "DEBUG"
@@ -35557,18 +35595,6 @@
 			(justify left bottom)
 		)
 	)
-	(gr_text "+"
-		(at 153.7 280 0)
-		(layer "F.SilkS")
-		(uuid "ab89eee1-2f1e-4132-9c79-6e7c72aadf84")
-		(effects
-			(font
-				(size 1 1)
-				(thickness 0.15)
-			)
-			(justify left bottom)
-		)
-	)
 	(gr_text "Revision 2"
 		(at 174.63841 178.6 0)
 		(layer "F.SilkS")
@@ -35606,7 +35632,7 @@
 		)
 	)
 	(gr_text "CHARGE"
-		(at 155.8 276.2 0)
+		(at 155.8 275.6 0)
 		(layer "F.SilkS")
 		(uuid "cb86ae10-2f3c-434b-8ca9-7a37831c9763")
 		(effects
