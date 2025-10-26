@@ -14,8 +14,9 @@ void GPIOExtender::read(uint8_t controlAddr, uint8_t length, uint8_t* outData)
 {
 	if (controlAddr == 0x00)
 	{
-		outData[0] = m_bits & 0xff;
-		outData[1] = (m_bits >> 8) & 0xff;
+		const uint16_t bits = ~m_bits;
+		outData[0] = bits & 0xff;
+		outData[1] = (bits >> 8) & 0xff;
 	}
 }
 
