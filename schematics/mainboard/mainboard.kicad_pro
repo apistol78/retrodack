@@ -513,7 +513,17 @@
     "meta": {
       "version": 4
     },
-    "net_colors": null,
+    "net_colors": {
+      "GND": "rgb(83, 10, 255)",
+      "LCD_B0": "rgb(255, 153, 0)",
+      "LCD_B1": "rgb(255, 153, 0)",
+      "LCD_B2": "rgb(255, 153, 0)",
+      "LCD_B3": "rgb(255, 153, 0)",
+      "LCD_B4": "rgb(255, 153, 0)",
+      "LCD_B5": "rgb(255, 153, 0)",
+      "LCD_BACKLIGHT_CTRL": "rgb(255, 153, 0)",
+      "LCD_CLK": "rgb(255, 153, 0)"
+    },
     "netclass_assignments": null,
     "netclass_patterns": [
       {
