@@ -16917,24 +16917,26 @@
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(property "Reference" "U"
-				(at 0 0 0)
+			(property "Reference" "U11"
+				(at 8.89 1.2701 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(justify left)
 				)
 			)
-			(property "Value" ""
-				(at 0 0 0)
+			(property "Value" "~"
+				(at 8.89 -1.2699 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(justify left)
 				)
 			)
-			(property "Footprint" ""
-				(at 0 0 0)
+			(property "Footprint" "ap_phonejack:PJ-327E-5A"
+				(at -0.508 9.144 0)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -16958,6 +16960,14 @@
 						(size 1.27 1.27)
 					)
 					(hide yes)
+				)
+			)
+			(property "LCSC" "C145812"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
 				)
 			)
 			(symbol "PJ_1_1_1"
@@ -16993,7 +17003,7 @@
 				(pin input line
 					(at -10.16 2.54 0)
 					(length 2.54)
-					(name "DETECT"
+					(name "LEFT"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -17011,7 +17021,7 @@
 				(pin input line
 					(at -10.16 0 0)
 					(length 2.54)
-					(name "R"
+					(name "RIGHT"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -17029,7 +17039,7 @@
 				(pin input line
 					(at -10.16 -2.54 0)
 					(length 2.54)
-					(name "S"
+					(name "DETECT_GND"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -17047,7 +17057,7 @@
 				(pin input line
 					(at -10.16 -5.08 0)
 					(length 2.54)
-					(name "DETECT_GND"
+					(name "NC"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -18343,10 +18353,6 @@
 	(no_connect
 		(at 365.76 255.27)
 		(uuid "5d8b6a8d-43d0-4308-80e7-8d06a40a2168")
-	)
-	(no_connect
-		(at 783.59 180.34)
-		(uuid "618257dc-b1b6-4a7a-9b1b-3c473f1a4692")
 	)
 	(no_connect
 		(at 365.76 262.89)
@@ -19734,6 +19740,16 @@
 	)
 	(wire
 		(pts
+			(xy 759.46 180.34) (xy 783.59 180.34)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "26af6844-2f79-49ff-9f16-5c750a4702d2")
+	)
+	(wire
+		(pts
 			(xy 49.53 426.72) (xy 90.17 426.72)
 		)
 		(stroke
@@ -20254,6 +20270,16 @@
 	)
 	(wire
 		(pts
+			(xy 759.46 182.88) (xy 759.46 185.42)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "384b13ce-33d8-4de3-ad71-29b641799c1e")
+	)
+	(wire
+		(pts
 			(xy 396.24 382.27) (xy 400.05 382.27)
 		)
 		(stroke
@@ -20694,13 +20720,13 @@
 	)
 	(wire
 		(pts
-			(xy 767.08 187.96) (xy 783.59 187.96)
+			(xy 783.59 185.42) (xy 767.08 185.42)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "4c4b6041-03c8-4cec-baac-94e0dbef2917")
+		(uuid "4bf6bae9-0250-4f10-90e8-5dd6a1adedf6")
 	)
 	(wire
 		(pts
@@ -21094,7 +21120,7 @@
 	)
 	(wire
 		(pts
-			(xy 753.11 185.42) (xy 783.59 185.42)
+			(xy 753.11 185.42) (xy 759.46 185.42)
 		)
 		(stroke
 			(width 0)
@@ -21964,16 +21990,6 @@
 	)
 	(wire
 		(pts
-			(xy 759.46 182.88) (xy 783.59 182.88)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "78db6b1b-e2b1-4659-9f21-e24946c654f9")
-	)
-	(wire
-		(pts
 			(xy 102.87 217.17) (xy 105.41 217.17)
 		)
 		(stroke
@@ -22784,6 +22800,16 @@
 	)
 	(wire
 		(pts
+			(xy 783.59 182.88) (xy 759.46 182.88)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "92fc8f4a-d22a-448e-a430-fdeb88bf9e9e")
+	)
+	(wire
+		(pts
 			(xy 361.95 382.27) (xy 365.76 382.27)
 		)
 		(stroke
@@ -23024,7 +23050,7 @@
 	)
 	(wire
 		(pts
-			(xy 759.46 177.8) (xy 759.46 182.88)
+			(xy 759.46 177.8) (xy 759.46 180.34)
 		)
 		(stroke
 			(width 0)
@@ -24044,16 +24070,6 @@
 	)
 	(wire
 		(pts
-			(xy 767.08 205.74) (xy 767.08 187.96)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "bfaaeedc-dea8-430b-a1ac-bb75ba1e2a1d")
-	)
-	(wire
-		(pts
 			(xy 104.14 312.42) (xy 107.95 312.42)
 		)
 		(stroke
@@ -24441,6 +24457,16 @@
 			(type default)
 		)
 		(uuid "cb23d400-42eb-42ff-ba91-acb38842ea61")
+	)
+	(wire
+		(pts
+			(xy 767.08 185.42) (xy 767.08 205.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cb31240b-c86b-4e71-b034-5682ae432ef2")
 	)
 	(wire
 		(pts
@@ -43394,7 +43420,7 @@
 			)
 		)
 		(property "Footprint" "ap_phonejack:PJ-327E-5A"
-			(at 793.75 182.88 0)
+			(at 793.242 173.736 0)
 			(effects
 				(font
 					(size 1.27 1.27)
