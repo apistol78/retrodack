@@ -79,5 +79,10 @@ PACKAGES =
 		name = "lvgl",
 		url = "https://github.com/lvgl/lvgl.git"
 	},
+	{
+		type = "GIT",
+		name = "SimpleNES",
+		url = "https://github.com/amhndu/SimpleNES.git"
+	},	
 }
 

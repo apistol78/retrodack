@@ -157,19 +157,60 @@
 			]
 		},
 
-		// {
-		// 	"type": "gdb",
-		// 	"request": "attach",
-		// 	"name": "RV Quake",
-		// 	"executable": "${workspaceRoot}/build/rv/ReleaseStatic/Quake",
-		// 	"target": ":12345",
-		// 	"remote": true,
-		// 	"cwd": "${workspaceRoot}",
-		// 	"gdbpath": "/opt/riscv/bin/riscv32-unknown-elf-gdb",
-		// 	"autorun": [
-		// 		"load"
-		// 	]
-		// },
+		{
+			"type": "gdb",
+			"request": "attach",
+			"name": "... RV Dashboard (Debug)",
+			"executable": "${workspaceRoot}/build/rv/DebugStatic/Dashboard",
+			"target": ":12345",
+			"remote": true,
+			"cwd": "${workspaceRoot}",
+			"gdbpath": "/opt/riscv/bin/riscv32-unknown-elf-gdb",
+			"autorun": [
+				"load"
+			]
+		},
+		{
+			"type": "gdb",
+			"request": "attach",
+			"name": "... RV Dashboard (Release)",
+			"executable": "${workspaceRoot}/build/rv/ReleaseStatic/Dashboard",
+			"target": ":12345",
+			"remote": true,
+			"cwd": "${workspaceRoot}",
+			"gdbpath": "/opt/riscv/bin/riscv32-unknown-elf-gdb",
+			"autorun": [
+				"load"
+			]
+		},
+
+		{
+			"type": "gdb",
+			"request": "attach",
+			"name": "... RV NES (Debug)",
+			"executable": "${workspaceRoot}/build/rv/DebugStatic/SimpleNES",
+			"target": ":12345",
+			"remote": true,
+			"cwd": "${workspaceRoot}",
+			"gdbpath": "/opt/riscv/bin/riscv32-unknown-elf-gdb",
+			"autorun": [
+				"load"
+			]
+		},
+		{
+			"type": "gdb",
+			"request": "attach",
+			"name": "... RV NES (Release)",
+			"executable": "${workspaceRoot}/build/rv/ReleaseStatic/SimpleNES",
+			"target": ":12345",
+			"remote": true,
+			"cwd": "${workspaceRoot}",
+			"gdbpath": "/opt/riscv/bin/riscv32-unknown-elf-gdb",
+			"autorun": [
+				"load"
+			]
+		},
+
 	],
 	"compounds": [
 		{
@@ -239,5 +280,39 @@
 			],
 			"stopAll": true
 		},
+
+		{
+			"name": "Dashboard (Debug)",
+			"configurations": [
+				"... Emulator HL",
+				"... RV Dashboard (Debug)"
+			],
+			"stopAll": true
+		},
+		{
+			"name": "Dashboard (Release)",
+			"configurations": [
+				"... Emulator HL",
+				"... RV Dashboard (Release)"
+			],
+			"stopAll": true
+		},		
+
+		{
+			"name": "NES (Debug)",
+			"configurations": [
+				"... Emulator HL",
+				"... RV NES (Debug)"
+			],
+			"stopAll": true
+		},
+		{
+			"name": "NES (Release)",
+			"configurations": [
+				"... Emulator HL",
+				"... RV NES (Release)"
+			],
+			"stopAll": true
+		},		
 	]
 }
