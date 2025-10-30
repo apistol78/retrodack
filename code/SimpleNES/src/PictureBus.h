@@ -52,6 +52,10 @@ private:
     Byte m_palette[0x20];
     Byte m_RAM[0x800];
     Mapper* m_mapper;
+
+    using readCHR_fn = Byte(*)(Mapper*, Address);
+
+    readCHR_fn m_mapperReadCHR;
 };
 
 }

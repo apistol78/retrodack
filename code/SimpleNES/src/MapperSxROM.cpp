@@ -45,7 +45,7 @@ Byte MapperSxROM::readPRG(Address addr) const
         return *(m_secondBankPRG + (addr & 0x3fff));
 }
 
-NameTableMirroring MapperSxROM::getNameTableMirroring()
+NameTableMirroring MapperSxROM::getNameTableMirroring() const
 {
     return m_mirroing;
 }

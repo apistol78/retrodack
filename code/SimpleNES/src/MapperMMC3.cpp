@@ -219,7 +219,7 @@ void MapperMMC3::scanlineIRQ()
     }
 }
 
-NameTableMirroring MapperMMC3::getNameTableMirroring()
+NameTableMirroring MapperMMC3::getNameTableMirroring() const
 {
     return m_mirroring;
 }

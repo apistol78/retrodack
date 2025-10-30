@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <cstring>
 
 #include <Runtime/Video.h>
 
@@ -17,12 +18,13 @@ void VirtualScreen::create(unsigned int w, unsigned int h, float pixel_size, uin
         const uint32_t rgb = (p[3] << 16) | (p[2] << 8) | (p[1] << 0);
         rt_video_set_palette(i, rgb);
     }
+
     m_buffer = (uint8_t*)malloc(360 * 360);
+    memset(m_buffer, 0, 360 * 360);
 }
 
 void VirtualScreen::present()
 {
-    // uint8_t* fb = (uint8_t*)rt_video_get_secondary_target();
     rt_video_blit(m_buffer);
 	rt_video_wait();
 	rt_video_present(0);

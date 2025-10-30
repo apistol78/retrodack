@@ -19,7 +19,7 @@ public:
 
     virtual void writeCHR(Address address, Byte value) override;
 
-    virtual NameTableMirroring getNameTableMirroring() override;
+    virtual NameTableMirroring getNameTableMirroring() const override;
 
 private:
     NameTableMirroring        m_mirroring;

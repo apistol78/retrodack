@@ -34,15 +34,15 @@ void MapperUxROM::writePRG(Address, Byte value)
 
 Byte MapperUxROM::readCHR(Address addr) const
 {
-    if (m_usesCharacterRAM)
+    // if (m_usesCharacterRAM)
         return m_characterRAM[addr];
-    else
-        return m_cartridge.getVROM()[addr];
+    // else
+    //     return m_cartridge.getVROM()[addr];
 }
 
 void MapperUxROM::writeCHR(Address addr, Byte value)
 {
-    if (m_usesCharacterRAM)
+    // if (m_usesCharacterRAM)
         m_characterRAM[addr] = value;
     // else
     //     LOG(Info) << "Read-only CHR memory write attempt at " << std::hex << addr << std::endl;

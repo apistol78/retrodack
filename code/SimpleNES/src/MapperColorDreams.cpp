@@ -25,6 +25,7 @@ void MapperColorDreams::writePRG(Address address, Byte value)
     {
         prgbank = ((value >> 0) & 0x3);
         chrbank = ((value >> 4) & 0xF);
+        m_characterRAMOffset = chrbank * 0x2000;
     }
 }
 
@@ -37,7 +38,7 @@ Byte MapperColorDreams::readCHR(Address address) const
     return 0;
 }
 
-NameTableMirroring MapperColorDreams::getNameTableMirroring()
+NameTableMirroring MapperColorDreams::getNameTableMirroring() const
 {
     return m_mirroring;
 }

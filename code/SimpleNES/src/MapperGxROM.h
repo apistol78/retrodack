@@ -8,7 +8,7 @@ class MapperGxROM final : public Mapper
 public:
     MapperGxROM(Cartridge& cart, std::function<void(void)> mirroring_cb);
 
-    virtual NameTableMirroring getNameTableMirroring() override;
+    virtual NameTableMirroring getNameTableMirroring() const override;
 
     virtual Byte readPRG(Address address) const override;
     

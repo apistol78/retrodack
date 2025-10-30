@@ -39,7 +39,7 @@ void MapperAxROM::writePRG(Address address, Byte value)
     }
 }
 
-NameTableMirroring MapperAxROM::getNameTableMirroring()
+NameTableMirroring MapperAxROM::getNameTableMirroring() const
 {
     return m_mirroring;
 }

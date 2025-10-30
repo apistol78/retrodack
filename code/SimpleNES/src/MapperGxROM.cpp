@@ -27,6 +27,7 @@ void MapperGxROM::writePRG(Address address, Byte value)
         prgbank     = ((value & 0x30) >> 4);
         chrbank     = (value & 0x3);
         m_mirroring = Vertical;
+        m_characterRAMOffset = chrbank * 0x2000;
     }
     m_mirroringCallback();
 }
@@ -40,7 +41,7 @@ Byte MapperGxROM::readCHR(Address address) const
     return 0;
 }
 
-NameTableMirroring MapperGxROM::getNameTableMirroring()
+NameTableMirroring MapperGxROM::getNameTableMirroring() const
 {
     return m_mirroring;
 }

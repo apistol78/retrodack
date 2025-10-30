@@ -16,7 +16,8 @@ Byte PictureBus::read(Address addr) const
 
     if (addr < 0x2000)
     {
-        return m_mapper->readCHR(addr);
+        // return m_mapper->readCHR(addr);
+        return m_mapper->readCHR_novptr(addr);
     }
     else if (addr <= 0x3eff)
     {
@@ -30,7 +31,8 @@ Byte PictureBus::read(Address addr) const
         }
 
         if (NameTable0 >= sizeof(m_RAM))
-            return m_mapper->readCHR(normalizedAddr);
+            // return m_mapper->readCHR(normalizedAddr);
+            return m_mapper->readCHR_novptr(normalizedAddr);
         else if (normalizedAddr < 0x2400) // NT0
             return m_RAM[NameTable0 + index];
         else if (normalizedAddr < 0x2800) // NT1
@@ -56,7 +58,8 @@ void PictureBus::write(Address addr, Byte value)
 
     if (addr < 0x2000)
     {
-        m_mapper->writeCHR(addr, value);
+        // m_mapper->writeCHR(addr, value);
+        m_mapper->writeCHR_novptr(addr, value);
     }
     else if (addr <= 0x3eff)
     {

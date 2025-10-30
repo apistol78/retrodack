@@ -28,6 +28,7 @@ Byte MapperCNROM::readPRG(Address addr) const
 void MapperCNROM::writePRG(Address, Byte value)
 {
     m_selectCHR = value & 0x3;
+    m_characterRAMOffset = (m_selectCHR << 13);
 }
 
 Byte MapperCNROM::readCHR(Address addr) const

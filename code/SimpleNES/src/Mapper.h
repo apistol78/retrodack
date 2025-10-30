@@ -34,10 +34,7 @@ public:
         GxROM       = 66,
     };
 
-    explicit Mapper(Cartridge& cart, Type t)
-      : m_cartridge(cart)
-      , m_type(t)
-    {}
+    explicit Mapper(Cartridge& cart, Type t);
 
     virtual ~Mapper() = default;
 
@@ -49,7 +46,7 @@ public:
 
     virtual void writeCHR(Address addr, Byte value) = 0;
 
-    virtual NameTableMirroring getNameTableMirroring();
+    virtual NameTableMirroring getNameTableMirroring() const;
 
     bool inline hasExtendedRAM() { return m_cartridge.hasExtendedRAM(); }
 
@@ -58,9 +55,9 @@ public:
     static std::unique_ptr<Mapper> createMapper(Type mapper_t, Cartridge& cart, IRQHandle& irq, std::function<void(void)> mirroring_cb);
 
 
-    Byte readCHR_novptr(Address addr) const { return m_characterRAM[addr]; }
+    Byte readCHR_novptr(Address addr) const { return m_characterRAM[m_characterRAMOffset + addr]; }
 
-    void writeCHR_novptr(Address addr, Byte value) { m_characterRAM[addr] = value; }
+    void writeCHR_novptr(Address addr, Byte value) { m_characterRAM[m_characterRAMOffset + addr] = value; }
 
 
 protected:
@@ -68,6 +65,7 @@ protected:
     Type m_type;
 
     std::vector<Byte> m_characterRAM;
+    Address m_characterRAMOffset = 0;
 };
 
 }

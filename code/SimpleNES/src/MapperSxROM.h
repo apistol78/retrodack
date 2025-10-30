@@ -18,7 +18,7 @@ public:
 
     virtual void writeCHR(Address addr, Byte value) override;
 
-    NameTableMirroring getNameTableMirroring();
+    virtual NameTableMirroring getNameTableMirroring() const override;
 
 private:
     void                      calculatePRGPointers();

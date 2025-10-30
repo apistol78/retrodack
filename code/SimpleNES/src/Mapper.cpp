@@ -10,7 +10,22 @@
 
 namespace sn
 {
-NameTableMirroring Mapper::getNameTableMirroring()
+
+Mapper::Mapper(Cartridge& cart, Type t)
+: m_cartridge(cart)
+, m_type(t)
+{
+    if (cart.getVROM().size() == 0)
+    {
+        m_characterRAM.resize(0x2000);
+    }
+    else
+    {
+        m_characterRAM = m_cartridge.getVROM();
+    }
+}
+
+NameTableMirroring Mapper::getNameTableMirroring() const
 {
     return static_cast<NameTableMirroring>(m_cartridge.getNameTableMirroring());
 }
