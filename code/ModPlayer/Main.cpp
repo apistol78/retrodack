@@ -59,15 +59,12 @@ int main()
 	// xmp_load_module(ctx, "song.mod");
 	xmp_load_module_from_memory(ctx, mod_data, mod_size);
 
-
 	printf("playing...\n");
 	xmp_start_player(ctx, SAMPLE_RATE, 0);
 	xmp_set_player(ctx, XMP_PLAYER_INTERP, XMP_INTERP_LINEAR);
 	//xmp_set_player(ctx, XMP_PLAYER_DSP, 0);
 
 	struct xmp_frame_info fi;
-
-	//rt_kernel_enter_critical();
 
 	uint8_t buffer[64][1024 * 2 * sizeof(int16_t)];
 	int32_t i = 0;

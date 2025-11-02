@@ -236,11 +236,20 @@ int main(int argc, const char** argv)
 
 	VCDTrace vcd;
 	vcd.declare(L"TIMER");
+	vcd.declare(L"INPUT");
+	vcd.declare(L"GPIO");
+	vcd.declare(L"VIDEO");
+	vcd.declare(L"COUNTDOWN", [&](){ return tmr.getCountDown() > 0; });
+	vcd.declare(L"TIP", [&](){
+		const uint32_t mip = cpu->getCSR(MIP);
+		return (mip & 0x80) != 0;
+	});
 
-	tmr.setCallback([&](){ vcd.set(0, true); cpu->interrupt(TIMER); });
-	tb.setCallback([&](){ plic.raise(0); }); // Input interrupt
-	gpio.setCallback([&](){ plic.raise(0); }); // GPIO interrupt
-	video.setCallback([&]() { plic.raise(2); }); // Video interrupt
+	// Setup PLIC interrupts.
+	tmr.setCallback([&](){ vcd.toggle(0); cpu->interrupt(TIMER); });
+	tb.setCallback([&](){ vcd.toggle(1); plic.raise(0); }); // Input interrupt
+	gpio.setCallback([&](){ vcd.toggle(2); plic.raise(0); }); // GPIO interrupt
+	video.setCallback([&]() { vcd.toggle(3); plic.raise(2); }); // Video interrupt
 	// usb.setCallback([&]() { plic.raise(3); }); // USB interrupt
 
 	if (cmdLine.hasOption(L'e', L"elf"))
@@ -277,7 +286,7 @@ int main(int argc, const char** argv)
 
 	// Create user interface.
 	Ref< ui::Form > form = new ui::Form();
-	form->create(L"RetroDACK", 220_ut, 220_ut, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,70%,10%,10%", 0_ut, 0_ut));
+	form->create(L"RetroDACK", 220_ut, 220_ut, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%", 0_ut, 0_ut));
 	form->addEventHandler< ui::CloseEvent >([&](ui::CloseEvent* event) {
 		g_going = false;
 		event->consume();
@@ -297,12 +306,6 @@ int main(int argc, const char** argv)
 	Ref< ui::Image > image = new ui::Image();
 	image->create(container, uiImage, ui::Image::WsScale | ui::Image::WsNearestFilter);
 
-	Ref< SignalView > signalViews[2];
-	signalViews[0] = new SignalView();
-	signalViews[0]->create(form, 0);
-	signalViews[1] = new SignalView();
-	signalViews[1]->create(form, 0);
-	
 	form->update();
 	form->show();
 
@@ -416,8 +419,7 @@ int main(int argc, const char** argv)
 		traktor::Timer timer;
 		while(!threadCpu->stopped())
 		{
-			// vcd.tick();
-			// vcd.set(0, false);
+			vcd.tick();
 
 			if (gdbServer)
 			{
@@ -478,11 +480,6 @@ int main(int argc, const char** argv)
 				profiler->record(cpu->getPC());
 				timer.reset();
 			}
-
-			const uint32_t df = dma0.readU32(12);
-
-			signalViews[0]->set(0, (df & 1) ? 1 : 0);
-			signalViews[1]->set(0, (df & 2) ? 1 : 0);
 		}
 	});
 	threadCpu->start();
@@ -490,12 +487,15 @@ int main(int argc, const char** argv)
 	traktor::Timer timer;
 	double lastVideoT = 0.0;
 	double lastStatus = 0.0;
+
 	while (g_going && !threadCpu->wait(0))
 	{
 		if (!ui::Application::getInstance()->process())
 			break;
 
-		if ((timer.getElapsedTime() - lastVideoT) > 1.0f / 60.0f)
+		if (
+			(timer.getElapsedTime() - lastVideoT) > 1.0f / 60.0f
+		)
 		{
 			drawing::Image* videoImage = video.getImage();
 			if (videoImage)
@@ -515,14 +515,6 @@ int main(int argc, const char** argv)
 			}
 			lastVideoT = timer.getElapsedTime();
 		}
-
-		if ((timer.getElapsedTime() - lastStatus) > 1.0f / 120.0f)
-		{
-			signalViews[0]->update();
-			signalViews[1]->update();
-
-			lastStatus = timer.getElapsedTime();
-		}			
 	}
 
 	threadCpu->stop();
@@ -536,12 +528,10 @@ int main(int argc, const char** argv)
 
 	profiler = nullptr;
 
-	/*
 	Ref< IStream > fs = FileSystem::getInstance().open(L"Emulator.vcd", File::FmWrite);
 	FileOutputStream fos(fs, new Utf8Encoding());
 	vcd.dump(fos);
 	fos.close();
-	*/
 
 	return 0;
 }

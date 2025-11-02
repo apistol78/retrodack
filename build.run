@@ -136,7 +136,8 @@ local function buildRV()
 	-- run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Dashboard", "build/rv/ReleaseStatic/Dashboard.dump")
 	-- run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Doom", "build/rv/ReleaseStatic/Doom.dump")
 	-- run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/ScummRV", "build/rv/ReleaseStatic/ScummRV.dump")
-	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/ModPlayer", "build/rv/ReleaseStatic/ModPlayer.dump")
+	-- run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/ModPlayer", "build/rv/ReleaseStatic/ModPlayer.dump")
+	-- run:execute("riscv32-unknown-elf-objdump -S -D build/rv/ReleaseStatic/SimpleNES", "build/rv/ReleaseStatic/SimpleNES.dump")
 
 	return true
 end
