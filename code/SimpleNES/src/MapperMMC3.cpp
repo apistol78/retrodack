@@ -1,3 +1,4 @@
+#include <cstdio>
 #include "MapperMMC3.h"
 
 namespace sn
@@ -30,6 +31,8 @@ MapperMMC3::MapperMMC3(Cartridge& cart, IRQHandle& irq, std::function<void(void)
     }
     m_chrBanks[0] = cart.getVROM().size() - 0x800;
     m_chrBanks[3] = cart.getVROM().size() - 0x800;
+
+    printf("MapperMMC3 initialized.\n");
 }
 
 Byte MapperMMC3::readPRG(Address addr) const

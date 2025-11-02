@@ -15,7 +15,7 @@
 #include <HAL/DMA.h>
 #include <HAL/Timer.h>
 
-#define DMA_CHANNEL 0
+#define DMA_CHANNEL DMA_0_BASE
 #define TLV320_ADDR 0x18
 
 static uint32_t s_dma_tag = 0;

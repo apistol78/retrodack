@@ -42,7 +42,7 @@ Byte PictureBus::read(Address addr) const
         else /* if (normalizedAddr < 0x3000)*/ // NT3
             return m_RAM[NameTable3 + index];
     }
-    else if (addr <= 0x3fff)
+    else /*if (addr <= 0x3fff)*/
     {
         const Address paletteAddr = addr & 0x1f;
         return readPalette(paletteAddr);

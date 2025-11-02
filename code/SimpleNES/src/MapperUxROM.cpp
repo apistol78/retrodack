@@ -1,3 +1,4 @@
+#include <cstdio>
 #include "MapperUxROM.h"
 
 namespace sn
@@ -17,6 +18,8 @@ MapperUxROM::MapperUxROM(Cartridge& cart)
         m_usesCharacterRAM = false;
 
     m_lastBankPtr = &cart.getROM()[cart.getROM().size() - 0x4000]; // last - 16KB
+
+    printf("MapperUxROM initialized.\n");
 }
 
 Byte MapperUxROM::readPRG(Address addr) const

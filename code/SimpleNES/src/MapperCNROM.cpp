@@ -1,3 +1,4 @@
+#include <cstdio>
 #include "MapperCNROM.h"
 
 namespace sn
@@ -15,6 +16,7 @@ MapperCNROM::MapperCNROM(Cartridge& cart)
     {
         m_oneBank = false;
     }
+    printf("MapperCNROM initialized.\n");
 }
 
 Byte MapperCNROM::readPRG(Address addr) const

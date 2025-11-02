@@ -1,3 +1,4 @@
+#include <cstdio>
 #include "MapperColorDreams.h"
 
 namespace sn
@@ -8,6 +9,7 @@ MapperColorDreams::MapperColorDreams(Cartridge& cart, std::function<void(void)> 
   , m_mirroring(Vertical)
   , m_mirroringCallback(mirroring_cb)
 {
+    printf("MapperColorDreams initialized.\n");
 }
 
 Byte MapperColorDreams::readPRG(Address address) const

@@ -28,7 +28,7 @@ int main()
 
 
 	printf("reading mod file...\n");
-	if (!(file = fopen("2nd_pm.s3m", "rb")))
+	if (!(file = fopen("song.mod", "rb")))
 	{
 		//printf("error: can't open '%s' for reading\n", argv[1]);
 		return -1;
@@ -62,47 +62,22 @@ int main()
 
 	printf("playing...\n");
 	xmp_start_player(ctx, SAMPLE_RATE, 0);
-	xmp_set_player(ctx, XMP_PLAYER_INTERP, XMP_INTERP_NEAREST);
-	xmp_set_player(ctx, XMP_PLAYER_DSP, 0);
+	xmp_set_player(ctx, XMP_PLAYER_INTERP, XMP_INTERP_LINEAR);
+	//xmp_set_player(ctx, XMP_PLAYER_DSP, 0);
 
 	struct xmp_frame_info fi;
 
-	rt_kernel_enter_critical();
+	//rt_kernel_enter_critical();
 
-
-	
-	uint8_t buffer[256][1024 * 2 * sizeof(int16_t)];
+	uint8_t buffer[64][1024 * 2 * sizeof(int16_t)];
 	int32_t i = 0;
 
 	for (;;)
 	{
-		
-
-		// if (xmp_play_frame(ctx) != 0)
-		// 	break;
-
-		// xmp_get_frame_info(ctx, &fi);
-
-		// rt_audio_wait();
-		// rt_audio_play_stereo(fi.buffer, fi.buffer_size >> 2);
-
-
 		xmp_play_buffer(ctx, buffer[i], 1024 * 2 * sizeof(int16_t), 0);
 		rt_audio_wait();
 		rt_audio_play_stereo(buffer[i], 1024);
-
-		i = (i + 1) & 255;
-
-
-
-		// uint32_t t1 = rt_timer_get_ms();
-		// if ((t1 - t0) > 4000)
-		// {
-		// 	printf("filter %d\n", filter);
-		// 	rt_audio_set_filter(filter);
-		// 	filter = (filter + 1) % 11;
-		// 	t0 = t1;
-		// }
+		i = (i + 1) & 63;
 	}
 
 	return 0;

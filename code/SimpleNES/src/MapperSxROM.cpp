@@ -1,3 +1,4 @@
+#include <cstdio>
 #include "MapperSxROM.h"
 
 namespace sn
@@ -35,6 +36,8 @@ MapperSxROM::MapperSxROM(Cartridge& cart, std::function<void(void)> mirroring_cb
 
     m_firstBankPRG  = &cart.getROM()[0];                                               // first bank
     m_secondBankPRG = &cart.getROM()[cart.getROM().size() - 0x4000 /*0x2000 * 0x0e*/]; // last bank
+
+    printf("MapperSxROM initialized.\n");
 }
 
 Byte MapperSxROM::readPRG(Address addr) const

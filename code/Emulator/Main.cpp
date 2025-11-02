@@ -68,6 +68,7 @@
 #include "Emulator/GPIOExtender.h"
 #include "Emulator/LoadELF.h"
 #include "Emulator/LoadHEX.h"
+#include "Emulator/Profiler.h"
 #include "Emulator/SignalView.h"
 #include "Emulator/TrackBallDevice.h"
 
@@ -170,7 +171,7 @@ int main(int argc, const char** argv)
 	bus.map(0x30000000, 0x30000100, false, true, &i2c);
 	bus.map(0x40000000, 0x40000100, false, true, &sd);
 	bus.map(0x50000000, 0x50000100, false, true, &tmr);
-	bus.map(0x60000000, 0x60000100, false, true, &audio);
+	bus.map(0x60000000, 0x60000100, false, false, &audio);
 	bus.map(0x70000000, 0x70ffffff, false, true, &plic);
 	bus.map(0x80000000, 0x81000000, false, true, &video);
 	bus.map(0x90000000, 0x90000100, false, true, &dma0);
@@ -261,6 +262,10 @@ int main(int argc, const char** argv)
 	// Create user interface.
 	Ref< ui::Form > form = new ui::Form();
 	form->create(L"RetroDACK", 220_ut, 220_ut, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"70%,10%,10%", 0_ut, 0_ut));
+	form->addEventHandler< ui::CloseEvent >([&](ui::CloseEvent* event) {
+		g_going = false;
+		event->consume();
+	});
 
 	Ref< ui::Bitmap > uiImage = new ui::Bitmap(720, 720);
 
@@ -381,10 +386,12 @@ int main(int argc, const char** argv)
 			os = new FileOutputStream(f, new Utf8Encoding()); 
 	}
 
+	Ref< Profiler > profiler = new Profiler();
+
 	// CPU execution thread.
 	Thread* threadCpu = ThreadManager::getInstance().create([&]()
 	{
-		uint32_t pc = ~0U;
+		traktor::Timer timer;
 		while(!threadCpu->stopped())
 		{
 			// vcd.tick();
@@ -397,11 +404,10 @@ int main(int argc, const char** argv)
 				{
 				case GDBServer::ModeRun:
 					{
-						for (int32_t i = 0; i < 10000; ++i)
+						for (int32_t i = 0; i < 1000; ++i)
 						{
 							if (!cpu->tick(1) || bus.error())
 							{
-								pc = cpu->getPC();
 								gdbServer->setMode(GDBServer::ModeStopped);
 								break;
 							}
@@ -417,16 +423,9 @@ int main(int argc, const char** argv)
 					{
 						if (!cpu->tick(1) || bus.error())
 						{
-							pc = cpu->getPC();
-							gdbServer->setMode(GDBServer::ModeStopped);
-						}
-						if (pc != cpu->getPC())
-						{
-							pc = cpu->getPC();
 							gdbServer->setMode(GDBServer::ModeStopped);
 						}
 						gdbServer->tick();
-						threadCpu->sleep(0);
 					}
 					break;
 
@@ -439,7 +438,7 @@ int main(int argc, const char** argv)
 			}
 			else
 			{
-				if (!cpu->tick(10000) || bus.error())
+				if (!cpu->tick(1000) || bus.error())
 				{
 					cpu->flushCaches();
 
@@ -452,8 +451,16 @@ int main(int argc, const char** argv)
 				}
 			}
 
-			signalViews[0]->set(0, plic.issued(0) ? 1 : 0);
-			signalViews[1]->set(0, plic.issued(1) ? 1 : 0);
+			if (timer.getElapsedTime() > 10.0f / 1000.0f)
+			{
+				profiler->record(cpu->getPC());
+				timer.reset();
+			}
+
+			const uint32_t df = dma0.readU32(12);
+
+			signalViews[0]->set(0, (df & 1) ? 1 : 0);
+			signalViews[1]->set(0, (df & 2) ? 1 : 0);
 		}
 	});
 	threadCpu->start();
@@ -504,6 +511,8 @@ int main(int argc, const char** argv)
 		form->destroy();
 		form = nullptr;
 	}
+
+	profiler = nullptr;
 
 	/*
 	Ref< IStream > fs = FileSystem::getInstance().open(L"Emulator.vcd", File::FmWrite);

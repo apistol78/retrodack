@@ -1,3 +1,4 @@
+#include <cstdio>
 #include "MapperGxROM.h"
 
 namespace sn
@@ -8,6 +9,7 @@ MapperGxROM::MapperGxROM(Cartridge& cart, std::function<void(void)> mirroring_cb
   , m_mirroring(Vertical)
   , m_mirroringCallback(mirroring_cb)
 {
+    printf("MapperGxROM initialized.\n");
 }
 
 Byte MapperGxROM::readPRG(Address address) const

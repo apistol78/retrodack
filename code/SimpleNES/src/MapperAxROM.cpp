@@ -1,3 +1,4 @@
+#include <cstdio>
 #include "MapperAxROM.h"
 
 namespace sn
@@ -18,6 +19,7 @@ MapperAxROM::MapperAxROM(Cartridge& cart, std::function<void(void)> mirroring_cb
         m_characterRAM.resize(0x2000);
         // LOG(Info) << "Uses Character RAM OK" << std::endl;
     }
+    printf("MapperAxROM initialized.\n");
 }
 
 Byte MapperAxROM::readPRG(Address address) const

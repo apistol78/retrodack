@@ -68,8 +68,7 @@ void PPU::step(int nsteps)
                 m_dataAddress &= ~0x7be0;                // Unset bits related to horizontal
                 m_dataAddress |= m_tempAddress & 0x7be0; // Copy
             }
-            //                 if (m_cycle > 257 && m_cycle < 320)
-            //                     m_spriteDataAddress = 0;
+
             // if rendering is on, every other frame is one cycle shorter
             if (m_cycle >= ScanlineEndCycle - (!m_evenFrame && m_showBackground && m_showSprites))
             {
@@ -98,17 +97,16 @@ void PPU::step(int nsteps)
 
                 if (m_showBackground)
                 {
-                    auto x_fine = (m_fineXScroll + x) % 8;
+                    const Byte x_fine = (m_fineXScroll + x) & 7;
                     if (!m_hideEdgeBackground || x >= 8)
                     {
                         // fetch tile
                         Address addr = 0x2000 | (m_dataAddress & 0x0FFF); // mask off fine y
-                        // auto addr = 0x2000 + x / 8 + (y / 8) * (ScanlineVisibleDots / 8);
                         const Byte tile = m_bus.read_2000_2fff(addr);
 
                         // fetch pattern
                         // Each pattern occupies 16 bytes, so multiply by 16
-                        addr = (tile * 16) + ((m_dataAddress >> 12 /*y % 8*/) & 0x7); // Add fine y
+                        addr = (tile * 16) + ((m_dataAddress >> 12) & 0x7); // Add fine y
                         addr |= m_bgPage << 12; // set whether the pattern is in the high or low page
                         
                         // Get the corresponding bit determined by (8 - x_fine) from the right
