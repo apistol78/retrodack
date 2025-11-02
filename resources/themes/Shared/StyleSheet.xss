@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<object type="traktor.ui.StyleSheet" version="3">
+	<include/>
+	<entities/>
+	<palette/>
+	<values>
+		<item>
+			<first>Emulator.Path</first>
+			<second>resources/themes/Shared/Images</second>
+		</item>
+		<item>
+			<first>Emulator.Play</first>
+			<second>$(Emulator.Path)/Play.svg</second>
+		</item>
+	</values>
+</object>

@@ -34,7 +34,13 @@
 #include <Ui/Form.h>
 #include <Ui/FloodLayout.h>
 #include <Ui/TableLayout.h>
+#include <Ui/StyleBitmap.h>
+#include <Ui/StyleSheet.h>
 #include <Ui/StatusBar/StatusBar.h>
+#include <Ui/ToolBar/ToolBar.h>
+#include <Ui/ToolBar/ToolBarButton.h>
+#include <Ui/ToolBar/ToolBarButtonClickEvent.h>
+
 #if defined(_WIN32)
 #	include <Ui/Win32/WidgetFactoryWin32.h>
 #elif defined(__APPLE__)
@@ -132,6 +138,16 @@ int main(int argc, const char** argv)
 		nullptr
 	);
 #endif
+
+	Ref< const ui::StyleSheet > styleSheet = ui::StyleSheet::load(L"resources/themes/Shared/StyleSheet.xss");
+	if (!styleSheet)
+	{
+		log::error << L"Unable to load stylesheet." << Endl;
+		return 1;
+	}
+
+	// Append our styles into current.
+	ui::Application::getInstance()->appendStyleSheet(styleSheet);
 
 	// Create file system from files.
 	Ref< FileSystemImage > fsi = FileSystemImage::createFromDirectory(L"fs");
@@ -261,11 +277,17 @@ int main(int argc, const char** argv)
 
 	// Create user interface.
 	Ref< ui::Form > form = new ui::Form();
-	form->create(L"RetroDACK", 220_ut, 220_ut, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"70%,10%,10%", 0_ut, 0_ut));
+	form->create(L"RetroDACK", 220_ut, 220_ut, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,70%,10%,10%", 0_ut, 0_ut));
 	form->addEventHandler< ui::CloseEvent >([&](ui::CloseEvent* event) {
 		g_going = false;
 		event->consume();
 	});
+
+	Ref< ui::ToolBar > toolBar = new ui::ToolBar();
+	toolBar->create(form, ui::WsNone);
+	toolBar->addImage(new ui::StyleBitmap(L"Emulator.Play"));
+	toolBar->addItem(new ui::ToolBarButton(L"Continue", 0, ui::Command(L"Emulator.Continue")));
+	toolBar->addItem(new ui::ToolBarButton(L"Pause", 0, ui::Command(L"Emulator.Pause")));
 
 	Ref< ui::Bitmap > uiImage = new ui::Bitmap(720, 720);
 
