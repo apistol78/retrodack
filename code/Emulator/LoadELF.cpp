@@ -116,7 +116,7 @@ bool loadELF(const std::wstring& fileName, ICPU& cpu, Bus& bus)
 			const uint32_t addr = phdr[i].p_paddr;
 			for (uint32_t j = 0; j < phdr[i].p_filesz; j += 4)
 			{
-				bus.writeU32(addr + j, *(const uint32_t*)(pbits + j));
+				bus.writeU32(addr + j, *(const uint32_t*)(pbits + j), ~0U);
 				if (bus.error())
 					return false;
 			}
