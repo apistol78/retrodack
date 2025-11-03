@@ -114,6 +114,7 @@ module RetroDACK(
 	wire [31:0] cpu_dbus_address;
 	wire [31:0] cpu_dbus_rdata;
 	wire [31:0] cpu_dbus_wdata;
+	wire [3:0] cpu_dbus_wmask;
 	wire cpu_fault;
 
 	CPU #(
@@ -145,6 +146,7 @@ module RetroDACK(
 		.o_dbus_address(cpu_dbus_address),
 		.i_dbus_rdata(cpu_dbus_rdata),
 		.o_dbus_wdata(cpu_dbus_wdata),
+		.o_dbus_wmask(cpu_dbus_wmask),
 
 		// Debug
 		.o_execute_busy(),
@@ -187,8 +189,9 @@ module RetroDACK(
 	wire sdram_request;
 	wire sdram_rw;
 	wire [31:0] sdram_address;
-	wire [31:0] sdram_wdata;
 	wire [31:0] sdram_rdata;
+	wire [31:0] sdram_wdata;
+	wire [3:0] sdram_wmask;
 	wire sdram_ready;
 
 	bit [15:0] it_sdram_data_r;
@@ -210,6 +213,7 @@ module RetroDACK(
 	    .i_rw(sdram_rw),
 	    .i_address(sdram_address),
 	    .i_wdata(sdram_wdata),
+		.i_wmask(sdram_wmask),
 	    .o_rdata(sdram_rdata),
 	    .o_ready(sdram_ready),
 
@@ -822,6 +826,7 @@ module RetroDACK(
 		.i_m0_address(cpu_ibus_address),
 		.o_m0_rdata(cpu_ibus_rdata),
 		.i_m0_wdata(32'h0),
+		.i_m0_wmask(4'h0),
 
 		// CPU data bus
 		.i_m1_rw(cpu_dbus_rw),
@@ -830,6 +835,7 @@ module RetroDACK(
 		.i_m1_address(cpu_dbus_address),
 		.o_m1_rdata(cpu_dbus_rdata),
 		.i_m1_wdata(cpu_dbus_wdata),
+		.i_m1_wmask(cpu_dbus_wmask),
 
 		// DMA channel 0
 		.i_m2_rw(dma_0_bus_rw),
@@ -837,7 +843,8 @@ module RetroDACK(
 		.o_m2_ready(dma_0_bus_ready),
 		.i_m2_address(dma_0_bus_address),
 		.o_m2_rdata(dma_0_bus_rdata),
-		.i_m2_wdata(dma_0_bus_wdata),	
+		.i_m2_wdata(dma_0_bus_wdata),
+		.i_m2_wmask(4'b1111),
 
 		// DMA channel 1
 		.i_m3_rw(dma_1_bus_rw),
@@ -845,7 +852,8 @@ module RetroDACK(
 		.o_m3_ready(dma_1_bus_ready),
 		.i_m3_address(dma_1_bus_address),
 		.o_m3_rdata(dma_1_bus_rdata),
-		.i_m3_wdata(dma_1_bus_wdata),	
+		.i_m3_wdata(dma_1_bus_wdata),
+		.i_m3_wmask(4'b1111),
 
 		//
 
@@ -856,6 +864,7 @@ module RetroDACK(
 		.o_s0_address(spif_address),
 		.i_s0_rdata(spif_rdata),
 		.o_s0_wdata(),
+		.o_s0_wmask(),
 
 		// 32'h1xxx_xxxx : SDRAM
 		.o_s1_rw(sdram_rw),
@@ -864,6 +873,7 @@ module RetroDACK(
 		.o_s1_address(sdram_address),
 		.i_s1_rdata(sdram_rdata),
 		.o_s1_wdata(sdram_wdata),
+		.o_s1_wmask(sdram_wmask),
 
 		// 32'h2xxx_xxxx : UART
 		.o_s2_rw(uart_rw),
@@ -872,6 +882,7 @@ module RetroDACK(
 		.o_s2_address(uart_address),
 		.i_s2_rdata(uart_rdata),
 		.o_s2_wdata(uart_wdata),
+		.o_s2_wmask(),
 
 		// 32'h3xxx_xxxx : I2C
 		.o_s3_rw(i2c_rw),
@@ -880,6 +891,7 @@ module RetroDACK(
 		.o_s3_address(i2c_address),
 		.i_s3_rdata(i2c_rdata),
 		.o_s3_wdata(i2c_wdata),
+		.o_s3_wmask(),
 
 		// 32'h4xxx_xxxx : SD
 		.o_s4_rw(sd_rw),
@@ -888,6 +900,7 @@ module RetroDACK(
 		.o_s4_address(sd_address),
 		.i_s4_rdata(sd_rdata),
 		.o_s4_wdata(sd_wdata),
+		.o_s4_wmask(),
 
 		// 32'h5xxx_xxxx : Timer
 		.o_s5_rw(timer_rw),
@@ -896,6 +909,7 @@ module RetroDACK(
 		.o_s5_address(timer_address),
 		.i_s5_rdata(timer_rdata),
 		.o_s5_wdata(timer_wdata),
+		.o_s5_wmask(),
 
 		// 32'h6xxx_xxxx : Audio
 		.o_s6_rw(audio_rw),
@@ -904,6 +918,7 @@ module RetroDACK(
 		.o_s6_address(audio_address),
 		.i_s6_rdata(audio_rdata),
 		.o_s6_wdata(audio_wdata),
+		.o_s6_wmask(),
 
 		// 32'h7xxx_xxxx : PLIC
 		.o_s7_rw(plic_rw),
@@ -912,6 +927,7 @@ module RetroDACK(
 		.o_s7_address(plic_address),
 		.i_s7_rdata(plic_rdata),
 		.o_s7_wdata(plic_wdata),
+		.o_s7_wmask(),
 
 		// 32'h8xxx_xxxx : Video
 		.o_s8_rw(video_rw),
@@ -920,6 +936,7 @@ module RetroDACK(
 		.o_s8_address(video_address),
 		.i_s8_rdata(video_rdata),
 		.o_s8_wdata(video_wdata),
+		.o_s8_wmask(),
 
 		// 32'h9xxx_xxxx : DMA 0
 		.o_s9_rw(dma_0_rw),
@@ -928,6 +945,7 @@ module RetroDACK(
 		.o_s9_address(dma_0_address),
 		.i_s9_rdata(dma_0_rdata),
 		.o_s9_wdata(dma_0_wdata),
+		.o_s9_wmask(),
 
 		// 32'haxxx_xxxx : DMA 1
 		.o_s10_rw(dma_1_rw),
@@ -936,6 +954,7 @@ module RetroDACK(
 		.o_s10_address(dma_1_address),
 		.i_s10_rdata(dma_1_rdata),
 		.o_s10_wdata(dma_1_wdata),
+		.o_s10_wmask(),
 
 		// 32'hbxxx_xxxx : Sprites
 		.o_s11_rw(),
@@ -944,6 +963,7 @@ module RetroDACK(
 		.o_s11_address(video_sprite_address),
 		.i_s11_rdata(32'h0),
 		.o_s11_wdata(video_sprite_wdata),
+		.o_s11_wmask(),
 
 		// 32'hcxxx_xxxx : SPI
 		.o_s12_rw(spi_rw),
@@ -951,7 +971,8 @@ module RetroDACK(
 		.i_s12_ready(spi_ready),
 		.o_s12_address(spi_address),
 		.i_s12_rdata(spi_rdata),
-		.o_s12_wdata(spi_wdata)
+		.o_s12_wdata(spi_wdata),
+		.o_s12_wmask()
 	);
 
 
