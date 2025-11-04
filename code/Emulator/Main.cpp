@@ -195,13 +195,7 @@ int main(int argc, const char** argv)
 	bus.map(0xb0000000, 0xb0010000, false, false, &sprite);
 	bus.map(0xc0000000, 0xc0010000, false, false, &spi);
 
-	Ref< OutputStream > os = nullptr;	
-	if (cmdLine.hasOption(L't', L"trace"))
-	{
-		Ref< traktor::IStream > f = FileSystem::getInstance().open(L"CPU.trace", File::FmWrite);
-		if (f)
-			os = new FileOutputStream(f, new Utf8Encoding());
-	}
+	Ref< OutputStream > os;
 
 	Ref< ICPU > cpu;
 	std::wstring trace;
@@ -225,31 +219,32 @@ int main(int argc, const char** argv)
 	}
 
 	// Create GDB server.
-	Ref< GDBServer > gdbServer;
-	if (cmdLine.hasOption(L"gdb"))
-	{
-		gdbServer = new GDBServer(cpu, &bus);
-		gdbServer->create();
-	}
+	Ref< GDBServer > gdbServer = new GDBServer(cpu, &bus);
+	gdbServer->create();
 
 	cpu->setSP(0x12000000 - 4);
 
-	VCDTrace vcd;
-	vcd.declare(L"TIMER");
-	vcd.declare(L"INPUT");
-	vcd.declare(L"GPIO");
-	vcd.declare(L"VIDEO");
-	vcd.declare(L"COUNTDOWN", [&](){ return tmr.getCountDown() > 0; });
-	vcd.declare(L"TIP", [&](){
-		const uint32_t mip = cpu->getCSR(MIP);
-		return (mip & 0x80) != 0;
-	});
+	// Create VCD trace.
+	Ref< VCDTrace > vcd;
+	if (cmdLine.hasOption(L"vcd"))
+	{
+		vcd = new VCDTrace();
+		vcd->declare(L"TIMER");
+		vcd->declare(L"INPUT");
+		vcd->declare(L"GPIO");
+		vcd->declare(L"VIDEO");
+		vcd->declare(L"COUNTDOWN", [&](){ return tmr.getCountDown() > 0; });
+		vcd->declare(L"TIP", [&](){
+			const uint32_t mip = cpu->getCSR(MIP);
+			return (mip & 0x80) != 0;
+		});
+	}
 
 	// Setup PLIC interrupts.
-	tmr.setCallback([&](){ vcd.toggle(0); cpu->interrupt(TIMER); });
-	tb.setCallback([&](){ vcd.toggle(1); plic.raise(0); }); // Input interrupt
-	gpio.setCallback([&](){ vcd.toggle(2); plic.raise(0); }); // GPIO interrupt
-	video.setCallback([&]() { vcd.toggle(3); plic.raise(2); }); // Video interrupt
+	tmr.setCallback([&](){ if (vcd) { vcd->toggle(0); } cpu->interrupt(TIMER); });
+	tb.setCallback([&](){ if (vcd) { vcd->toggle(1); } plic.raise(0); }); // Input interrupt
+	gpio.setCallback([&](){ if (vcd) { vcd->toggle(2); } plic.raise(0); }); // GPIO interrupt
+	video.setCallback([&]() { if (vcd) { vcd->toggle(3); } plic.raise(2); }); // Video interrupt
 	// usb.setCallback([&]() { plic.raise(3); }); // USB interrupt
 
 	if (cmdLine.hasOption(L'e', L"elf"))
@@ -297,6 +292,18 @@ int main(int argc, const char** argv)
 	toolBar->addImage(new ui::StyleBitmap(L"Emulator.Play"));
 	toolBar->addItem(new ui::ToolBarButton(L"Continue", 0, ui::Command(L"Emulator.Continue")));
 	toolBar->addItem(new ui::ToolBarButton(L"Pause", 0, ui::Command(L"Emulator.Pause")));
+	toolBar->addEventHandler< ui::ToolBarButtonClickEvent >([&](ui::ToolBarButtonClickEvent* event)
+	{
+		const std::wstring cmd = event->getCommand().getName();
+		if (cmd == L"Emulator.Continue")
+		{
+			gdbServer->setMode(GDBServer::ModeRun);
+		}
+		else if (cmd == L"Emulator.Pause")
+		{
+			gdbServer->setMode(GDBServer::ModeStopped);
+		}
+	});
 
 	Ref< ui::Bitmap > uiImage = new ui::Bitmap(720, 720);
 
@@ -419,60 +426,44 @@ int main(int argc, const char** argv)
 		traktor::Timer timer;
 		while(!threadCpu->stopped())
 		{
-			vcd.tick();
+			if (vcd)
+				vcd->tick();
 
-			if (gdbServer)
+			gdbServer->process();
+			switch (gdbServer->getMode())
 			{
-				gdbServer->process();
-				switch (gdbServer->getMode())
+			case GDBServer::ModeRun:
 				{
-				case GDBServer::ModeRun:
-					{
-						for (int32_t i = 0; i < 1000; ++i)
-						{
-							if (!cpu->tick(1) || bus.error())
-							{
-								gdbServer->setMode(GDBServer::ModeStopped);
-								break;
-							}
-
-							gdbServer->tick();
-							if (gdbServer->getMode() != GDBServer::ModeRun)
-								break;
-						}
-					}
-					break;
-
-				case GDBServer::ModeStep:
+					for (int32_t i = 0; i < 1000; ++i)
 					{
 						if (!cpu->tick(1) || bus.error())
 						{
 							gdbServer->setMode(GDBServer::ModeStopped);
+							break;
 						}
+
 						gdbServer->tick();
+						if (gdbServer->getMode() != GDBServer::ModeRun)
+							break;
 					}
-					break;
-
-				case GDBServer::ModeStopped:
-				case GDBServer::ModeKilled:
-				default:
-					threadCpu->sleep(0);
-					break;
 				}
-			}
-			else
-			{
-				if (!cpu->tick(1000) || bus.error())
+				break;
+
+			case GDBServer::ModeStep:
 				{
-					cpu->flushCaches();
-
-					log::error << L"CPU tick failed at PC " << str(L"%08x", cpu->getPC()) << Endl;
-					log::error << str(L"%-5S", L"PC") << L" : " << str(L"%08x", cpu->getPC()) << Endl;
-					log::error << L"---" << Endl;
-					for (uint32_t i = 0; i < 32; ++i)
-						log::error << str(L"%-5S", getRegisterName(i)) << L" : " << str(L"%08x", cpu->getRegister(i)) << Endl;
-					break;
+					if (!cpu->tick(1) || bus.error())
+					{
+						gdbServer->setMode(GDBServer::ModeStopped);
+					}
+					gdbServer->tick();
 				}
+				break;
+
+			case GDBServer::ModeStopped:
+			case GDBServer::ModeKilled:
+			default:
+				threadCpu->sleep(0);
+				break;
 			}
 
 			if (timer.getElapsedTime() > 10.0f / 1000.0f)
@@ -486,7 +477,6 @@ int main(int argc, const char** argv)
 
 	traktor::Timer timer;
 	double lastVideoT = 0.0;
-	double lastStatus = 0.0;
 
 	while (g_going && !threadCpu->wait(0))
 	{
@@ -528,10 +518,13 @@ int main(int argc, const char** argv)
 
 	profiler = nullptr;
 
-	Ref< IStream > fs = FileSystem::getInstance().open(L"Emulator.vcd", File::FmWrite);
-	FileOutputStream fos(fs, new Utf8Encoding());
-	vcd.dump(fos);
-	fos.close();
+	if (vcd)
+	{
+		Ref< IStream > fs = FileSystem::getInstance().open(L"Emulator.vcd", File::FmWrite);
+		FileOutputStream fos(fs, new Utf8Encoding());
+		vcd->dump(fos);
+		fos.close();
+	}
 
 	return 0;
 }
