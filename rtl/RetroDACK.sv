@@ -474,8 +474,9 @@ module RetroDACK(
 	wire video_sram_request;
 	wire video_sram_rw;
 	wire [31:0] video_sram_address;
-	wire [31:0] video_sram_wdata;
 	wire [31:0] video_sram_rdata;
+	wire [31:0] video_sram_wdata;
+	wire [3:0] video_sram_wmask;
 	wire video_sram_ready;
 
 	wire [15:0] video_sram_sram_d_w;
@@ -496,8 +497,9 @@ module RetroDACK(
 		.i_rw(video_sram_rw),
 
 		.i_address(video_sram_address),
-		.i_wdata(video_sram_wdata),
 		.o_rdata(video_sram_rdata),
+		.i_wdata(video_sram_wdata),
+		// .i_wmask(video_sram_wmask),
 		.o_ready(video_sram_ready),
 
 		.SRAM_A(SRAM_A),
@@ -518,14 +520,13 @@ module RetroDACK(
 	wire vram_pa_request;
 	wire vram_pa_rw;
 	wire [31:0] vram_pa_address;
-	wire [31:0] vram_pa_wdata;
 	wire [31:0] vram_pa_rdata;
+	wire [31:0] vram_pa_wdata;
+	wire [3:0] vram_pa_wmask;
 	wire vram_pa_ready;
 
 	wire vram_pb_request;
-	wire vram_pb_rw;
 	wire [31:0] vram_pb_address;
-	wire [31:0] vram_pb_wdata;
 	wire [31:0] vram_pb_rdata;
 	wire vram_pb_ready;
 
@@ -539,6 +540,7 @@ module RetroDACK(
 		.o_bus_address(video_sram_address),
 		.i_bus_rdata(video_sram_rdata),
 		.o_bus_wdata(video_sram_wdata),
+		.o_bus_wmask(video_sram_wmask),
 
 		.i_pa_rw(1'b0),
 		.i_pa_request(1'b0),
@@ -546,14 +548,16 @@ module RetroDACK(
 		.i_pa_address(32'h0),
 		.o_pa_rdata(),
 		.i_pa_wdata(32'h0),
+		.i_pa_wmask(4'h0),
 
 		// Video output access.
-		.i_pb_rw(vram_pb_rw),
+		.i_pb_rw(1'b0),
 		.i_pb_request(vram_pb_request),
 		.o_pb_ready(vram_pb_ready),
 		.i_pb_address(vram_pb_address),
 		.o_pb_rdata(vram_pb_rdata),
-		.i_pb_wdata(vram_pb_wdata),
+		.i_pb_wdata(32'h0),
+		.i_pb_wmask(4'h0),
 
 		// Video CPU access.
 		.i_pc_rw(vram_pa_rw),
@@ -561,7 +565,8 @@ module RetroDACK(
 		.o_pc_ready(vram_pa_ready),
 		.i_pc_address(vram_pa_address),
 		.o_pc_rdata(vram_pa_rdata),
-		.i_pc_wdata(vram_pa_wdata)
+		.i_pc_wdata(vram_pa_wdata),
+		.i_pc_wmask(vram_pa_wmask)
 	);
 
 
@@ -666,8 +671,9 @@ module RetroDACK(
 	wire video_request;
 	wire video_rw;
 	wire [31:0] video_address;
-	wire [31:0] video_wdata;
 	wire [31:0] video_rdata;
+	wire [31:0] video_wdata;
+	wire [3:0] video_wmask;
 	wire video_ready;	
 
 	VIDEO_controller #(
@@ -679,8 +685,9 @@ module RetroDACK(
 		.i_cpu_request(video_request),
 		.i_cpu_rw(video_rw),
 		.i_cpu_address(video_address),
-		.i_cpu_wdata(video_wdata),
 		.o_cpu_rdata(video_rdata),
+		.i_cpu_wdata(video_wdata),
+		.i_cpu_wmask(video_wmask),
 		.o_cpu_ready(video_ready),
 		
 		// Video signal interface.
@@ -694,13 +701,12 @@ module RetroDACK(
 		.o_vram_pa_request(vram_pa_request),
 		.o_vram_pa_rw(vram_pa_rw),
 		.o_vram_pa_address(vram_pa_address),
-		.o_vram_pa_wdata(vram_pa_wdata),
 		.i_vram_pa_rdata(vram_pa_rdata),
+		.o_vram_pa_wdata(vram_pa_wdata),
+		.o_vram_pa_wmask(vram_pa_wmask),
 		.i_vram_pa_ready(vram_pa_ready),
 		.o_vram_pb_request(vram_pb_request),
-		.o_vram_pb_rw(vram_pb_rw),
 		.o_vram_pb_address(vram_pb_address),
-		.o_vram_pb_wdata(vram_pb_wdata),
 		.i_vram_pb_rdata(vram_pb_rdata),
 		.i_vram_pb_ready(vram_pb_ready),
 
@@ -936,7 +942,7 @@ module RetroDACK(
 		.o_s8_address(video_address),
 		.i_s8_rdata(video_rdata),
 		.o_s8_wdata(video_wdata),
-		.o_s8_wmask(),
+		.o_s8_wmask(video_wmask),
 
 		// 32'h9xxx_xxxx : DMA 0
 		.o_s9_rw(dma_0_rw),
