@@ -6,9 +6,34 @@
  License, v. 2.0. If a copy of the MPL was not distributed with this
  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
+#include <stdio.h>
 #include <stdlib.h>
 
+#include "Runtime/File.h"
 #include "Runtime/Graphics.h"
+
+#pragma pack(1)
+struct PCXHeader
+{
+	uint8_t manufacturer;
+	uint8_t version;
+	uint8_t encoding;
+	uint8_t bitsPerPixel;
+	uint16_t xmin;
+	uint16_t ymin;
+	uint16_t xmax;
+	uint16_t ymax;
+	uint16_t vdpi;
+	uint8_t palette[48];
+	uint8_t reserved;
+	uint8_t planes;
+	uint16_t pitch;
+	uint16_t paletteType;
+	uint16_t screenWidth;
+	uint16_t screenHeight;
+	uint8_t dummy[56];
+};
+#pragma pack()
 
 static int32_t min(int32_t a, int32_t b)
 {
@@ -37,7 +62,96 @@ void rt_gfx_destroy_image(rt_gfx_image_t* image)
 	free(image);
 }
 
+rt_gfx_palette_t* rt_gfx_create_palette()
+{
+	rt_gfx_palette_t* palette = (rt_gfx_palette_t*)malloc(sizeof(rt_gfx_palette_t));
+	if (!palette)
+		return 0;
+
+	palette->minIndex = 0;
+	palette->maxIndex = 0;
+	return palette;
+}
+
+void rt_gfx_destroy_palette(rt_gfx_palette_t* palette)
+{
+	free(palette);
+}
+
 rt_gfx_image_t* rt_gfx_load_image(const char* filename)
+{
+	struct PCXHeader hdr;
+
+	const int32_t fd = file_open(filename, FILE_MODE_READ);
+	if (fd <= 0)
+		return 0;
+
+	file_read(fd, &hdr, sizeof(hdr));
+
+	if (hdr.bitsPerPixel != 8)
+		goto cleanup;
+
+	rt_gfx_image_t* image = rt_gfx_create_image(hdr.xmax - hdr.xmin + 1, hdr.ymax - hdr.ymin + 1);
+	if (!image)
+		goto cleanup;
+
+	for (int32_t y = 0; y < image->height; ++y)
+	{
+		uint8_t* scan = &image->pixels[y * image->width];
+
+		int32_t count = 0;
+		uint8_t value = 0;
+
+		int32_t x = image->width;
+		while (x > 0)
+		{
+			uint8_t c;
+			if (file_read(fd, &c, sizeof(uint8_t)) != sizeof(uint8_t))
+			{
+				rt_gfx_destroy_image(image);
+				goto cleanup;
+			}
+			if ((c & 0xc0) == 0xc0)
+			{
+				count = c & 0x3f;
+				if (file_read(fd, &value, sizeof(uint8_t)) != sizeof(uint8_t))
+				{
+					rt_gfx_destroy_image(image);
+					goto cleanup;
+				}
+			}
+			else
+			{
+				count = 1;
+				value = c;
+			}
+
+			if (count > x)
+				count = x;
+
+			x -= count;
+
+			while (count-- > 0)
+				*scan++ = value;
+		}
+	}
+
+	// uint8_t dummy;
+	// if (file_read(fd, &dummy, sizeof(uint8_t)) != sizeof(uint8_t))
+	// {
+	// 	rt_gfx_destroy_image(image);
+	// 	goto cleanup;
+	// }	
+
+	file_close(fd);
+	return image;
+
+cleanup:
+	file_close(fd);
+	return 0;
+}
+
+rt_gfx_palette_t* rt_gfx_load_palette(const char* filename)
 {
 	return 0;
 }
