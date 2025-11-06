@@ -451,11 +451,13 @@ int main(int argc, const char** argv)
 
 			case GDBServer::ModeStep:
 				{
-					if (!cpu->tick(1) || bus.error())
+					const uint32_t fromPC = cpu->getPC();
+					while (cpu->getPC() == fromPC)
 					{
-						gdbServer->setMode(GDBServer::ModeStopped);
+						if (!cpu->tick(1) || bus.error())
+							break;
 					}
-					gdbServer->tick();
+					gdbServer->setMode(GDBServer::ModeStopped);
 				}
 				break;
 
