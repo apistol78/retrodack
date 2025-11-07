@@ -260,6 +260,7 @@ void kickstart_main()
 
 	hal_sprite_set_visible(0, 0xff);
 	hal_sprite_set_bits(0, c_mouseCursor, 32, 32);
+	rt_input_set_hotspot(16, 16);
 
 	int32_t card = SD_RESULT_NO_CARD;
 

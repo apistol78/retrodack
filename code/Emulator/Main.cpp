@@ -192,7 +192,7 @@ int main(int argc, const char** argv)
 	bus.map(0x80000000, 0x81000000, false, true, &video);
 	bus.map(0x90000000, 0x90000100, false, true, &dma0);
 	bus.map(0xa0000000, 0xa0000100, false, true, &dma1);
-	bus.map(0xb0000000, 0xb0010000, false, false, &sprite);
+	bus.map(0xb0000000, 0xb0010000, false, true, &sprite);
 	bus.map(0xc0000000, 0xc0010000, false, false, &spi);
 
 	Ref< OutputStream > os;
@@ -240,11 +240,13 @@ int main(int argc, const char** argv)
 		});
 	}
 
+	bool g_enableInterrupt = true;
+
 	// Setup PLIC interrupts.
-	tmr.setCallback([&](){ if (vcd) { vcd->toggle(0); } cpu->interrupt(TIMER); });
-	tb.setCallback([&](){ if (vcd) { vcd->toggle(1); } plic.raise(0); }); // Input interrupt
-	gpio.setCallback([&](){ if (vcd) { vcd->toggle(2); } plic.raise(0); }); // GPIO interrupt
-	video.setCallback([&]() { if (vcd) { vcd->toggle(3); } plic.raise(2); }); // Video interrupt
+	tmr.setCallback([&](){ if (g_enableInterrupt) { if (vcd) { vcd->toggle(0); } cpu->interrupt(TIMER); } } );
+	tb.setCallback([&](){ if (g_enableInterrupt) { if (vcd) { vcd->toggle(1); } plic.raise(0); } }); // Input interrupt
+	gpio.setCallback([&](){ if (g_enableInterrupt) { if (vcd) { vcd->toggle(2); } plic.raise(0); } }); // GPIO interrupt
+	video.setCallback([&]() { if (g_enableInterrupt) { if (vcd) { vcd->toggle(3); } plic.raise(2); } }); // Video interrupt
 	// usb.setCallback([&]() { plic.raise(3); }); // USB interrupt
 
 	if (cmdLine.hasOption(L'e', L"elf"))
@@ -452,11 +454,13 @@ int main(int argc, const char** argv)
 			case GDBServer::ModeStep:
 				{
 					const uint32_t fromPC = cpu->getPC();
+					g_enableInterrupt = false;
 					while (cpu->getPC() == fromPC)
 					{
 						if (!cpu->tick(1) || bus.error())
 							break;
 					}
+					g_enableInterrupt = true;
 					gdbServer->setMode(GDBServer::ModeStopped);
 				}
 				break;
