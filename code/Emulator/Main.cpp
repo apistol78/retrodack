@@ -23,6 +23,7 @@
 #include <Core/Misc/CommandLine.h>
 #include <Core/Misc/String.h>
 #include <Core/Misc/TString.h>
+#include <Core/System/OS.h>
 #include <Core/Timer/Timer.h>
 #include <Core/Thread/ThreadManager.h>
 #include <Core/Thread/Thread.h>
@@ -139,7 +140,30 @@ int main(int argc, const char** argv)
 	);
 #endif
 
-	Ref< const ui::StyleSheet > styleSheet = ui::StyleSheet::load(L"resources/themes/Shared/StyleSheet.xss");
+	// Check if environment is already set, else set to current working directory.
+	std::wstring home;
+	if (!OS::getInstance().getEnvironment(L"RETRODACK_HOME", home))
+	{
+		const Path executablePath = OS::getInstance().getExecutable().getPathOnly();
+		FileSystem::getInstance().setCurrentVolumeAndDirectory(executablePath);
+
+		while (!FileSystem::getInstance().exist(L"LICENSE.txt"))
+		{
+			const Path cwd = FileSystem::getInstance().getCurrentVolumeAndDirectory();
+			const Path pwd = cwd.getPathOnly();
+			if (cwd == pwd)
+			{
+				log::error << L"No LICENSE.txt file found." << Endl;
+				return 1;
+			}
+			FileSystem::getInstance().setCurrentVolumeAndDirectory(pwd);
+		}
+
+		const Path cwd = FileSystem::getInstance().getCurrentVolumeAndDirectory();
+		OS::getInstance().setEnvironment(L"RETRODACK_HOME", cwd.getPathNameOS());
+	}
+
+	Ref< const ui::StyleSheet > styleSheet = ui::StyleSheet::load(L"$(RETRODACK_HOME)/resources/themes/Shared/StyleSheet.xss");
 	if (!styleSheet)
 	{
 		log::error << L"Unable to load stylesheet." << Endl;
