@@ -79,8 +79,8 @@
 		{
 			"type": "gdb",
 			"request": "attach",
-			"name": "... RV Doom (Debug)",
-			"executable": "${workspaceRoot}/build/rv/DebugStatic/Doom",
+			"name": "... RV Quake (Debug)",
+			"executable": "${workspaceRoot}/build/rv/DebugStatic/Quake",
 			"target": ":12345",
 			"remote": true,
 			"cwd": "${workspaceRoot}",
@@ -92,8 +92,8 @@
 		{
 			"type": "gdb",
 			"request": "attach",
-			"name": "... RV Doom (Release)",
-			"executable": "${workspaceRoot}/build/rv/ReleaseStatic/Doom",
+			"name": "... RV Quake (Release)",
+			"executable": "${workspaceRoot}/build/rv/ReleaseStatic/Quake",
 			"target": ":12345",
 			"remote": true,
 			"cwd": "${workspaceRoot}",
@@ -101,7 +101,7 @@
 			"autorun": [
 				"load"
 			]
-		},		
+		},	
 
 		{
 			"type": "gdb",
@@ -231,18 +231,18 @@
 		},
 
 		{
-			"name": "Doom (Debug)",
+			"name": "Quake (Debug)",
 			"configurations": [
 				"... Emulator HL",
-				"... RV Doom (Debug)"
+				"... RV Quake (Debug)"
 			],
 			"stopAll": true
 		},
 		{
-			"name": "Doom (Release)",
+			"name": "Quake (Release)",
 			"configurations": [
 				"... Emulator HL",
-				"... RV Doom (Release)"
+				"... RV Quake (Release)"
 			],
 			"stopAll": true
 		},
