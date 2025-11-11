@@ -134,7 +134,6 @@ local function buildRV()
 
 	-- Create dump files.
 	-- run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Dashboard", "build/rv/ReleaseStatic/Dashboard.dump")
-	-- run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Doom", "build/rv/ReleaseStatic/Doom.dump")
 	-- run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/ScummRV", "build/rv/ReleaseStatic/ScummRV.dump")
 	-- run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/ModPlayer", "build/rv/ReleaseStatic/ModPlayer.dump")
 	-- run:execute("riscv32-unknown-elf-objdump -S -D build/rv/ReleaseStatic/SimpleNES", "build/rv/ReleaseStatic/SimpleNES.dump")
@@ -211,11 +210,7 @@ local function buildEmulatorFS()
 
 	run:mkdir(SCRIPT_HOME .. "/fs")
 	run:replace(SCRIPT_HOME .. "/build/rv/ReleaseStatic/Dashboard", SCRIPT_HOME .. "/fs/dash")
-	run:replace(SCRIPT_HOME .. "/build/rv/ReleaseStatic/Doom", SCRIPT_HOME .. "/fs/doom")
-	run:replace(SCRIPT_HOME .. "/code/Doom/doom1.wad", SCRIPT_HOME .. "/fs/doom1.wad")
-	run:replace(SCRIPT_HOME .. "/code/Doom/doom2.wad", SCRIPT_HOME .. "/fs/doom2.wad")
 	run:replace(SCRIPT_HOME .. "/build/rv/ReleaseStatic/ScummRV", SCRIPT_HOME .. "/fs/scummrv")
-	run:replace(SCRIPT_HOME .. "/3rdp/pocketmod/songs/elysium.mod", SCRIPT_HOME .. "/fs/song.mod")
 
 	return true
 end
