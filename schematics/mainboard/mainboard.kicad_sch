@@ -27203,6 +27203,28 @@
 			)
 		)
 	)
+	(global_label "BAT_SYS+"
+		(shape bidirectional)
+		(at 226.06 283.21 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "099a74bb-215b-4d63-a879-ab97ab01e8e7")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 212.5897 283.21 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+				(hide yes)
+			)
+		)
+	)
 	(global_label "LCD_R1"
 		(shape input)
 		(at 105.41 217.17 0)
@@ -28404,28 +28426,6 @@
 		(uuid "33116ec9-ed68-47db-b916-43d6b0ad153b")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 173.7035 494.03 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-				(hide yes)
-			)
-		)
-	)
-	(global_label "BAT+"
-		(shape input)
-		(at 226.06 283.21 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "33b44e31-ea8b-4676-bc0a-8e9eff57e18b")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 218.1762 283.21 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -44648,7 +44648,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
 			(at 389.128 104.14 90)
 			(effects
 				(font
@@ -47236,7 +47236,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 163.322 502.92 90)
 			(effects
 				(font
