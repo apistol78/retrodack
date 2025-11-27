@@ -123,8 +123,8 @@ local function buildRV()
 	)
 
 	run:pushd("build/rv")
-	if run:execute("make -f RetroDACK.mak DebugStatic") ~= 0 then return false end
-	if run:execute("make -f RetroDACK.mak ReleaseStatic") ~= 0 then return false end
+	if run:execute("make -j4 -f RetroDACK.mak DebugStatic") ~= 0 then return false end
+	if run:execute("make -j4 -f RetroDACK.mak ReleaseStatic") ~= 0 then return false end
 	run:popd()
 
 	-- Create binary and dump files of firmware; the binary file is used 
@@ -165,53 +165,8 @@ local function buildHostLinux()
 	)
 
 	run:pushd("build/linux")
-	if run:execute("make -f RetroDACK.mak ReleaseStatic") ~= 0 then return false end
+	if run:execute("make -j4 -f RetroDACK.mak ReleaseStatic") ~= 0 then return false end
 	run:popd()
-
-	return true
-end
-
-local function buildHostWin64()
-	local TRAKTOR_HOME < const > = os:getEnvironment("TRAKTOR_HOME")
-
-	if run:execute(
-		TRAKTOR_HOME .. "/bin/win64/releasestatic/Traktor.SolutionBuilder.App " ..
-		"-f=msvc " ..
-		"-p=" .. TRAKTOR_HOME .. "/resources/build/configurations/msvc-2022-win64.xml " ..
-		"retrodack-win64.xms"
-	) ~= 0 then
-		stderr:printLn("Failed to execute solution generator.")
-		return false
-	end
-
-	run:pushd("build/win64")
-
-	writeFile(
-		"build.bat",
-		{
-			"@echo off",
-			"call \"" .. TRAKTOR_HOME .. "/scripts/config.bat\"",
-			"call \"" .. TRAKTOR_HOME .. "/scripts/config-vs-x64.bat\"",
-			"msbuild -m RetroDACK.sln /p:Configuration=ReleaseStatic"
-		}
-	)
-
-	if run:execute("build/win64/build.bat") ~= 0 then
-		stderr:printLn("Failed to execute build file.")
-		return false
-	end
-
-	run:popd()
-
-	return true
-end
-
-local function buildEmulatorFS()
-	local SCRIPT_HOME < const > = fileSystem:getAbsolutePath(Path(os:getEnvironment("RUN_SCRIPT_PATH"))):normalized().pathNameOS
-
-	run:mkdir(SCRIPT_HOME .. "/fs")
-	run:replace(SCRIPT_HOME .. "/build/rv/ReleaseStatic/Dashboard", SCRIPT_HOME .. "/fs/dash")
-	run:replace(SCRIPT_HOME .. "/build/rv/ReleaseStatic/ScummRV", SCRIPT_HOME .. "/fs/scummrv")
 
 	return true
 end
@@ -229,15 +184,8 @@ function main()
 
 	-- Compile firmware and tools.
 	if compile then
-		if os.identifier == "windows" then
-			if not buildHostWin64() then return 1 end
-		else
-			if not buildRV() then return 1 end
-			if not buildHostLinux() then return 1 end
-		end
-
-		-- Build filesystem folder for emulator.
-		if not buildEmulatorFS() then return 1 end
+		if not buildRV() then return 1 end
+		if not buildHostLinux() then return 1 end
 	end
 
 	-- Synthesize system.
