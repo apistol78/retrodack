@@ -88,7 +88,7 @@ local SOURCE < const > =
 	PATH_PERIFHERIALS .. "/cpu/private/fpu/CPU_FPU_MulAdd.sv"
 }
 
-local function writeFile(fn, lines)
+function run.writeFile(fn, lines)
 	local f = fileSystem:open(Path(run.cwd .. "/" .. fn), File.FmWrite)
 	if f == nil then return false end
 	local so = StreamOutput(f, Utf8Encoding())
@@ -96,6 +96,29 @@ local function writeFile(fn, lines)
 		so:printLn(ln)
 	end
 	f:close()
+end
+
+function run.readFile(fn)
+	local f = fileSystem:open(Path(run.cwd .. "/" .. fn), File.FmRead)
+	if f == nil then return nil end
+	local lns = {}
+	local sr = StringReader(f, Utf8Encoding())
+	while true do
+		local ln = sr:readLine()
+		if ln == nil then break end
+		table.insert(lns, ln)
+	end
+	f:close()
+	return lns
+end
+
+function run.md5(fn)
+	local f = fileSystem:open(Path(run.cwd .. "/" .. fn), File.FmRead)
+	if f == nil then return nil end
+	local cs = MD5()
+	StreamCopy(HashStream(cs), f):execute()
+	f:close()
+	return cs:format()
 end
 
 local function buildRV()
@@ -180,7 +203,6 @@ function main()
 	local rtl < const > = "RetroDACK"
 	-- local rtl < const > = "RetroDACK_VGA"
 	-- local rtl < const > = "RetroDACK_SRAM"
-	local flash_fw < const > = true
 
 	-- Compile firmware and tools.
 	if compile then
@@ -225,7 +247,7 @@ function main()
 		stdout:printLn("==============================")
 		local tmr = Timer()
 
-		writeFile(
+		run.writeFile(
 			"build/" .. rtl .. ".yosys.script",
 			{
 				"proc; opt -full; memory; opt -full; fsm; opt -full",
@@ -289,7 +311,13 @@ function main()
 		local xc = 0
 
 		-- Write firmware binary to target flash; this is executed in place thus need to be a flat binary.
-		if flash_fw then
+		local flashChecksum < const > = run.md5("./build/rv/ReleaseStatic/Firmware.bin")
+		local flashFirmware = true
+		local chk = run.readFile("./build/rv/ReleaseStatic/Firmware.bin." .. rtl .. ".md5")
+		if chk ~= nil and chk[1] == flashChecksum then
+			flashFirmware = false
+		end
+		if flashFirmware then
 			stdout:printLn("==============================")
 			stdout:printLn("Flashing firmware...")
 			stdout:printLn("==============================")
@@ -299,6 +327,7 @@ function main()
 				stderr:printLn("openFPGALoader failed to write firmware to SPI flash; build aborted.")
 				return 1
 			end
+			run.writeFile("./build/rv/ReleaseStatic/Firmware.bin." .. rtl .. ".md5", { flashChecksum })
 		end
 
 		-- Write FPGA bitstream, either to SRAM or to target flash.
