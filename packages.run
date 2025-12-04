@@ -34,10 +34,10 @@ PACKAGES =
 	{
 		type = "GET",
 		name = "oss-cad-suite-build",
-		url = "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2025-04-30/oss-cad-suite-linux-x64-20250430.tgz",
+		url = "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2025-12-04/oss-cad-suite-linux-x64-20251204.tgz",
 		os = "linux",
 		patch = function()
-			run:execute(TAR .. " -xzf oss-cad-suite-linux-x64-20250430.tgz")
+			run:execute(TAR .. " -xzf oss-cad-suite-linux-x64-20251204.tgz")
 		end,
 		license = "ISC"
 	},
