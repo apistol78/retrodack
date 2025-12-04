@@ -97,7 +97,7 @@ Ref< FileSystemImage > FileSystemImage::createFromDirectory(const Path& path)
 
 		imageSize += ff->getSize();
 	}
-	log::info << L"FS image size " << imageSize << L" byte(s)." << Endl;
+	log::info << L"[FS] Image size " << imageSize << L" byte(s)." << Endl;
 
 	// Allocate image.
 	Ref< FileSystemImage > image = new FileSystemImage();
@@ -109,14 +109,14 @@ Ref< FileSystemImage > FileSystemImage::createFromDirectory(const Path& path)
 	res = f_mkfs("", NULL, work, sizeof(work));
 	if (res)
 	{
-		log::error << L"f_mkfs failed, FRESULT = " << (int32_t)res << Endl;
+		log::error << L"[FS] f_mkfs failed, FRESULT = " << (int32_t)res << Endl;
 		return nullptr;
 	}
 
 	res = f_mount(&fs, "", 0);
 	if (res)
 	{
-		log::error << L"f_mount failed, FRESULT = " << (int32_t)res << Endl;
+		log::error << L"[FS] f_mount failed, FRESULT = " << (int32_t)res << Endl;
 		return nullptr;
 	}
 

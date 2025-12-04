@@ -505,6 +505,9 @@ int main(int argc, const char** argv)
 	});
 	threadCpu->start();
 
+	if (cmdLine.hasOption('r', L"run"))
+		gdbServer->setMode(GDBServer::ModeRun);
+
 	traktor::Timer timer;
 	double lastVideoT = 0.0;
 
