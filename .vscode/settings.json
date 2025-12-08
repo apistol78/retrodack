@@ -17,6 +17,45 @@
         "istream": "cpp",
         "ostream": "cpp",
         "compare": "cpp",
-        "cstdint": "cpp"
-    }
+        "cstdint": "cpp",
+        "runtime.h": "c",
+        "console.h": "c",
+        "font8x8_c64.h": "c",
+        "video.h": "c",
+        "timer.h": "c",
+        "input.h": "c",
+        "random": "cpp",
+        "string": "cpp",
+        "string_view": "cpp",
+        "ranges": "cpp",
+        "span": "cpp",
+        "unistd.h": "c",
+        "fcntl.h": "c",
+        "sdl.h": "c",
+        "deque": "cpp",
+        "vector": "cpp",
+        "unordered_map": "cpp",
+        "unordered_set": "cpp",
+        "thread": "c",
+        "*.q1": "c",
+        "*.q2": "c",
+        "new": "cpp",
+        "kernel.h": "c",
+        "scsicommands.h": "c",
+        "max3420.h": "c",
+        "atomic": "cpp",
+        "condition_variable": "cpp"
+    },
+
+    "terminal.integrated.profiles.linux": {
+      "BashWithStartup": {
+        "path": "bash",
+        "args": [
+          "--init-file",
+          ".vscode/init.sh"
+        ]
+      }
+    },
+    "terminal.integrated.defaultProfile.linux": "BashWithStartup"
+    
 }
