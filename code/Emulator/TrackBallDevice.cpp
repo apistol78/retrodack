@@ -54,7 +54,7 @@ void TrackBallDevice::accumulateMovement(int32_t dx, int32_t dy)
 	m_absY += dy;
 
 	// Issue interrupt if there has been movement.
-	m_trig |= (dx != 0 && dy != 0);
+	m_trig |= (dx != 0 || dy != 0);
 }
 
 void TrackBallDevice::setButton(bool pressed)

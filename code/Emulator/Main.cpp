@@ -342,7 +342,8 @@ int main(int argc, const char** argv)
 	form->update();
 	form->show();
 
-	ui::Point mousePosition(0, 0);
+	float lptx = 0.0f, lpty = 0.0f;
+	float dptx = 0.0f, dpty = 0.0f;
 
 	image->addEventHandler< ui::MouseButtonDownEvent >([&](ui::MouseButtonDownEvent* event) {
 		if (event->getButton() == ui::MbtLeft)
@@ -354,14 +355,25 @@ int main(int argc, const char** argv)
 	});
 	image->addEventHandler< ui::MouseMoveEvent >([&](ui::MouseMoveEvent* event) {
 
-		ui::Point pt = event->getPosition();
-		pt.x /= 2;
-		pt.y /= 2;
+		const ui::Size sz = image->getInnerRect().getSize();
+		const ui::Point pt = event->getPosition();
+		
+		float fptx = (float)pt.x / (sz.cx / 180.0f);
+		float fpty = (float)pt.y / (sz.cy / 180.0f);
 
-		const ui::Size d = pt - mousePosition;
-		mousePosition = pt;
+		dptx += fptx - lptx;
+		dpty += fpty - lpty;
 
-		tb.accumulateMovement(d.cx, d.cy);
+		lptx = fptx;
+		lpty = fpty;
+
+		int32_t idptx = (int32_t)dptx;
+		int32_t idpty = (int32_t)dpty;
+
+		dptx -= idptx;
+		dpty -= idpty;
+
+		tb.accumulateMovement(idptx, idpty);
 	});
 	image->addEventHandler< ui::KeyDownEvent >([&](ui::KeyDownEvent* event) {
 		switch (event->getVirtualKey())
