@@ -48,6 +48,8 @@ EXTERN_C void rt_kernel_cs_unlock(volatile kernel_cs_t* cs);
 
 EXTERN_C void rt_kernel_sig_init(volatile kernel_sig_t* sig);
 
+EXTERN_C void rt_kernel_sig_reset(volatile kernel_sig_t* sig);
+
 EXTERN_C void rt_kernel_sig_raise(volatile kernel_sig_t* sig);
 
 EXTERN_C void rt_kernel_sig_wait(volatile kernel_sig_t* sig);
