@@ -30,6 +30,7 @@ const int32_t offset_x = (FH - (CR * 8)) / 2;
 
 uint32_t s_thread = 0;
 kernel_sig_t s_redraw;
+kernel_sig_t s_redrawn;
 char s_cbuffer[CC * CR];
 int s_x = 0;
 int s_y = 0;
@@ -119,6 +120,7 @@ static void rt_console_thread_redraw()
 		rt_kernel_sig_try_wait(&s_redraw, 200);
 		rt_console_draw_console();
 		s_cursor = 1 - s_cursor;
+		rt_kernel_sig_raise(&s_redrawn);
 	}	
 }
 
@@ -135,6 +137,8 @@ void rt_console_init()
 	rt_video_wait();
 
 	rt_kernel_sig_init(&s_redraw);
+	rt_kernel_sig_init(&s_redrawn);
+
 	s_thread = rt_kernel_create_thread(rt_console_thread_redraw);
 }
 
@@ -174,4 +178,11 @@ void rt_console_printf(const char* str, ...)
 	vsnprintf(buf, sizeof(buf), str, args);
 	va_end(args);
 	rt_console_print(buf);
+}
+
+void rt_console_flush()
+{
+	rt_kernel_sig_reset(&s_redrawn);
+	rt_kernel_sig_raise(&s_redraw);
+	rt_kernel_sig_wait(&s_redrawn);
 }

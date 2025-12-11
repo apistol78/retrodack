@@ -10,16 +10,18 @@
 
 #include <HAL/Common.h>
 
-EXTERN_C void rt_console_init();
+typedef struct
+{
+	uint16_t year;
+	uint8_t month;
+	uint8_t mday;
+	uint8_t hour;
+	uint8_t minute;
+	uint8_t second;
+}
+rtc_t;
 
-EXTERN_C void rt_console_shutdown();
+EXTERN_C void rt_rtc_read(rtc_t* rtc);
 
-EXTERN_C void rt_console_clear();
+EXTERN_C void rt_rtc_write(rtc_t* rtc);
 
-EXTERN_C void rt_console_putc(char c);
-
-EXTERN_C void rt_console_print(const char* str);
-
-EXTERN_C void rt_console_printf(const char* str, ...);
-
-EXTERN_C void rt_console_flush();

@@ -1,0 +1,6 @@
+SODIMM,Designator,FPGA,Signal,Direction,PullMode
+74,PR17B,H13,DEBUG_0,output,
+76,PR14C,G14,DEBUG_1,output,
+78,PR11B,G13,DEBUG_2,output,
+80,PR5D,F14,DEBUG_3,output,
+82,PR8C,F13,DEBUG_4,output,

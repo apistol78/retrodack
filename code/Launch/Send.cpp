@@ -107,7 +107,6 @@ bool sendWrite(traktor::IStream* target, uint32_t base, const uint8_t* line, uin
 				}
 			}
 		}
-
 	}
 
 	log::error << L"Error reply, got " << str(L"0x%02x", reply) << Endl;
@@ -149,4 +148,79 @@ bool sendJump(traktor::IStream* target, uint32_t start, uint32_t sp)
 	}
 
 	return true;
+}
+
+bool sendCreateFile(traktor::IStream* target, const char* fileName)
+{
+	CW(writeChar(target, 'f'));
+	for (const char* ch = fileName; *ch; ++ch)
+	{
+		CW(writeChar(target, *ch));
+	}
+	CW(writeChar(target, 0));
+
+	const uint8_t reply = readChar(target);
+	if (reply != 'O')
+	{
+		log::error << L"Error reply, got " << str(L"0x%02x", reply) << Endl;
+		return false;
+	}
+
+	return true;	
+}
+
+bool sendWriteFile(traktor::IStream* target, const uint8_t* line, uint32_t length)
+{
+	uint8_t reply;
+
+	if (length <= 0)
+		return true;
+
+	for (int32_t tr = 0; tr < 10; ++tr)
+	{	
+		CW(writeChar(target, 'w'));
+		CW(writeU16(target, (uint16_t)length));
+		for (uint32_t i = 0; i < length; ++i)
+			CW(writeU8(target, line[i]));
+
+		reply = readChar(target);
+		if (reply == 'O')
+			return true;
+
+		log::warning << L"Error reply, trying again..." << Endl;
+
+		// Purge incoming data.
+		for (;;)
+		{
+			ThreadManager::getInstance().getCurrentThread()->sleep(1000);
+			if (target->available() == 0)
+				break;
+			while (target->available() > 0)
+			{
+				uint8_t ch;
+				if (target->read(&ch, 1) <= 0)
+				{
+					log::error << L"Serial device error while purging." << Endl;
+					return false;
+				}
+			}
+		}
+	}
+
+	log::error << L"Error reply, got " << str(L"0x%02x", reply) << Endl;
+	return false;	
+}
+
+bool sendCloseFile(traktor::IStream* target)
+{
+	CW(writeChar(target, 'c'));
+
+	const uint8_t reply = readChar(target);
+	if (reply != 'O')
+	{
+		log::error << L"Error reply, got " << str(L"0x%02x", reply) << Endl;
+		return false;
+	}
+
+	return true;	
 }

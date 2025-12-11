@@ -94,14 +94,14 @@ static void input_thread()
 	for (;;)
 	{
 		// Wait for signal.
-		rt_i2c_write(0x0a, TRACKBALL_REG_INT, 0);
-		rt_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN);
+		rt_i2c_write(0x0a, TRACKBALL_REG_INT, 0, RT_I2C_MODE_FAST);
+		rt_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN, RT_I2C_MODE_FAST);
 		const int32_t gotSignal = rt_kernel_sig_try_wait(&s_input_signal, wait);
 
 		// Trackball
 		{
 			uint8_t data[5] = { 0, 0, 0, 0, 0 };
-			rt_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5);
+			rt_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5, RT_I2C_MODE_FAST);
 
 			#define TB_DATA(N) ((int32_t)data[N])
 
@@ -210,7 +210,7 @@ static void input_thread()
 		if (gotSignal)
 		{
 			uint16_t data = 0;
-			rt_i2c_read(0x20, 0x00, (uint8_t*)&data, 2);
+			rt_i2c_read(0x20, 0x00, (uint8_t*)&data, 2, RT_I2C_MODE_FAST);
 			data = ~data;
 
 			#define S(bit, mask) \
@@ -280,7 +280,7 @@ int32_t rt_input_init()
 	// Locate trackball by reading it's identification.
 	for (int32_t i = 0; i < 10; ++i)
 	{
-		rt_i2c_read(0x0a, TRACKBALL_REG_CHIP_ID_L, data, 2);
+		rt_i2c_read(0x0a, TRACKBALL_REG_CHIP_ID_L, data, 2, RT_I2C_MODE_FAST);
 		if (data[0] == 0x11 && data[1] == 0xba)
 		{
 			found = 1;
@@ -298,18 +298,18 @@ int32_t rt_input_init()
 	// if (found)
 	{
 		// Turn on green backlight to indicate success.
-		rt_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0xff);
+		rt_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, 0xff, RT_I2C_MODE_FAST);
 
 		// Enable interrupt pin; notify CPU everytime
 		// track ball position change.
-		rt_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN);
+		rt_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN, RT_I2C_MODE_FAST);
 
 		// Read data from TB; to ensure interrupt state
 		// in TB is reset.
 		for (int i = 0; i < 100; ++i)
 		{
 			uint8_t data[5] = { 0, 0, 0, 0, 0 };
-			rt_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5);
+			rt_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5, RT_I2C_MODE_FAST);
 			hal_timer_wait_ms(10);
 		}
 	}
@@ -364,24 +364,24 @@ void rt_input_set_tb_color(int32_t clr)
 	switch (clr)
 	{
 	case RT_TB_RED:
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_RED, 0xff);
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_GRN, 0x00);
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_BLU, 0x00);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_RED, 0xff, RT_I2C_MODE_FAST);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_GRN, 0x00, RT_I2C_MODE_FAST);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_BLU, 0x00, RT_I2C_MODE_FAST);
 		break;
 	case RT_TB_GREEN:
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_RED, 0x00);
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_GRN, 0xff);
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_BLU, 0x00);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_RED, 0x00, RT_I2C_MODE_FAST);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_GRN, 0xff, RT_I2C_MODE_FAST);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_BLU, 0x00, RT_I2C_MODE_FAST);
 		break;
 	case RT_TB_BLUE:
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_RED, 0x00);
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_GRN, 0x00);
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_BLU, 0xff);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_RED, 0x00, RT_I2C_MODE_FAST);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_GRN, 0x00, RT_I2C_MODE_FAST);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_BLU, 0xff, RT_I2C_MODE_FAST);
 		break;
 	default:
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_RED, 0x00);
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_GRN, 0x00);
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_BLU, 0x00);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_RED, 0x00, RT_I2C_MODE_FAST);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_GRN, 0x00, RT_I2C_MODE_FAST);
+		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_BLU, 0x00, RT_I2C_MODE_FAST);
 		break;
 	}
 }

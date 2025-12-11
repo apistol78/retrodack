@@ -23,3 +23,5 @@ EXTERN_C uint32_t rt_audio_get_queued();
 EXTERN_C void rt_audio_play_stereo(const void* samples, uint32_t nsamples);
 
 EXTERN_C void rt_audio_wait();
+
+EXTERN_C int32_t rt_audio_headphones_connected();

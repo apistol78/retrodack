@@ -473,7 +473,7 @@ void rt_kernel_sig_reset(volatile kernel_sig_t* sig)
 }
 
 void rt_kernel_sig_raise(volatile kernel_sig_t* sig)
-{0000
+{
 	rt_kernel_enter_critical();
 	sig->counter = 1;
 	rt_kernel_leave_critical();

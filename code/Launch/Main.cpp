@@ -22,6 +22,7 @@
 #include <Core/Math/Random.h>
 #include <Core/Misc/CommandLine.h>
 #include <Core/Misc/String.h>
+#include <Core/Misc/TString.h>
 #include <Core/Thread/ThreadManager.h>
 #include <Core/Thread/Thread.h>
 
@@ -143,16 +144,57 @@ bool uploadELF(traktor::IStream* target, const std::wstring& fileName, uint32_t 
 	return true;
 }
 
+bool uploadFile(traktor::IStream* target, const std::wstring& fileName)
+{
+	AlignedVector< uint8_t > fd;
+	uint32_t start = -1;
+	uint32_t last = 0;
+
+	// Read entire file into memory.
+	{
+		Ref< traktor::IStream > f = FileSystem::getInstance().open(fileName, File::FmRead);
+		if (!f)
+		{
+			log::error << L"Unable to open file \"" << fileName << L"\"." << Endl;
+			return false;
+		}
+
+		DynamicMemoryStream dms(fd, false, true);
+		if (!StreamCopy(&dms, f).execute())
+		{
+			log::error << L"Unable to open file \"" << fileName << L"\"; failed to read file." << Endl;
+			return false;
+		}
+	}
+
+	const std::string fn = wstombs(Path(fileName).getFileName());
+	if (!sendCreateFile(target, fn.c_str()))
+		return false;
+
+	for (uint32_t j = 0; j < fd.size(); j += 512)
+	{
+		const uint32_t cnt = std::min< uint32_t >(fd.size() - j, 512);
+		log::info << L"FILE " << str(L"%08x", j) << L" (" << cnt << L" bytes)..." << Endl;
+		if (!sendWriteFile(target, fd.c_ptr() + j, cnt))
+			return false;
+	}
+
+	if (!sendCloseFile(target))
+		return false;
+
+	return true;
+}
+
 int main(int argc, const char** argv)
 {
 	CommandLine commandLine(argc, argv);
 
 	std::wstring device = L"/dev/ttyACM0";
 	if (commandLine.hasOption('d', L"device"))
-		device = commandLine.getOption('d', L"device").getInteger();
+		device = commandLine.getOption('d', L"device").getString();
 
 	Serial::Configuration configuration;
-	configuration.baudRate = 460800; //115200;
+	configuration.baudRate = 115200;
 	configuration.stopBits = 1;
 	configuration.parity = Serial::Parity::No;
 	configuration.byteSize = 8;
@@ -167,8 +209,8 @@ int main(int argc, const char** argv)
 
 	Ref< traktor::IStream > target = serial;
 
-	// Issue reset command; any data suffice.
-	if (commandLine.hasOption('e', L"elf") && !commandLine.hasOption(L"skip-reset"))
+	// Issue reset command.
+	if (!commandLine.hasOption(L"skip-reset"))
 	{
 		log::info << L"Resetting target..." << Endl;
 		const uint8_t ch = 0xff;
@@ -203,10 +245,19 @@ int main(int argc, const char** argv)
 		const std::wstring elf = commandLine.getOption('e', L"elf").getString();
 		if (!uploadELF(target, elf, sp))
 		{
-			log::error << L"Unable to load ELF." << Endl;
+			log::error << L"Unable to upload ELF." << Endl;
 			return 1;
 		}
 	}
+	else if (commandLine.hasOption('f', L"file"))
+	{
+		const std::wstring fn = commandLine.getOption('f', L"file").getString();
+		if (!uploadFile(target, fn))
+		{
+			log::error << L"Unable to upload file." << Endl;
+			return 1;
+		}
+	}	
 
 	// if (commandLine.hasOption('r', L"raw"))
 	// {

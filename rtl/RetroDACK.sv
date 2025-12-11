@@ -25,10 +25,18 @@ module RetroDACK(
 	assign LED_G = cpu_external_interrupt; //~cpu_fault;
 	assign LED_B = cpu_timer_interrupt; // sd_CARD;
 
+	assign DEBUG_0 = 1'b0; //(I2C_SCL_direction == 1'b0 && I2C_SDA == 1'b0);
+	assign DEBUG_1 = 1'b0; //I2C_SCL_direction;	// 1 = CPU own SCL
+	assign DEBUG_2 = I2C_SDA_direction;	// 1 = CPU own SDA
+	assign DEBUG_3 = I2C_SCL;
+	assign DEBUG_4 = I2C_SDA;
+
 	// Unimplemeneted pins.
 	assign LCD_CS = 1'b0;
 	assign USB_HCI_RESET_n = ~reset;
 
+	// assign SRAM_BLE = 1'b0;
+	// assign SRAM_BHE = 1'b0;
 
 	// assign LCD_R[0] = I2S_SCLK;
 	// assign LCD_R[1] = I2S_MCLK;
@@ -120,7 +128,7 @@ module RetroDACK(
 	CPU #(
 		.STACK_POINTER(32'h12000000 - 4),
 		.FREQUENCY(`FREQUENCY),
-		.DCACHE_SIZE(13),
+		.DCACHE_SIZE(12),
 		.DCACHE_REGISTERED(1),
 		.DCACHE_WB_QUEUE(1),
 		.ICACHE_SIZE(12),
@@ -243,9 +251,9 @@ module RetroDACK(
 
 	UART #(
 		.FREQUENCY(`FREQUENCY),
-		.BAUDRATE(460800), // 115200),
+		.BAUDRATE(115200),
 		.RX_FIFO_DEPTH(1024),
-		.TX_FIFO_DEPTH(64)
+		.TX_FIFO_DEPTH(32)
 	) uart(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -272,13 +280,19 @@ module RetroDACK(
 	wire [31:0] i2c_rdata;
 	wire i2c_ready;
 
+	// wire I2C_SCL_direction;
+	// wire I2C_SCL_w;
+
 	wire I2C_SDA_direction;
 	wire I2C_SDA_w;
 
+	// assign I2C_SCL = I2C_SCL_direction ? I2C_SCL_w : 1'bz;
 	assign I2C_SDA = I2C_SDA_direction ? I2C_SDA_w : 1'bz;
 
 	I2C_v2 #(
-		.DELAY(800)	// 100 works for GPIO, 400 for TB.
+		// .DELAY_FAST(400),
+		// .DELAY_SLOW(1400)
+		.DELAY(4000)
 	) i2c (
 		.i_reset(reset),
 		.i_clock(clock),
@@ -289,10 +303,19 @@ module RetroDACK(
 		.o_rdata(i2c_rdata),
 		.o_ready(i2c_ready),
 		// ---
+
 		.I2C_SCL(I2C_SCL),
 		.I2C_SDA_direction(I2C_SDA_direction),
 		.I2C_SDA_r(I2C_SDA),
 		.I2C_SDA_w(I2C_SDA_w)
+
+		// .I2C_SCL_direction(I2C_SCL_direction),
+		// .I2C_SCL_r(I2C_SCL),
+		// .I2C_SCL_w(I2C_SCL_w),
+
+		// .I2C_SDA_direction(I2C_SDA_direction),
+		// .I2C_SDA_r(I2C_SDA),
+		// .I2C_SDA_w(I2C_SDA_w)
 	);
 
 
@@ -499,7 +522,7 @@ module RetroDACK(
 		.i_address(video_sram_address),
 		.o_rdata(video_sram_rdata),
 		.i_wdata(video_sram_wdata),
-		// .i_wmask(video_sram_wmask),
+		.i_wmask(video_sram_wmask),
 		.o_ready(video_sram_ready),
 
 		.SRAM_A(SRAM_A),
@@ -510,8 +533,8 @@ module RetroDACK(
 		.SRAM_CE_n(),
 		.SRAM_OE_n(SRAM_OE),
 		.SRAM_WE_n(SRAM_WE),
-		.SRAM_LB_n(),
-		.SRAM_UB_n()
+		.SRAM_LB_n(SRAM_BLE),
+		.SRAM_UB_n(SRAM_BHE)
 	);
 
 

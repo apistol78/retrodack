@@ -20,6 +20,7 @@
 #include <HAL/Sprite.h>
 
 #include "Runtime/Audio.h"
+#include "Runtime/Battery.h"
 #include "Runtime/Console.h"
 #include "Runtime/CRT.h"
 #include "Runtime/Disk.h"
@@ -78,7 +79,10 @@ static uint32_t rx_u32()
 
 static void remote_control()
 {
+	static char filename[256];
+	static int32_t fd;
 	static uint8_t r[1024];
+
 	for (;;)
 	{
 		// wait until any data has been receieved.
@@ -121,7 +125,21 @@ static void remote_control()
 				for (uint16_t i = 0; i < nb; ++i)
 					*(volatile uint8_t*)(addr + i) = r[i];
 
-				hal_uart_tx_u8('O');
+				// Flush DCACHE.
+				__asm__ volatile ("fence");
+
+				// Verify data in memory.
+				uint8_t result = 'O';
+				for (uint16_t i = 0; i < nb; ++i)
+				{
+					if (*(volatile uint8_t*)(addr + i) != r[i])
+					{
+						result = 'E';
+						break;
+					}
+				}
+
+				hal_uart_tx_u8(result);
 			}
 			else
 				hal_uart_tx_u8('E');	// Invalid checksum.
@@ -155,6 +173,10 @@ static void remote_control()
 			if (cs == rx_u8())
 			{
 				hal_uart_tx_u8('O');	// Ok
+
+				rt_console_printf("\nLaunching...\n");
+				rt_kernel_sleep(1000);
+
 				hal_interrupt_disable();
 
 				// Ensure DCACHE is flushed.
@@ -174,6 +196,59 @@ static void remote_control()
 			}
 			else
 				hal_uart_tx_u8('E');	// Invalid checksum.
+		}
+
+		// "create file"
+		else if (cmd == 'f')
+		{
+			for (int32_t i = 0;; ++i)
+			{
+				const uint8_t d = rx_u8();
+				if ((filename[i] = (char)d) == 0)
+					break;
+			}
+			
+			fd = file_open(filename, FILE_MODE_WRITE);
+			if (fd >= 0)
+				hal_uart_tx_u8('O');
+			else
+				hal_uart_tx_u8('E');	// Failed to create file.
+		}
+
+		// "write file"
+		else if (cmd == 'w')
+		{
+			const uint16_t nb = rx_u16();
+			if (nb == 0 || nb > 1024)
+			{
+				hal_uart_tx_u8('E');
+				continue;
+			}
+
+			// Receive 
+			for (uint16_t i = 0; i < nb; ++i)
+			{
+				const uint8_t d = rx_u8();
+				r[i] = d;
+			}
+			
+			if (file_write(fd, r, nb) == nb)
+				hal_uart_tx_u8('O');
+			else
+				hal_uart_tx_u8('E');			
+		}
+
+		// "close file"
+		else if (cmd == 'c')
+		{
+			if (fd >= 0)
+			{
+				file_close(fd);
+				hal_uart_tx_u8('O');
+				fd = -1;
+			}
+			else
+				hal_uart_tx_u8('E');
 		}
 	}
 }
@@ -250,7 +325,7 @@ void kickstart_main()
 	rt_video_set_palette(2, 0xffffff);
 	rt_video_set_palette(3, 0x000000);
 
-	rt_console_printf("RetroDACK 0.1\n");
+	rt_console_printf("RetroDACK 0.2.1\n");
 	rt_console_printf("\n");
 
 	hal_uart_reset();
@@ -363,6 +438,18 @@ void kickstart_main()
 
 			remote_control();
 		}
+
+		// // Check battery.
+		// battery_t bat;
+		// rt_battery_read(&bat);
+		// rt_console_printf("voltage     : %d mV\n", bat.voltage);
+		// rt_console_printf("f avail cap : %d mAh\n", bat.fullAvailableCapacity);
+		// rt_console_printf("f charge cap: %d mAh\n", bat.fullChargeCapacity);
+		// rt_console_printf("r capacity  : %d mAh\n", bat.remainingCapacity);
+		// rt_console_printf("current     : %d mA\n", bat.current);
+		// rt_console_printf("power       : %d mW\n", bat.power);
+		// rt_console_printf("state       : %d %%\n", bat.stageOfCharge);
+		// rt_console_printf("\n");	
 	}
 }
 
@@ -386,33 +473,38 @@ int main()
 	);
 
 	// Do some memory testing first.
-	/*
 	{
 		volatile uint32_t* start = (volatile uint32_t*)0x10000000;
 		volatile uint32_t* end = (volatile uint32_t*)0x12000000;
+		
 		for (volatile uint32_t* ptr = start; ptr != end; ++ptr)
 		{
 			*ptr = (uint32_t)ptr;
 		}
+
+		__asm__ volatile ("fence");
+
 		for (volatile uint32_t* ptr = start; ptr != end; ++ptr)
 		{
-			uint32_t value = *ptr;
+			const uint32_t value = *ptr;
 			if (value != (uint32_t)ptr)
 			{
 				error("memory check 1 failed\n");
 			}
 			*ptr = ~(uint32_t)ptr;
 		}
+
+		__asm__ volatile ("fence");
+
 		for (volatile uint32_t* ptr = start; ptr != end; ++ptr)
 		{
-			uint32_t value = *ptr;
+			const uint32_t value = *ptr;
 			if (value != ~(uint32_t)ptr)
 			{
 				error("memory check 2 failed\n");
 			}
 		}
 	}
-	*/
 
 	// Initialize segments when running from ROM.
 	{
