@@ -16,7 +16,7 @@
 #include "Runtime/Kernel.h"
 #include "Runtime/Video.h"
 
-#define DMA_CHANNEL DMA_1_BASE
+#define DMA_CHANNEL DMA_CHANNEL_1
 
 static uint32_t s_dma_tag = 0;
 static kernel_sig_t s_vblank_signal;
