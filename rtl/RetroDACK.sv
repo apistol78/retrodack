@@ -742,38 +742,74 @@ module RetroDACK(
 
 
 	//====================================================
-	// DMA
-	wire dma_request;
-	wire dma_rw;
-	wire [31:0] dma_address;
-	wire [31:0] dma_wdata;
-	wire [31:0] dma_rdata;
-	wire dma_ready;
+	// DMA 0
+	wire dma_0_request;
+	wire dma_0_rw;
+	wire [31:0] dma_0_address;
+	wire [31:0] dma_0_wdata;
+	wire [31:0] dma_0_rdata;
+	wire dma_0_ready;
 
-	wire dma_bus_rw;
-	wire dma_bus_request;
-	wire dma_bus_ready;
-	wire [31:0] dma_bus_address;
-	wire [31:0] dma_bus_rdata;
-	wire [31:0] dma_bus_wdata;
+	wire dma_0_bus_rw;
+	wire dma_0_bus_request;
+	wire dma_0_bus_ready;
+	wire [31:0] dma_0_bus_address;
+	wire [31:0] dma_0_bus_rdata;
+	wire [31:0] dma_0_bus_wdata;
 
-	DMA dma(
+	DMA dma_0(
 		.i_reset(reset),
 		.i_clock(clock),
 
-		.i_request(dma_request),
-		.i_rw(dma_rw),
-		.i_address(dma_address[27:0]),
-		.i_wdata(dma_wdata),
-		.o_rdata(dma_rdata),
-		.o_ready(dma_ready),
+		.i_request(dma_0_request),
+		.i_rw(dma_0_rw),
+		.i_address(dma_0_address[3:2]),
+		.i_wdata(dma_0_wdata),
+		.o_rdata(dma_0_rdata),
+		.o_ready(dma_0_ready),
 		
-		.o_bus_rw(dma_bus_rw),
-		.o_bus_request(dma_bus_request),
-		.i_bus_ready(dma_bus_ready),
-		.o_bus_address(dma_bus_address),
-		.i_bus_rdata(dma_bus_rdata),
-		.o_bus_wdata(dma_bus_wdata)
+		.o_bus_rw(dma_0_bus_rw),
+		.o_bus_request(dma_0_bus_request),
+		.i_bus_ready(dma_0_bus_ready),
+		.o_bus_address(dma_0_bus_address),
+		.i_bus_rdata(dma_0_bus_rdata),
+		.o_bus_wdata(dma_0_bus_wdata)
+	);
+
+
+	//====================================================
+	// DMA 1
+	wire dma_1_request;
+	wire dma_1_rw;
+	wire [31:0] dma_1_address;
+	wire [31:0] dma_1_wdata;
+	wire [31:0] dma_1_rdata;
+	wire dma_1_ready;
+
+	wire dma_1_bus_rw;
+	wire dma_1_bus_request;
+	wire dma_1_bus_ready;
+	wire [31:0] dma_1_bus_address;
+	wire [31:0] dma_1_bus_rdata;
+	wire [31:0] dma_1_bus_wdata;
+
+	DMA dma_1(
+		.i_reset(reset),
+		.i_clock(clock),
+
+		.i_request(dma_1_request),
+		.i_rw(dma_1_rw),
+		.i_address(dma_1_address[3:2]),
+		.i_wdata(dma_1_wdata),
+		.o_rdata(dma_1_rdata),
+		.o_ready(dma_1_ready),
+		
+		.o_bus_rw(dma_1_bus_rw),
+		.o_bus_request(dma_1_bus_request),
+		.i_bus_ready(dma_1_bus_ready),
+		.o_bus_address(dma_1_bus_address),
+		.i_bus_rdata(dma_1_bus_rdata),
+		.o_bus_wdata(dma_1_bus_wdata)
 	);
 
 
@@ -808,7 +844,7 @@ module RetroDACK(
 	//====================================================
 	// XBAR
 
-	XBAR_3_12 xbar(
+	XBAR_4_13 xbar(
 		.i_reset(reset),
 		.i_clock(clock),
 
@@ -830,14 +866,23 @@ module RetroDACK(
 		.i_m1_wdata(cpu_dbus_wdata),
 		.i_m1_wmask(cpu_dbus_wmask),
 
-		// DMA
-		.i_m2_rw(dma_bus_rw),
-		.i_m2_request(dma_bus_request),
-		.o_m2_ready(dma_bus_ready),
-		.i_m2_address(dma_bus_address),
-		.o_m2_rdata(dma_bus_rdata),
-		.i_m2_wdata(dma_bus_wdata),
+		// DMA channel 0
+		.i_m2_rw(dma_0_bus_rw),
+		.i_m2_request(dma_0_bus_request),
+		.o_m2_ready(dma_0_bus_ready),
+		.i_m2_address(dma_0_bus_address),
+		.o_m2_rdata(dma_0_bus_rdata),
+		.i_m2_wdata(dma_0_bus_wdata),
 		.i_m2_wmask(4'b1111),
+
+		// DMA channel 1
+		.i_m3_rw(dma_1_bus_rw),
+		.i_m3_request(dma_1_bus_request),
+		.o_m3_ready(dma_1_bus_ready),
+		.i_m3_address(dma_1_bus_address),
+		.o_m3_rdata(dma_1_bus_rdata),
+		.i_m3_wdata(dma_1_bus_wdata),
+		.i_m3_wmask(4'b1111),
 
 		//
 
@@ -922,32 +967,41 @@ module RetroDACK(
 		.o_s8_wdata(video_wdata),
 		.o_s8_wmask(video_wmask),
 
-		// 32'h9xxx_xxxx : DMA
-		.o_s9_rw(dma_rw),
-		.o_s9_request(dma_request),
-		.i_s9_ready(dma_ready),
-		.o_s9_address(dma_address),
-		.i_s9_rdata(dma_rdata),
-		.o_s9_wdata(dma_wdata),
+		// 32'h9xxx_xxxx : DMA 0
+		.o_s9_rw(dma_0_rw),
+		.o_s9_request(dma_0_request),
+		.i_s9_ready(dma_0_ready),
+		.o_s9_address(dma_0_address),
+		.i_s9_rdata(dma_0_rdata),
+		.o_s9_wdata(dma_0_wdata),
 		.o_s9_wmask(),
 
-		// 32'haxxx_xxxx : Sprites
-		.o_s10_rw(),
-		.o_s10_request(video_sprite_request),
-		.i_s10_ready(video_sprite_ready),
-		.o_s10_address(video_sprite_address),
-		.i_s10_rdata(32'h0),
-		.o_s10_wdata(video_sprite_wdata),
+		// 32'haxxx_xxxx : DMA 1
+		.o_s10_rw(dma_1_rw),
+		.o_s10_request(dma_1_request),
+		.i_s10_ready(dma_1_ready),
+		.o_s10_address(dma_1_address),
+		.i_s10_rdata(dma_1_rdata),
+		.o_s10_wdata(dma_1_wdata),
 		.o_s10_wmask(),
 
-		// 32'hbxxx_xxxx : SPI
-		.o_s11_rw(spi_rw),
-		.o_s11_request(spi_request),
-		.i_s11_ready(spi_ready),
-		.o_s11_address(spi_address),
-		.i_s11_rdata(spi_rdata),
-		.o_s11_wdata(spi_wdata),
-		.o_s11_wmask()
+		// 32'hbxxx_xxxx : Sprites
+		.o_s11_rw(),
+		.o_s11_request(video_sprite_request),
+		.i_s11_ready(video_sprite_ready),
+		.o_s11_address(video_sprite_address),
+		.i_s11_rdata(32'h0),
+		.o_s11_wdata(video_sprite_wdata),
+		.o_s11_wmask(),
+
+		// 32'hcxxx_xxxx : SPI
+		.o_s12_rw(spi_rw),
+		.o_s12_request(spi_request),
+		.i_s12_ready(spi_ready),
+		.o_s12_address(spi_address),
+		.i_s12_rdata(spi_rdata),
+		.o_s12_wdata(spi_wdata),
+		.o_s12_wmask()
 	);
 
 
