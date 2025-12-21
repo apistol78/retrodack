@@ -22,14 +22,14 @@ module RetroDACK(
 	wire clock_locked;
 
 	assign LED_R = cpu_fault;
-	assign LED_G = cpu_external_interrupt; //~cpu_fault;
-	assign LED_B = cpu_timer_interrupt; // sd_CARD;
+	assign LED_G = 1'b0;
+	assign LED_B = 1'b0;
 
-	assign DEBUG_0 = 1'b0; //(I2C_SCL_direction == 1'b0 && I2C_SDA == 1'b0);
-	assign DEBUG_1 = 1'b0; //I2C_SCL_direction;	// 1 = CPU own SCL
-	assign DEBUG_2 = I2C_SDA_direction;	// 1 = CPU own SDA
-	assign DEBUG_3 = I2C_SCL;
-	assign DEBUG_4 = I2C_SDA;
+	// assign DEBUG_0 = 1'b0; //(I2C_SCL_direction == 1'b0 && I2C_SDA == 1'b0);
+	// assign DEBUG_1 = 1'b0; //I2C_SCL_direction;	// 1 = CPU own SCL
+	// assign DEBUG_2 = I2C_SDA_direction;	// 1 = CPU own SDA
+	// assign DEBUG_3 = I2C_SCL;
+	// assign DEBUG_4 = I2C_SDA;
 
 	// Unimplemeneted pins.
 	assign LCD_CS = 1'b0;

@@ -191,12 +191,8 @@ int main(int argc, const char** argv)
 	::Timer tmr;
 	PLIC plic;
 	Audio audio;
-	DMA dma0_0;
-	DMA dma0_1;
-	DMA dma0_2;
-	DMA dma1_0;
-	DMA dma1_1;
-	DMA dma1_2;
+	DMA dma0;
+	DMA dma1;
 	Sprite sprite;
 	SPI spi;
 
@@ -218,12 +214,8 @@ int main(int argc, const char** argv)
 	bus.map(0x60000000, 0x60000100, false, false, &audio);
 	bus.map(0x70000000, 0x70ffffff, false, true, &plic);
 	bus.map(0x80000000, 0x81000000, false, true, &video);
-	bus.map(0x90000000, 0x90000100, false, true, &dma0_0);
-	bus.map(0x91000000, 0x91000100, false, true, &dma0_1);
-	bus.map(0x92000000, 0x92000100, false, true, &dma0_2);
-	bus.map(0xa0000000, 0xa0000100, false, true, &dma1_0);
-	bus.map(0xa1000000, 0xa1000100, false, true, &dma1_1);
-	bus.map(0xa2000000, 0xa2000100, false, true, &dma1_2);
+	bus.map(0x90000000, 0x90000100, false, true, &dma0);
+	bus.map(0xa0000000, 0xa0000100, false, true, &dma1);
 	bus.map(0xb0000000, 0xb0010000, false, true, &sprite);
 	bus.map(0xc0000000, 0xc0010000, false, false, &spi);
 
@@ -264,10 +256,9 @@ int main(int argc, const char** argv)
 		vcd->declare(L"TIMER");
 		vcd->declare(L"INPUT");
 		vcd->declare(L"GPIO");
-		vcd->declare(L"DMA");
 		vcd->declare(L"VIDEO");
-		vcd->declare(L"COUNTDOWN", [&]() { return tmr.getCountDown() > 0; });
-		vcd->declare(L"TIP", [&]() {
+		vcd->declare(L"COUNTDOWN", [&](){ return tmr.getCountDown() > 0; });
+		vcd->declare(L"TIP", [&](){
 			const uint32_t mip = cpu->getCSR(MIP);
 			return (mip & 0x80) != 0;
 		});
@@ -277,12 +268,9 @@ int main(int argc, const char** argv)
 
 	// Setup PLIC interrupts.
 	tmr.setCallback([&](){ if (g_enableInterrupt) { if (vcd) { vcd->toggle(0); } cpu->interrupt(TIMER); } } );
-	tb.setCallback([&](){ if (g_enableInterrupt) { if (vcd) { vcd->toggle(1); } plic.raise(0); } });		// Input interrupt
-	gpio.setCallback([&](){ if (g_enableInterrupt) { if (vcd) { vcd->toggle(2); } plic.raise(0); } });		// GPIO interrupt
-	// dma0.setCallback([&]() { if (g_enableInterrupt) { if (vcd) { vcd->toggle(3); } plic.raise(1); } });		// DMA interrupt
-	// dma1.setCallback([&]() { if (g_enableInterrupt) { if (vcd) { vcd->toggle(3); } plic.raise(1); } });		// DMA interrupt
-	// dma2.setCallback([&]() { if (g_enableInterrupt) { if (vcd) { vcd->toggle(3); } plic.raise(1); } });		// DMA interrupt
-	video.setCallback([&]() { if (g_enableInterrupt) { if (vcd) { vcd->toggle(4); } plic.raise(2); } });	// Video interrupt
+	tb.setCallback([&](){ if (g_enableInterrupt) { if (vcd) { vcd->toggle(1); } plic.raise(0); } }); // Input interrupt
+	gpio.setCallback([&](){ if (g_enableInterrupt) { if (vcd) { vcd->toggle(2); } plic.raise(0); } }); // GPIO interrupt
+	video.setCallback([&]() { if (g_enableInterrupt) { if (vcd) { vcd->toggle(3); } plic.raise(2); } }); // Video interrupt
 	// usb.setCallback([&]() { plic.raise(3); }); // USB interrupt
 
 	if (cmdLine.hasOption(L'e', L"elf"))
@@ -319,7 +307,7 @@ int main(int argc, const char** argv)
 
 	// Create user interface.
 	Ref< ui::Form > form = new ui::Form();
-	form->create(L"RetroDACK", 220_ut, 220_ut, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%,*", 0_ut, 0_ut));
+	form->create(L"RetroDACK", 220_ut, 220_ut, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%", 0_ut, 0_ut));
 	form->addEventHandler< ui::CloseEvent >([&](ui::CloseEvent* event) {
 		g_going = false;
 		event->consume();
@@ -350,16 +338,6 @@ int main(int argc, const char** argv)
 	
 	Ref< ui::Image > image = new ui::Image();
 	image->create(container, uiImage, ui::Image::WsScale | ui::Image::WsNearestFilter);
-
-	Ref< ui::Container > containerThreads = new ui::Container();
-	containerThreads->create(form, ui::WsNone, new ui::TableLayout(L"100%", L"*", 0_ut, 0_ut));
-	
-	Ref< SignalView > signalThreads[6];
-	for (int i = 0; i < 6; ++i)
-	{
-		signalThreads[i] = new SignalView();
-		signalThreads[i]->create(containerThreads, 0);
-	}
 
 	form->update();
 	form->show();
@@ -530,12 +508,6 @@ int main(int argc, const char** argv)
 				break;
 			}
 
-			const int32_t ct = cpu->getCSR(MSCRATCH) & 0xffff;
-			for (int i = 0; i < 6; ++i)
-			{
-				signalThreads[i]->set(0, (i == ct) ? 1 : 0);
-			}
-
 			if (timer.getElapsedTime() > 10.0f / 1000.0f)
 			{
 				profiler->record(cpu->getPC());
@@ -577,11 +549,6 @@ int main(int argc, const char** argv)
 				image->setImage(uiImage);
 			}
 			lastVideoT = timer.getElapsedTime();
-
-			for (int i = 0; i < 6; ++i)
-			{
-				signalThreads[i]->update();
-			}
 		}
 	}
 
