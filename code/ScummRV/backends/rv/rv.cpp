@@ -450,8 +450,8 @@ void OSystem_RebelV::update_sound()
 		{
 			m_soundProc(m_soundParam, (byte*)buf[toggle], sizeof(buf[toggle]));
 			
-			rt_audio_wait();
-			rt_audio_play_stereo(buf[toggle], NumSamples);
+			rt_audio_wait(1 << 0);
+			rt_audio_play_stereo(0, buf[toggle], NumSamples);
 
 			toggle = (toggle + 1) & 63;
 		}

@@ -12,10 +12,8 @@
 #include "Runtime/Kernel.h"
 
 #include <HAL/Audio.h>
-#include <HAL/DMA.h>
 #include <HAL/Timer.h>
 
-#define DMA_CHANNEL DMA_0_BASE
 #define TLV320_ADDR 0x18
 
 static uint32_t s_dma_tag = 0;
@@ -123,24 +121,30 @@ void rt_audio_set_filter(uint8_t filter)
 	}
 }
 
-uint32_t rt_audio_get_queued()
+uint8_t rt_audio_is_channels_busy(uint32_t channel_mask)
 {
-	return hal_audio_get_queued();
+	const uint32_t busy = hal_audio_get_channels_busy();
+	return ((busy & channel_mask) != 0) ? 1 : 0;
 }
 
-void rt_audio_play_stereo(const void* samples, uint32_t nsamples)
+void rt_audio_play_stereo(uint8_t channel, const void* samples, uint32_t nsamples)
 {
 	if (nsamples > 0)
 	{
 		__asm__ volatile ( "fence" );
-		s_dma_tag = hal_dma_feed(DMA_CHANNEL, (void*)AUDIO_BASE, samples, nsamples);
+		hal_audio_setup_channel(channel, samples, nsamples);
 	}
 }
 
-void rt_audio_wait()
+void rt_audio_wait(uint32_t channel_mask)
 {
-	while (hal_dma_is_full(DMA_CHANNEL))
+	for (;;)
+	{
+		const uint32_t busy = hal_audio_get_channels_busy();
+		if ((busy & channel_mask) == 0)
+			break;
 		rt_kernel_yield();
+	}
 }
 
 int32_t rt_audio_headphones_connected()

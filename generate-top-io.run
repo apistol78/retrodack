@@ -30,7 +30,6 @@ function main()
 		"pin-sram.csv",
 		"pin-sdram.csv",
 		"pin-spi-flash.csv",
-		"pin-debug.csv",
 	}
 
 	local first = true
