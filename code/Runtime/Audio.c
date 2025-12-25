@@ -127,6 +127,15 @@ uint8_t rt_audio_is_channels_busy(uint32_t channel_mask)
 	return ((busy & channel_mask) != 0) ? 1 : 0;
 }
 
+void rt_audio_play_mono(uint8_t channel, const void* samples, uint32_t nsamples)
+{
+	if (nsamples > 0)
+	{
+		__asm__ volatile ( "fence" );
+		hal_audio_setup_channel(channel, samples, nsamples >> 1);
+	}
+}
+
 void rt_audio_play_stereo(uint8_t channel, const void* samples, uint32_t nsamples)
 {
 	if (nsamples > 0)
@@ -134,6 +143,10 @@ void rt_audio_play_stereo(uint8_t channel, const void* samples, uint32_t nsample
 		__asm__ volatile ( "fence" );
 		hal_audio_setup_channel(channel, samples, nsamples);
 	}
+}
+
+void rt_audio_set_channel_volume(uint8_t channel, uint8_t volume)
+{
 }
 
 void rt_audio_wait(uint32_t channel_mask)
