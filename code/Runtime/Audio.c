@@ -138,6 +138,7 @@ void rt_audio_play(uint8_t channel, const void* samples, uint32_t nsamples, uint
 
 void rt_audio_set_channel_volume(uint8_t channel, uint8_t volume)
 {
+	hal_audio_set_channel_volume(channel, volume);
 }
 
 void rt_audio_wait(uint32_t channel_mask)
