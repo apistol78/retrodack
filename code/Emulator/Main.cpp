@@ -191,8 +191,7 @@ int main(int argc, const char** argv)
 	::Timer tmr;
 	PLIC plic;
 	Audio audio;
-	DMA dma0;
-	DMA dma1;
+	DMA dma;
 	Sprite sprite;
 	SPI spi;
 
@@ -211,13 +210,12 @@ int main(int argc, const char** argv)
 	bus.map(0x30000000, 0x30000100, false, true, &i2c);
 	bus.map(0x40000000, 0x40000100, false, true, &sd);
 	bus.map(0x50000000, 0x50000100, false, true, &tmr);
-	bus.map(0x60000000, 0x60000100, false, false, &audio);
+	bus.map(0x60000000, 0x60ffffff, false, true, &audio);
 	bus.map(0x70000000, 0x70ffffff, false, true, &plic);
 	bus.map(0x80000000, 0x81000000, false, true, &video);
-	bus.map(0x90000000, 0x90000100, false, true, &dma0);
-	bus.map(0xa0000000, 0xa0000100, false, true, &dma1);
-	bus.map(0xb0000000, 0xb0010000, false, true, &sprite);
-	bus.map(0xc0000000, 0xc0010000, false, false, &spi);
+	bus.map(0x90000000, 0x90000100, false, true, &dma);
+	bus.map(0xa0000000, 0xa0010000, false, true, &sprite);
+	bus.map(0xb0000000, 0xb0010000, false, false, &spi);
 
 	Ref< OutputStream > os;
 

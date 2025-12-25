@@ -24,6 +24,7 @@ local SOURCE < const > =
 	-- Library
 	PATH_PERIFHERIALS .. "/audio2/AUDIO_channel.sv",
 	PATH_PERIFHERIALS .. "/audio2/AUDIO_controller_8.sv",
+	PATH_PERIFHERIALS .. "/audio2/AUDIO_cmdq.sv",
 	PATH_PERIFHERIALS .. "/audio2/AUDIO_i2s_output.sv",
 	PATH_PERIFHERIALS .. "/block/BRAM.sv",
 	PATH_PERIFHERIALS .. "/block/BRAM_1r1w.sv",

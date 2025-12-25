@@ -73,7 +73,7 @@ int main()
 	{
 		xmp_play_buffer(ctx, buffer[i], 1024 * 2 * sizeof(int16_t), 0);
 		rt_audio_wait(1 << 0);
-		rt_audio_play_stereo(0, buffer[i], 1024);
+		rt_audio_play(0, buffer[i], 1024, RT_AUDIO_MODE_APPEND | RT_AUDIO_MODE_STEREO);
 		i = (i + 1) & 63;
 	}
 
