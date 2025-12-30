@@ -12,5 +12,9 @@
 			<first>Emulator.Play</first>
 			<second>$(Emulator.Path)/Play.svg</second>
 		</item>
+		<item>
+			<first>Emulator.Stop</first>
+			<second>$(Emulator.Path)/Stop.svg</second>
+		</item>
 	</values>
 </object>

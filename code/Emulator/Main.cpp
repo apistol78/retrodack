@@ -182,8 +182,8 @@ int main(int argc, const char** argv)
 	}
 
 	// Create emulation devices.
-	Memory rom(0x00100000);
- 	Memory sdram(0x02000000);
+	Memory rom(0x00100000, false);
+ 	Memory sdram(0x02000000, true);
 	Video video(720, 720);
 	UART uart;
 	I2C i2c;
@@ -204,18 +204,18 @@ int main(int argc, const char** argv)
 	video.setSprite(&sprite);
 
 	Bus bus;
-	bus.map(0x00000000, 0x00000000 + rom.getCapacity(), false, false, &rom);
- 	bus.map(0x10000000, 0x10000000 + sdram.getCapacity(), true, false, &sdram);
-	bus.map(0x20000000, 0x20000100, false, false, &uart);
-	bus.map(0x30000000, 0x30000100, false, true, &i2c);
-	bus.map(0x40000000, 0x40000100, false, true, &sd);
-	bus.map(0x50000000, 0x50000100, false, true, &tmr);
-	bus.map(0x60000000, 0x60ffffff, false, true, &audio);
-	bus.map(0x70000000, 0x70ffffff, false, true, &plic);
-	bus.map(0x80000000, 0x81000000, false, true, &video);
-	bus.map(0x90000000, 0x90000100, false, true, &dma);
-	bus.map(0xa0000000, 0xa0010000, false, true, &sprite);
-	bus.map(0xb0000000, 0xb0010000, false, false, &spi);
+	bus.map(0x00000000, 0x00000000 + rom.getCapacity(), &rom);
+ 	bus.map(0x10000000, 0x10000000 + sdram.getCapacity(), &sdram);
+	bus.map(0x20000000, 0x20000100, &uart);
+	bus.map(0x30000000, 0x30000100, &i2c);
+	bus.map(0x40000000, 0x40000100, &sd);
+	bus.map(0x50000000, 0x50000100, &tmr);
+	bus.map(0x60000000, 0x60ffffff, &audio);
+	bus.map(0x70000000, 0x70ffffff, &plic);
+	bus.map(0x80000000, 0x81000000, &video);
+	bus.map(0x90000000, 0x90000100, &dma);
+	bus.map(0xa0000000, 0xa0010000, &sprite);
+	bus.map(0xb0000000, 0xb0010000, &spi);
 
 	Ref< OutputStream > os;
 
@@ -314,8 +314,9 @@ int main(int argc, const char** argv)
 	Ref< ui::ToolBar > toolBar = new ui::ToolBar();
 	toolBar->create(form, ui::WsNone);
 	toolBar->addImage(new ui::StyleBitmap(L"Emulator.Play"));
+	toolBar->addImage(new ui::StyleBitmap(L"Emulator.Stop"));
 	toolBar->addItem(new ui::ToolBarButton(L"Continue", 0, ui::Command(L"Emulator.Continue")));
-	toolBar->addItem(new ui::ToolBarButton(L"Pause", 0, ui::Command(L"Emulator.Pause")));
+	toolBar->addItem(new ui::ToolBarButton(L"Pause", 1, ui::Command(L"Emulator.Pause")));
 	toolBar->addEventHandler< ui::ToolBarButtonClickEvent >([&](ui::ToolBarButtonClickEvent* event)
 	{
 		const std::wstring cmd = event->getCommand().getName();
