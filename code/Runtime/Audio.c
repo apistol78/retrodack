@@ -14,6 +14,7 @@
 #include <HAL/Audio.h>
 #include <HAL/Timer.h>
 
+#define NUM_CHANNELS 4
 #define TLV320_ADDR 0x18
 
 static uint32_t s_dma_tag = 0;
@@ -121,6 +122,11 @@ void rt_audio_set_filter(uint8_t filter)
 	}
 }
 
+uint8_t rt_audio_get_num_channels()
+{
+	return NUM_CHANNELS;
+}
+
 uint8_t rt_audio_is_channels_busy(uint32_t channel_mask)
 {
 	const uint32_t busy = hal_audio_get_channels_busy();
@@ -129,7 +135,7 @@ uint8_t rt_audio_is_channels_busy(uint32_t channel_mask)
 
 void rt_audio_play(uint8_t channel, const void* samples, uint32_t nsamples, uint32_t mode)
 {
-	if (nsamples > 0)
+	if (nsamples > 0 && channel < NUM_CHANNELS)
 	{
 		__asm__ volatile ( "fence" );
 		hal_audio_setup_channel(channel, samples, nsamples, mode);
@@ -138,7 +144,8 @@ void rt_audio_play(uint8_t channel, const void* samples, uint32_t nsamples, uint
 
 void rt_audio_set_channel_volume(uint8_t channel, uint8_t volume)
 {
-	hal_audio_set_channel_volume(channel, volume);
+	if (channel < NUM_CHANNELS)
+		hal_audio_set_channel_volume(channel, volume);
 }
 
 void rt_audio_wait(uint32_t channel_mask)

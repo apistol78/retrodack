@@ -23,6 +23,8 @@ EXTERN_C void rt_audio_set_playback_rate(uint32_t rate);
 
 EXTERN_C void rt_audio_set_filter(uint8_t filter);
 
+EXTERN_C uint8_t rt_audio_get_num_channels();
+
 EXTERN_C uint8_t rt_audio_is_channels_busy(uint32_t channel_mask);
 
 EXTERN_C void rt_audio_play(uint8_t channel, const void* samples, uint32_t nsamples, uint32_t mode);

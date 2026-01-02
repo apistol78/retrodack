@@ -89,14 +89,14 @@ static float s_abs(float a)
 static void input_thread()
 {
 	int32_t absX, absY;
-	int32_t wait = 500;
+	int32_t wait = 100;
 
 	for (;;)
 	{
 		// Wait for signal.
 		rt_i2c_write(0x0a, TRACKBALL_REG_INT, 0, RT_I2C_MODE_FAST);
 		rt_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN, RT_I2C_MODE_FAST);
-		const int32_t gotSignal = rt_kernel_sig_try_wait(&s_input_signal, wait);
+		rt_kernel_sig_try_wait(&s_input_signal, wait);
 
 		// Trackball
 		{
@@ -136,7 +136,7 @@ static void input_thread()
 			{
 				s_filteredDeltaX = 0.0f;
 				s_filteredDeltaY = 0.0f;
-				wait = 500;
+				wait = 100;
 			}
 			else
 				wait = 10;
@@ -207,7 +207,6 @@ static void input_thread()
 		}
 
 		// Buttons
-		if (gotSignal)
 		{
 			uint16_t data = 0;
 			rt_i2c_read(0x20, 0x00, (uint8_t*)&data, 2, RT_I2C_MODE_FAST);

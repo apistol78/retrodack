@@ -192,7 +192,7 @@ bool Serial::open(const std::wstring& device, const Configuration& configuration
 	tty.c_oflag &= ~ONLCR; // Prevent conversion of newline to carriage return/line feed
 	// tty.c_oflag &= ~OXTABS; // Prevent conversion of tabs to spaces (NOT PRESENT IN LINUX)
 	// tty.c_oflag &= ~ONOEOT; // Prevent removal of C-d chars (0x004) in output (NOT PRESENT IN LINUX)
-	tty.c_cc[VTIME] = 1;    // Wait for up to 1s (10 deciseconds), returning as soon as any data is received.
+	tty.c_cc[VTIME] = 0;    // Wait for up to 1s (10 deciseconds), returning as soon as any data is received.
 	tty.c_cc[VMIN] = 0;
 
 	if (configuration.baudRate == 9600)

@@ -52,8 +52,9 @@ int32_t runtime_init()
 	rt_disk_init();
 
 	printf("** Initialize SD card **\n");
-	if (hal_sd_init(SD_MODE_SW) != 0)	// HW is only available on HW (duh), not emulator...
-		printf("SD card init failed!\n");
+	const int32_t result = hal_sd_init(SD_MODE_HW);
+	if (result != SD_RESULT_OK)
+		printf("SD card init failed (result = %d)!\n", result);
 
 	printf("** Initialize FS **\n");
 	if (file_init() != 0)

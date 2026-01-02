@@ -90,9 +90,7 @@ static void remote_control()
 			rt_kernel_yield();
 
 		const uint8_t cmd = hal_uart_rx_u8();
-
-		// "write"
-		if (cmd == 'W')
+		if (cmd == 'W')	// "write"
 		{
 			const uint32_t addr = rx_u32();
 			const uint16_t nb = rx_u16();
@@ -144,9 +142,7 @@ static void remote_control()
 			else
 				hal_uart_tx_u8('E');	// Invalid checksum.
 		}
-
-		// "jump to"
-		else if (cmd == 'J')
+		else if (cmd == 'J')	// "jump to"
 		{
 			const uint32_t addr = rx_u32();
 			const uint32_t sp = rx_u32();
@@ -173,14 +169,17 @@ static void remote_control()
 			if (cs == rx_u8())
 			{
 				hal_uart_tx_u8('O');	// Ok
+				rt_timer_wait_ms(100);	// Wait so UART have time to transmit response.
 
-				rt_console_printf("\nLaunching...\n");
-				rt_kernel_sleep(1000);
-
+				// Disable interrupts; assumed to be reinitialized
+				// by executable.
 				hal_interrupt_disable();
 
 				// Ensure DCACHE is flushed.
-				__asm__ volatile ("fence");
+				__asm__ volatile (
+					"fence	\n"
+					"fence	\n"
+				);
 
 				// Set initial stack pointer.
 				if (sp != 0)
@@ -197,58 +196,9 @@ static void remote_control()
 			else
 				hal_uart_tx_u8('E');	// Invalid checksum.
 		}
-
-		// "create file"
-		else if (cmd == 'f')
+		else
 		{
-			for (int32_t i = 0;; ++i)
-			{
-				const uint8_t d = rx_u8();
-				if ((filename[i] = (char)d) == 0)
-					break;
-			}
-			
-			fd = file_open(filename, FILE_MODE_WRITE);
-			if (fd >= 0)
-				hal_uart_tx_u8('O');
-			else
-				hal_uart_tx_u8('E');	// Failed to create file.
-		}
-
-		// "write file"
-		else if (cmd == 'w')
-		{
-			const uint16_t nb = rx_u16();
-			if (nb == 0 || nb > 1024)
-			{
-				hal_uart_tx_u8('E');
-				continue;
-			}
-
-			// Receive 
-			for (uint16_t i = 0; i < nb; ++i)
-			{
-				const uint8_t d = rx_u8();
-				r[i] = d;
-			}
-			
-			if (file_write(fd, r, nb) == nb)
-				hal_uart_tx_u8('O');
-			else
-				hal_uart_tx_u8('E');			
-		}
-
-		// "close file"
-		else if (cmd == 'c')
-		{
-			if (fd >= 0)
-			{
-				file_close(fd);
-				hal_uart_tx_u8('O');
-				fd = -1;
-			}
-			else
-				hal_uart_tx_u8('E');
+			hal_uart_tx_u8('E');	// Unknown command.
 		}
 	}
 }
@@ -265,49 +215,6 @@ static void load(const char* game)
 	// No BOOT executable found.
 	rt_console_printf("\"%s\" not found!\n", game);
 }
-
-// static void usb_thread()
-// {
-//     max3420_init_usb();
-//  	scsi_write_enable(1);
-    
-//     /* get and process USB event while Vbus is present */
-//     while (vBusHi())
-//     {
-//         const usbEvent_t event = max3420_get_usb_event();
-//         switch (event)
-//         {
-//             case USB_VBUS_LOST:
-// 				printf("USB_VBUS_LOST\n");
-//                 break;
-                
-//             case BUS_RESET:
-// 				printf("BUS_RESET\n");
-//                 usb_mass_process_bus_reset();
-//                 break;
-                
-//             case SETUP_PACKET_AVAILABLE:
-// 				printf("SETUP_PACKET_AVAILABLE\n");
-//                 usb_mass_process_setup_packet();
-//                 break;
-                
-//             case EP1_OUT_DATA:
-// 				printf("EP1_OUT_DATA\n");
-//                 usb_mass_process_bulk_out_transaction();
-//                 break;
-                
-//             case USB_SUSPEND:
-// 				printf("USB_SUSPEND\n");
-//                 max3420_usb_suspend();
-//                 break;
-                
-//             default:
-//                 break;
-//         }
-//     }
-    
-//     max3420_terminate_usb();
-// }
 
 void kickstart_main()
 {
@@ -357,7 +264,7 @@ void kickstart_main()
 
 				rt_console_printf("Initialize USB...\n");
 				max3420_init_usb();
-				scsi_write_enable(1);
+				// scsi_write_enable(1);
 
 				rt_console_printf("\n");
 				rt_console_printf("Press S1 for Doom\n");
@@ -471,7 +378,7 @@ int main()
 		:
 		: "r" (sp)
 	);
-
+/*
 	// Do some memory testing first.
 	{
 		volatile uint32_t* start = (volatile uint32_t*)0x10000000;
@@ -505,7 +412,7 @@ int main()
 			}
 		}
 	}
-
+*/
 	// Initialize segments when running from ROM.
 	{
 		extern uint8_t INIT_DATA_VALUES;

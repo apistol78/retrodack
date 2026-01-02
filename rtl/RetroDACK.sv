@@ -25,10 +25,15 @@ module RetroDACK(
 	assign LED_G = 1'b0;
 	assign LED_B = 1'b0;
 
-	// assign DEBUG_0 = 1'b0; //(I2C_SCL_direction == 1'b0 && I2C_SDA == 1'b0);
-	// assign DEBUG_1 = 1'b0; //I2C_SCL_direction;	// 1 = CPU own SCL
-	// assign DEBUG_2 = I2C_SDA_direction;	// 1 = CPU own SDA
-	// assign DEBUG_3 = I2C_SCL;
+	// bit [3:0] shf = 0;
+	// always_ff @(posedge clock) begin
+	// 	shf <= { shf[2:0], cpu_external_interrupt };
+	// end
+
+	// assign DEBUG_0 = ~KEYPAD_INTERRUPT;
+	// assign DEBUG_1 = cpu_external_interrupt_enable;
+	// assign DEBUG_2 = |shf;
+	// assign DEBUG_3 = cpu_scratch[0];
 	// assign DEBUG_4 = I2C_SDA;
 
 	// Unimplemeneted pins.
@@ -125,6 +130,7 @@ module RetroDACK(
 	wire [31:0] cpu_dbus_wdata;
 	wire [3:0] cpu_dbus_wmask;
 	wire cpu_fault;
+	wire [31:0] cpu_scratch;
 
 	CPU #(
 		.STACK_POINTER(32'h12000000 - 4),
@@ -161,7 +167,8 @@ module RetroDACK(
 		// Debug
 		.o_execute_busy(),
 		.o_memory_busy(),
-		.o_fault(cpu_fault)
+		.o_fault(cpu_fault),
+		.o_scratch(cpu_scratch)
 	);
 
 
@@ -292,9 +299,8 @@ module RetroDACK(
 	assign I2C_SDA = I2C_SDA_direction ? I2C_SDA_w : 1'bz;
 
 	I2C_v2 #(
-		// .DELAY_FAST(400),
-		// .DELAY_SLOW(1400)
-		.DELAY(4000)
+		.DELAY_SLOW(4000),
+		.DELAY_FAST(1400)
 	) i2c (
 		.i_reset(reset),
 		.i_clock(clock),
@@ -352,7 +358,7 @@ module RetroDACK(
 		.i_clock(clock),
 		.i_request(sd_request),
 		.i_rw(sd_rw),
-		.i_address(sd_address[1:0]),
+		.i_address(sd_address[3:2]),
 		.i_wdata(sd_wdata),
 		.o_rdata(sd_rdata),
 		.o_ready(sd_ready),
@@ -429,7 +435,7 @@ module RetroDACK(
 	wire audio_dma_ready;
 	wire [31:0] audio_dma_rdata;
 
-	AUDIO_controller_8 audio_controller(
+	AUDIO_controller_4 audio_controller(
 		.i_reset(reset),
 		.i_clock(clock),
 
@@ -464,12 +470,7 @@ module RetroDACK(
 
 	bit [1:0] tbi = 2'b00;
 	always_ff @(posedge clock) begin
-		tbi <= { tbi[0], ~TRACKBALL_INTERRUPT };
-	end
-
-	bit [1:0] kpi = 2'b00;
-	always_ff @(posedge clock) begin
-		kpi <= { kpi[0], ~KEYPAD_INTERRUPT };
+		tbi <= { tbi[0], ~TRACKBALL_INTERRUPT | ~KEYPAD_INTERRUPT };
 	end
 
 	bit [1:0] vbi = 2'b00;
@@ -486,7 +487,7 @@ module RetroDACK(
 		.i_reset(reset),
 		.i_clock(clock),
 
-		.i_interrupt_0((tbi == 2'b01) || (kpi == 2'b01)),
+		.i_interrupt_0(tbi == 2'b01),
 		.i_interrupt_1(1'b0),
 		.i_interrupt_2(vbi == 2'b01),
 		.i_interrupt_3(ubi == 2'b01),
