@@ -22,6 +22,7 @@ local SOURCE < const > =
 	-- PATH_SOC .. "/RetroDACK_VGA.sv",
 	-- PATH_SOC .. "/RetroDACK_SRAM.sv",
 	-- Library
+	PATH_PERIFHERIALS .. "/audio2/AUDIO_mul_16x4.sv",
 	PATH_PERIFHERIALS .. "/audio2/AUDIO_channel.sv",
 	PATH_PERIFHERIALS .. "/audio2/AUDIO_controller_4.sv",
 	PATH_PERIFHERIALS .. "/audio2/AUDIO_cmdq.sv",
