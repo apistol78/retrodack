@@ -137,7 +137,7 @@
         "min_text_thickness": 0.08,
         "min_through_hole_diameter": 0.3,
         "min_track_width": 0.1,
-        "min_via_annular_width": 0.2,
+        "min_via_annular_width": 0.1,
         "min_via_diameter": 0.2,
         "solder_mask_to_copper_clearance": 0.0,
         "use_height_for_length_calcs": true
@@ -483,7 +483,7 @@
         "priority": 2147483647,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
         "track_width": 0.1,
-        "via_diameter": 0.25,
+        "via_diameter": 0.4,
         "via_drill": 0.15,
         "wire_width": 6
       }
@@ -626,6 +626,18 @@
     [
       "a85e5c81-2db0-4fec-8ba8-fa5236bf3fa2",
       "Root"
+    ],
+    [
+      "85ccf59a-bacc-4fbd-ba31-3b49c3926c2c",
+      "FPGA"
+    ],
+    [
+      "4611da13-b1b8-49fc-bb4a-1e9970e119a4",
+      "POWER"
+    ],
+    [
+      "39b96e1e-2778-4661-a768-bd24a50710f8",
+      "RAM"
     ]
   ],
   "text_variables": {}
