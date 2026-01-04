@@ -10,11 +10,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include "Runtime/Console.h"
-#include "Runtime/Kernel.h"
 #include "Runtime/Runtime.h"
-#include "Runtime/Timer.h"
-#include "Runtime/Video.h"
 
 // C64 style font.
 #include "Runtime/font8x8_c64.h"

@@ -305,7 +305,7 @@ int main(int argc, const char** argv)
 
 	// Create user interface.
 	Ref< ui::Form > form = new ui::Form();
-	form->create(L"RetroDACK", 220_ut, 220_ut, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%", 0_ut, 0_ut));
+	form->create(L"RetroDACK", 620_ut, 420_ut, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%", 0_ut, 0_ut));
 	form->addEventHandler< ui::CloseEvent >([&](ui::CloseEvent* event) {
 		g_going = false;
 		event->consume();
@@ -378,34 +378,34 @@ int main(int argc, const char** argv)
 		switch (event->getVirtualKey())
 		{
 		case ui::Vk1:
-			gpio.setInputBit(0, true);
-			break;
-		case ui::Vk2:
-			gpio.setInputBit(1, true);
-			break;
-		case ui::Vk3:
-			gpio.setInputBit(2, true);
-			break;
-		case ui::Vk4:
 			gpio.setInputBit(3, true);
 			break;
+		case ui::Vk2:
+			gpio.setInputBit(2, true);
+			break;
+		case ui::Vk3:
+			gpio.setInputBit(1, true);
+			break;
+		case ui::Vk4:
+			gpio.setInputBit(0, true);
+			break;
 		case ui::Vk5:
-			gpio.setInputBit(4, true);
-			break;
-		case ui::Vk6:
-			gpio.setInputBit(5, true);
-			break;
-		case ui::VkW:
-			gpio.setInputBit(6, true);
-			break;
-		case ui::VkS:
-			gpio.setInputBit(7, true);
-			break;
-		case ui::VkD:
 			gpio.setInputBit(8, true);
 			break;
-		case ui::VkA:
+		case ui::Vk6:
 			gpio.setInputBit(9, true);
+			break;
+		case ui::VkW:
+			gpio.setInputBit(4, true);
+			break;
+		case ui::VkS:
+			gpio.setInputBit(5, true);
+			break;
+		case ui::VkD:
+			gpio.setInputBit(6, true);
+			break;
+		case ui::VkA:
+			gpio.setInputBit(7, true);
 			break;
 		}
 	});
@@ -416,34 +416,34 @@ int main(int argc, const char** argv)
 		switch (event->getVirtualKey())
 		{
 		case ui::Vk1:
-			gpio.setInputBit(0, false);
-			break;
-		case ui::Vk2:
-			gpio.setInputBit(1, false);
-			break;
-		case ui::Vk3:
-			gpio.setInputBit(2, false);
-			break;
-		case ui::Vk4:
 			gpio.setInputBit(3, false);
 			break;
+		case ui::Vk2:
+			gpio.setInputBit(2, false);
+			break;
+		case ui::Vk3:
+			gpio.setInputBit(1, false);
+			break;
+		case ui::Vk4:
+			gpio.setInputBit(0, false);
+			break;
 		case ui::Vk5:
-			gpio.setInputBit(4, false);
-			break;
-		case ui::Vk6:
-			gpio.setInputBit(5, false);
-			break;
-		case ui::VkW:
-			gpio.setInputBit(6, false);
-			break;
-		case ui::VkS:
-			gpio.setInputBit(7, false);
-			break;
-		case ui::VkD:
 			gpio.setInputBit(8, false);
 			break;
-		case ui::VkA:
+		case ui::Vk6:
 			gpio.setInputBit(9, false);
+			break;
+		case ui::VkW:
+			gpio.setInputBit(4, false);
+			break;
+		case ui::VkS:
+			gpio.setInputBit(5, false);
+			break;
+		case ui::VkD:
+			gpio.setInputBit(6, false);
+			break;
+		case ui::VkA:
+			gpio.setInputBit(7, false);
 			break;
 		}
 	});

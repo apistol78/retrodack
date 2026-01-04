@@ -10,20 +10,9 @@
 
 #include <HAL/Interrupt.h>
 #include <HAL/SD.h>
-#include <HAL/Timer.h>
 #include <HAL/UART.h>
-// #include <HAL/Video.h>
 
-#include "Runtime/Audio.h"
-#include "Runtime/CRT.h"
-#include "Runtime/Disk.h"
-#include "Runtime/File.h"
-#include "Runtime/I2C.h"
-#include "Runtime/Input.h"
-#include "Runtime/Kernel.h"
 #include "Runtime/Runtime.h"
-#include "Runtime/Timer.h"
-#include "Runtime/Video.h"
 
 // Needed by custom printf implementation.
 void _putchar(char character)
@@ -52,7 +41,7 @@ int32_t runtime_init()
 	rt_disk_init();
 
 	printf("** Initialize SD card **\n");
-	const int32_t result = hal_sd_init(SD_MODE_HW);
+	const int32_t result = hal_sd_init(SD_MODE_SW);
 	if (result != SD_RESULT_OK)
 		printf("SD card init failed (result = %d)!\n", result);
 

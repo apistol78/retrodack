@@ -19,19 +19,7 @@
 #include <HAL/UART.h>
 #include <HAL/Sprite.h>
 
-#include "Runtime/Audio.h"
-#include "Runtime/Battery.h"
-#include "Runtime/Console.h"
-#include "Runtime/CRT.h"
-#include "Runtime/Disk.h"
-#include "Runtime/ELF.h"
-#include "Runtime/File.h"
-#include "Runtime/I2C.h"
-#include "Runtime/Input.h"
 #include "Runtime/Runtime.h"
-#include "Runtime/Timer.h"
-#include "Runtime/Kernel.h"
-#include "Runtime/Video.h"
 
 #include "Runtime/USB/Max3420.h"
 #include "Runtime/USB/UsbMassStorage.h"
