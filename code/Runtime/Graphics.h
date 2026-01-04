@@ -18,21 +18,35 @@ typedef struct
 }
 rt_gfx_context_t;
 
+typedef union
+{
+    struct
+    {
+        uint8_t r;
+        uint8_t g;
+        uint8_t b;
+        uint8_t x;
+    };
+    uint32_t dw;
+}
+rt_gfx_color_t;
+
+typedef struct
+{
+    rt_gfx_color_t colors[256];
+    int32_t minIndex;
+    int32_t maxIndex;
+}
+rt_gfx_palette_t;
+
 typedef struct
 {
     int32_t width;
     int32_t height;
     uint8_t* pixels;
+    rt_gfx_palette_t* palette;
 }
 rt_gfx_image_t;
-
-typedef struct
-{
-    uint32_t colors[256];
-    int32_t minIndex;
-    int32_t maxIndex;
-}
-rt_gfx_palette_t;
 
 EXTERN_C rt_gfx_image_t* rt_gfx_create_image(int32_t width, int32_t height);
 
@@ -43,8 +57,6 @@ EXTERN_C rt_gfx_palette_t* rt_gfx_create_palette();
 EXTERN_C void rt_gfx_destroy_palette(rt_gfx_palette_t* palette);
 
 EXTERN_C rt_gfx_image_t* rt_gfx_load_image(const char* filename);
-
-EXTERN_C rt_gfx_palette_t* rt_gfx_load_palette(const char* filename);
 
 EXTERN_C void rt_gfx_blit_image(rt_gfx_context_t* ctx, const rt_gfx_image_t* image, int32_t x, int32_t y);
 

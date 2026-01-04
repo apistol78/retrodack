@@ -54,6 +54,7 @@ rt_gfx_image_t* rt_gfx_create_image(int32_t width, int32_t height)
 	image->width = width;
 	image->height = height;
 	image->pixels = (uint8_t*)(image + 1);
+	image->palette = 0;
 	return image;
 }
 
@@ -136,23 +137,32 @@ rt_gfx_image_t* rt_gfx_load_image(const char* filename)
 		}
 	}
 
-	// uint8_t dummy;
-	// if (file_read(fd, &dummy, sizeof(uint8_t)) != sizeof(uint8_t))
-	// {
-	// 	rt_gfx_destroy_image(image);
-	// 	goto cleanup;
-	// }	
+	uint8_t dummy;
+	if (file_read(fd, &dummy, sizeof(uint8_t)) != sizeof(uint8_t))
+	{
+		rt_gfx_destroy_image(image);
+		goto cleanup;
+	}	
+
+	image->palette = rt_gfx_create_palette();
+	image->palette->minIndex = 0;
+	image->palette->maxIndex = 255;
+
+	for (uint32_t i = 0; i < 256; ++i)
+	{
+		uint8_t rgb[3];
+		file_read(fd, rgb, 3 * sizeof(uint8_t));
+		image->palette->colors[i].b = rgb[0];
+		image->palette->colors[i].g = rgb[1];
+		image->palette->colors[i].r = rgb[2];
+		image->palette->colors[i].x = 255;
+	} 
 
 	file_close(fd);
 	return image;
 
 cleanup:
 	file_close(fd);
-	return 0;
-}
-
-rt_gfx_palette_t* rt_gfx_load_palette(const char* filename)
-{
 	return 0;
 }
 

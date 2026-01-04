@@ -30,15 +30,19 @@ int arena[A_HEIGHT][A_WIDTH];
 
 uint32_t score = 0;
 bool gameOver = false;
+int nextTetrominoIdx;
 int currTetrominoIdx;
 int currRotation = 0;
 int currX = A_WIDTH / 2;
 int currY = 0;
 
+// Graphics
+rt_gfx_image_t* img_background;
+
 void newTetromino();
 bool validPos(int tetromino, int rotation, int posX, int posY);
 int rotate(int x, int y, int rotation);
-void processInputs();
+bool processInputs();
 bool moveDown();
 void addToArena();
 void checkLines();
@@ -46,40 +50,55 @@ void drawArena();
 
 int tetrisMain()
 {
-	memset(arena, 0, sizeof(arena[0][0]) * A_HEIGHT * A_WIDTH);
-	newTetromino();
+	img_background = rt_gfx_load_image("background.pcx");
 
-	const int targetFrameTime = 350;
-	uint32_t lastTime = rt_timer_get_ms();
-
-	while (!gameOver)
+	for (;;)
 	{
-		uint32_t now = rt_timer_get_ms();
-		uint32_t elapsed = (now - lastTime);
-		processInputs();
+		score = 0;
+		gameOver = false;
+		nextTetrominoIdx = rand() % 7;
+		currRotation = 0;
+		currX = A_WIDTH / 2;
+		currY = 0;
 
-		if (elapsed >= targetFrameTime)
+		memset(arena, 0, sizeof(arena[0][0]) * A_HEIGHT * A_WIDTH);
+		newTetromino();
+
+		const int targetFrameTime = 350;
+		const int targetFrameTimeFast = 50;
+
+		uint32_t lastTime = rt_timer_get_ms();
+
+		while (!gameOver)
 		{
-			if (!moveDown())
+			uint32_t now = rt_timer_get_ms();
+			uint32_t elapsed = (now - lastTime);
+			const bool speedUp = processInputs();
+
+			if (elapsed >= (speedUp ? targetFrameTimeFast : targetFrameTime))
 			{
-				addToArena();
-				checkLines();
-				newTetromino();
+				if (!moveDown())
+				{
+					addToArena();
+					checkLines();
+					newTetromino();
+				}
+				lastTime = now;
 			}
-			lastTime = now;
+
+			drawArena();
+			//rt_kernel_sleep(10);
 		}
 
-		drawArena();
-		rt_kernel_sleep(10);
+		printf("Game over!\nScore: %d\n", score);
 	}
-
-	printf("Game over!\nScore: %d\n", score);
 	return 0;
 }
 
 void newTetromino()
 {
-	currTetrominoIdx = rand() % 7;
+	currTetrominoIdx = nextTetrominoIdx;
+	nextTetrominoIdx = rand() % 7;
 	currRotation = 0;
 	currX = (A_WIDTH / 2) - (T_WIDTH / 2);
 	currY = 0;
@@ -126,12 +145,12 @@ int rotate(int x, int y, int rotation)
 	}
 }
 
-void processInputs()
+bool processInputs()
 {
 	const uint32_t st = rt_input_get_state();
 
 	static bool rotated = false;
-	if (st & (RT_INPUT_BUTTON_A | RT_INPUT_DPAD_N))
+	if (st & RT_INPUT_BUTTON_A)
 	{
 		if (!rotated)
 		{
@@ -144,21 +163,31 @@ void processInputs()
 	else
 		rotated = false;
 
-	if (st & RT_INPUT_DPAD_W)
+	static uint32_t lastMove = 0;
+	const bool haveMove = ((st & (RT_INPUT_DPAD_W | RT_INPUT_DPAD_E)) != 0);
+	if (haveMove)
 	{
-		if (validPos(currTetrominoIdx, currRotation, currX - 1, currY))
-			currX--;
+		uint32_t tm = rt_timer_get_ms();
+		if ((tm - lastMove) > 200)
+		{
+			if (st & RT_INPUT_DPAD_W)
+			{
+				if (validPos(currTetrominoIdx, currRotation, currX - 1, currY))
+					currX--;
+			}
+			if (st & RT_INPUT_DPAD_E)
+			{
+				if (validPos(currTetrominoIdx, currRotation, currX + 1, currY))
+					currX++;
+			}
+			lastMove = tm;
+		}
 	}
-	if (st & RT_INPUT_DPAD_E)
-	{
-		if (validPos(currTetrominoIdx, currRotation, currX + 1, currY))
-			currX++;
-	}
-	if (st & RT_INPUT_DPAD_S)
-	{
-		if (validPos(currTetrominoIdx, currRotation, currX, currY + 1))
-			currY++;
-	}
+	else
+		lastMove = 0;
+
+	const bool speedUp = ((st & RT_INPUT_DPAD_S) != 0);
+	return speedUp;
 }
 
 bool moveDown()
@@ -234,13 +263,28 @@ void drawArena()
 	cx.height = 360;
 	cx.pixels = rt_video_get_secondary_target();
 
-	rt_video_clear(0);
-	rt_video_wait();
+	// rt_video_clear(0);
+	// rt_video_wait();
+
+	static int x = 0;
+
+	rt_gfx_blit_image(&cx, img_background, x - 360, 0);
+	rt_gfx_blit_image(&cx, img_background, x, 0);
+
+	x = (x + 1) % 360;
+
+	for (int32_t i = 0; i < 256; ++i)
+	{
+		rt_video_set_palette(i, img_background->palette->colors[i].dw);
+	}
+
+	const int32_t basePaletteIndex = 128;
 
 	const int32_t ox = (360 - A_WIDTH * 16) / 2;
 	const int32_t oy = (360 - A_HEIGHT * 16) / 2;
 
-	rt_gfx_fill_rect(&cx, ox, oy, A_WIDTH * 16, A_HEIGHT * 16, 8);
+	rt_gfx_fill_rect(&cx, 10, oy, T_WIDTH * 16, T_HEIGHT * 16, 0);
+	rt_gfx_fill_rect(&cx, ox, oy, A_WIDTH * 16, A_HEIGHT * 16, 0);
 
 	for (int y = 0; y < A_HEIGHT; y++)
 	{
@@ -252,13 +296,25 @@ void drawArena()
 			bool xyFilled = 1 == tetrominoes[currTetrominoIdx][rotatedPos];
 
 			if (arena[y][x] != 0)
-				rt_gfx_fill_rect(&cx, ox + x * 16 + 1, oy + y * 16 + 1, 14, 14, arena[y][x]);
+				rt_gfx_fill_rect(&cx, ox + x * 16 + 1, oy + y * 16 + 1, 14, 14, (arena[y][x] - 1) + basePaletteIndex);
 			if (validX && validY && xyFilled)
-				rt_gfx_fill_rect(&cx, ox + x * 16 + 1, oy + y * 16 + 1, 14, 14, currTetrominoIdx + 1);
+				rt_gfx_fill_rect(&cx, ox + x * 16 + 1, oy + y * 16 + 1, 14, 14, currTetrominoIdx + basePaletteIndex);
 		}
 	}
 
-	rt_video_present(0);
+	for (int y = 0; y < T_HEIGHT; ++y)
+	{
+		for (int32_t x = 0; x < T_WIDTH; ++x)
+		{
+			int pos = x + y * T_WIDTH;
+			bool xyFilled = 1 == tetrominoes[nextTetrominoIdx][pos];
+
+			if (xyFilled)
+				rt_gfx_fill_rect(&cx, 10 + x * 16 + 1, oy + y * 16 + 1, 14, 14, nextTetrominoIdx + basePaletteIndex);
+		}
+	}
+
+	rt_video_present(1);
 
 	// printf("%s\n\nScore: %d\n\n", buffer, score);
 }
