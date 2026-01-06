@@ -38,6 +38,7 @@ int currY = 0;
 
 // Graphics
 rt_gfx_image_t* img_background;
+rt_gfx_image_t* img_foreground;
 
 void newTetromino();
 bool validPos(int tetromino, int rotation, int posX, int posY);
@@ -51,6 +52,7 @@ void drawArena();
 int tetrisMain()
 {
 	img_background = rt_gfx_load_image("background.pcx");
+	img_foreground = rt_gfx_load_image("foreground.pcx");
 
 	for (;;)
 	{
@@ -87,7 +89,6 @@ int tetrisMain()
 			}
 
 			drawArena();
-			//rt_kernel_sleep(10);
 		}
 
 		printf("Game over!\nScore: %d\n", score);
@@ -275,13 +276,13 @@ void drawArena()
 
 	for (int32_t i = 0; i < 256; ++i)
 	{
-		rt_video_set_palette(i, img_background->palette->colors[i].dw);
+		rt_video_set_palette(i, img_foreground->palette->colors[i].dw);
 	}
 
 	const int32_t basePaletteIndex = 128;
 
 	const int32_t ox = (360 - A_WIDTH * 16) / 2;
-	const int32_t oy = (360 - A_HEIGHT * 16) / 2;
+	const int32_t oy = 28; // (360 - A_HEIGHT * 16) / 2;
 
 	rt_gfx_fill_rect(&cx, 10, oy, T_WIDTH * 16, T_HEIGHT * 16, 0);
 	rt_gfx_fill_rect(&cx, ox, oy, A_WIDTH * 16, A_HEIGHT * 16, 0);
@@ -312,6 +313,25 @@ void drawArena()
 			if (xyFilled)
 				rt_gfx_fill_rect(&cx, 10 + x * 16 + 1, oy + y * 16 + 1, 14, 14, nextTetrominoIdx + basePaletteIndex);
 		}
+	}
+
+	const int sox = (360 - 8 * 24) / 2;
+	int denom = 1;
+	for (int i = 0; i < 8; ++i)
+	{
+		int d = (score / denom) % 10;
+		denom *= 10;
+
+		rt_gfx_blit_image_region(
+			&cx,
+			img_foreground,
+			d * 24,
+			0,
+			24,
+			24,
+			sox + (8 - 1 - i) * 24,
+			0
+		);
 	}
 
 	rt_video_present(1);
