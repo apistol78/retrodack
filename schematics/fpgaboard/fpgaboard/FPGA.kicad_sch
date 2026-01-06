@@ -15333,7 +15333,7 @@
 		(uuid "ff318fb5-7e8d-4ab2-b3b0-a7f0ff9b15bf")
 	)
 	(label "RAM_D8"
-		(at 255.27 93.98 0)
+		(at 256.54 106.68 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -15343,7 +15343,7 @@
 		(uuid "01adf417-3fe5-4745-9f6d-34de5dcc6d0e")
 	)
 	(label "RAM_D9"
-		(at 255.27 106.68 0)
+		(at 256.54 114.3 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -15383,7 +15383,7 @@
 		(uuid "13a829c7-94b5-43e8-8bfb-7656830541ef")
 	)
 	(label "RAM_D14"
-		(at 255.27 96.52 0)
+		(at 256.54 93.98 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -15403,7 +15403,7 @@
 		(uuid "22d0845d-69a1-42e9-82b2-b5936d84ef03")
 	)
 	(label "RAM_D13"
-		(at 255.27 101.6 0)
+		(at 256.54 99.06 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -15413,7 +15413,7 @@
 		(uuid "2867b5fd-e967-4ce7-af68-f80c430df3c5")
 	)
 	(label "RAM_D12"
-		(at 255.27 114.3 0)
+		(at 256.54 101.6 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -15433,7 +15433,7 @@
 		(uuid "3210626f-5381-4e3a-91b9-47cbc35314ad")
 	)
 	(label "RAM_D10"
-		(at 255.27 91.44 0)
+		(at 256.54 104.14 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -15533,7 +15533,7 @@
 		(uuid "5fc0ac23-c78e-468b-91ee-27477c3a7669")
 	)
 	(label "RAM_D7"
-		(at 255.27 111.76 0)
+		(at 256.54 111.76 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -15633,7 +15633,7 @@
 		(uuid "ad299a0b-964b-40ab-9aec-8b912a0b5271")
 	)
 	(label "RAM_D11"
-		(at 255.27 104.14 0)
+		(at 256.54 96.52 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -15673,7 +15673,7 @@
 		(uuid "b6038e12-694c-4c8e-a988-70f90dd3dd83")
 	)
 	(label "RAM_D15"
-		(at 255.27 99.06 0)
+		(at 256.54 91.44 0)
 		(effects
 			(font
 				(size 1.27 1.27)
