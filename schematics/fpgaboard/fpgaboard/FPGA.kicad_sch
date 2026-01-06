@@ -16464,6 +16464,28 @@
 			)
 		)
 	)
+	(global_label "RAM_BA0"
+		(shape input)
+		(at 308.61 140.97 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "41d4dca7-b229-41c1-967f-ac3072a6e2c2")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 297.2791 140.97 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+				(hide yes)
+			)
+		)
+	)
 	(global_label "S65"
 		(shape bidirectional)
 		(at 289.56 208.28 0)
@@ -17357,6 +17379,28 @@
 		(uuid "8c71298a-ca8e-4b41-bc4c-bcbad2c472b7")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 243.9391 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+				(hide yes)
+			)
+		)
+	)
+	(global_label "RAM_BA1"
+		(shape input)
+		(at 308.61 143.51 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "8d7ee38d-ce54-41dc-9df0-6c9c70cd16d9")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 297.2791 143.51 0)
 			(effects
 				(font
 					(size 1.27 1.27)
