@@ -12,12 +12,19 @@
 #include "Runtime/Kernel.h"
 
 #include <HAL/Audio.h>
+#include <HAL/Interrupt.h>
 #include <HAL/Timer.h>
 
 #define NUM_CHANNELS 4
 #define TLV320_ADDR 0x18
 
 static uint32_t s_dma_tag = 0;
+static kernel_sig_t s_audio_signal;
+
+static void audio_interrupt(uint32_t source)
+{
+	rt_kernel_sig_raise(&s_audio_signal);
+}
 
 int32_t rt_audio_init()
 {
@@ -97,7 +104,10 @@ int32_t rt_audio_init()
 
 	// Initialize audio controller.
 	hal_audio_init();
-
+	
+	// Setup interrupt handler.
+	rt_kernel_sig_init(&s_audio_signal);
+	hal_interrupt_set_handler(IRQ_SOURCE_PLIC_1, audio_interrupt);
 	return 0;
 }
 
@@ -152,10 +162,13 @@ void rt_audio_wait(uint32_t channel_mask)
 {
 	for (;;)
 	{
+		// First check if any channel is actually busy.
 		const uint32_t busy = hal_audio_get_channels_busy();
 		if ((busy & channel_mask) == 0)
-			break;
-		rt_kernel_yield();
+			return;
+
+		// Channels are busy; wait on interrupt.
+		rt_kernel_sig_wait(&s_audio_signal);
 	}
 }
 

@@ -435,6 +435,8 @@ module RetroDACK(
 	wire audio_dma_ready;
 	wire [31:0] audio_dma_rdata;
 
+	wire audio_interrupt;
+
 	AUDIO_controller_4 audio_controller(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -454,7 +456,9 @@ module RetroDACK(
 		.i_output_sample_clock(audio_output_sample_clock),
 		.o_output_sample_rate(audio_output_sample_rate),
 		.o_output_sample_left(audio_output_sample_left),
-		.o_output_sample_right(audio_output_sample_right)
+		.o_output_sample_right(audio_output_sample_right),
+
+		.o_interrupt(audio_interrupt)
 	);
 
 
@@ -473,6 +477,11 @@ module RetroDACK(
 		tbi <= { tbi[0], ~TRACKBALL_INTERRUPT | ~KEYPAD_INTERRUPT };
 	end
 
+	bit [1:0] abi = 2'b00;
+	always_ff @(posedge clock) begin
+		abi <= { abi[0], audio_interrupt };
+	end
+
 	bit [1:0] vbi = 2'b00;
 	always_ff @(posedge clock) begin
 		vbi <= { vbi[0], vga_vblank };
@@ -488,7 +497,7 @@ module RetroDACK(
 		.i_clock(clock),
 
 		.i_interrupt_0(tbi == 2'b01),
-		.i_interrupt_1(1'b0),
+		.i_interrupt_1(abi == 2'b01),
 		.i_interrupt_2(vbi == 2'b01),
 		.i_interrupt_3(ubi == 2'b01),
 

@@ -255,6 +255,7 @@ int main(int argc, const char** argv)
 		vcd->declare(L"INPUT");
 		vcd->declare(L"GPIO");
 		vcd->declare(L"VIDEO");
+		vcd->declare(L"AUDIO");
 		vcd->declare(L"COUNTDOWN", [&](){ return tmr.getCountDown() > 0; });
 		vcd->declare(L"TIP", [&](){
 			const uint32_t mip = cpu->getCSR(MIP);
@@ -270,6 +271,7 @@ int main(int argc, const char** argv)
 	gpio.setCallback([&](){ if (g_enableInterrupt) { if (vcd) { vcd->toggle(2); } plic.raise(0); } }); // GPIO interrupt
 	video.setCallback([&]() { if (g_enableInterrupt) { if (vcd) { vcd->toggle(3); } plic.raise(2); } }); // Video interrupt
 	// usb.setCallback([&]() { plic.raise(3); }); // USB interrupt
+	audio.setCallback([&]() { if (g_enableInterrupt) { if (vcd) { vcd->toggle(4); } plic.raise(1); }}); // Audio interrupt
 
 	if (cmdLine.hasOption(L'e', L"elf"))
 	{
