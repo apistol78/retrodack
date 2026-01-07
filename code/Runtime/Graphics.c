@@ -218,6 +218,75 @@ void rt_gfx_blit_image_region(rt_gfx_context_t* ctx, const rt_gfx_image_t* image
 	}	
 }
 
+void rt_gfx_draw_hline(rt_gfx_context_t* ctx, int32_t x1, int32_t x2, int32_t y, uint8_t color)
+{
+	const int32_t w = ctx->width;
+	const int32_t h = ctx->height;
+
+	if (y < 0 || y >= h)
+		return;
+
+	if (x1 < 0)
+		x1 = 0;
+	else if (x1 > w - 1)
+		x1 = w - 1;
+	if (x2 < 0)
+		x2 = 0;
+	else if (x2 > w - 1)
+		x2 = w - 1;
+
+	if (x1 > x2)
+	{
+		int32_t tmp = x1;
+		x1 = x2;
+		x2 = tmp;
+	}
+
+	uint8_t* dp = ctx->pixels + y * w + x1;
+	for (int32_t x = x1; x <= x2; ++x)
+		*dp++ = color;
+}
+
+void rt_gfx_draw_vline(rt_gfx_context_t* ctx, int32_t x, int32_t y1, int32_t y2, uint8_t color)
+{
+	const int32_t w = ctx->width;
+	const int32_t h = ctx->height;
+
+	if (x < 0 || x >= w)
+		return;
+
+	if (y1 < 0)
+		y1 = 0;
+	else if (y1 > h - 1)
+		y1 = w - 1;
+	if (y2 < 0)
+		y2 = 0;
+	else if (y2 > h - 1)
+		y2 = w - 1;
+
+	if (y1 > y2)
+	{
+		int32_t tmp = y1;
+		y1 = y2;
+		y2 = tmp;
+	}
+
+	uint8_t* dp = ctx->pixels + x + y1 * w;
+	for (int32_t y = y1; y <= y2; ++y)
+	{
+		*dp = color;	
+		dp += w;
+	}
+}
+
+void rt_gfx_draw_rect(rt_gfx_context_t* ctx, int32_t x, int32_t y, int32_t width, int32_t height, uint8_t color)
+{
+	rt_gfx_draw_hline(ctx, x, x + width - 1, y, color);
+	rt_gfx_draw_hline(ctx, x, x + width - 1, y + height - 1, color);
+	rt_gfx_draw_vline(ctx, x, y, y + height - 1, color);
+	rt_gfx_draw_vline(ctx, x + width - 1, y, y + height - 1, color);
+}
+
 void rt_gfx_fill_rect(rt_gfx_context_t* ctx, int32_t x, int32_t y, int32_t width, int32_t height, uint8_t color)
 {
 	const int32_t w = ctx->width;
@@ -248,4 +317,8 @@ void rt_gfx_fill_rect(rt_gfx_context_t* ctx, int32_t x, int32_t y, int32_t width
 		}
 		dp += w;
 	}			
+}
+
+void rt_gfx_draw_line(rt_gfx_context_t* ctx, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint8_t color)
+{
 }

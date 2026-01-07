@@ -1,11 +1,5 @@
-// #include <conio.h>
-// #include <stdbool.h>
-// #include <stdint.h>
 #include <stdio.h>
-// #include <stdlib.h>
 #include <string.h>
-// #include <time.h>
-// #include <windows.h>
 #include <math.h>
 
 #include "Runtime/Runtime.h"
@@ -53,6 +47,11 @@ int tetrisMain()
 {
 	img_background = rt_gfx_load_image("background.pcx");
 	img_foreground = rt_gfx_load_image("foreground.pcx");
+
+	for (int32_t i = 0; i < 256; ++i)
+	{
+		rt_video_set_palette(i, img_foreground->palette->colors[i].dw);
+	}
 
 	for (;;)
 	{
@@ -264,29 +263,29 @@ void drawArena()
 	cx.height = 360;
 	cx.pixels = rt_video_get_secondary_target();
 
-	// rt_video_clear(0);
-	// rt_video_wait();
-
+	// Scrolling background.
 	static int x = 0;
-
 	rt_gfx_blit_image(&cx, img_background, x - 360, 0);
 	rt_gfx_blit_image(&cx, img_background, x, 0);
-
 	x = (x + 1) % 360;
-
-	for (int32_t i = 0; i < 256; ++i)
-	{
-		rt_video_set_palette(i, img_foreground->palette->colors[i].dw);
-	}
 
 	const int32_t basePaletteIndex = 128;
 
 	const int32_t ox = (360 - A_WIDTH * 16) / 2;
 	const int32_t oy = 28; // (360 - A_HEIGHT * 16) / 2;
 
+	// Background of "next".
 	rt_gfx_fill_rect(&cx, 10, oy, T_WIDTH * 16, T_HEIGHT * 16, 0);
-	rt_gfx_fill_rect(&cx, ox, oy, A_WIDTH * 16, A_HEIGHT * 16, 0);
 
+	// Play area background.
+	int cl = 0;
+	for (int x = 0; x < A_WIDTH * 16; x += 16)
+	{
+		rt_gfx_fill_rect(&cx, ox + x, oy, 16, A_HEIGHT * 16, cl);
+		cl = 1 - cl;
+	}
+
+	// Tiles.
 	for (int y = 0; y < A_HEIGHT; y++)
 	{
 		for (int x = 0; x < A_WIDTH; x++)
@@ -297,12 +296,19 @@ void drawArena()
 			bool xyFilled = 1 == tetrominoes[currTetrominoIdx][rotatedPos];
 
 			if (arena[y][x] != 0)
+			{
 				rt_gfx_fill_rect(&cx, ox + x * 16 + 1, oy + y * 16 + 1, 14, 14, (arena[y][x] - 1) + basePaletteIndex);
+				rt_gfx_draw_rect(&cx, ox + x * 16, oy + y * 16, 16, 16, basePaletteIndex + 9);
+			}
 			if (validX && validY && xyFilled)
+			{
 				rt_gfx_fill_rect(&cx, ox + x * 16 + 1, oy + y * 16 + 1, 14, 14, currTetrominoIdx + basePaletteIndex);
+				rt_gfx_draw_rect(&cx, ox + x * 16, oy + y * 16, 16, 16, basePaletteIndex + 9);
+			}
 		}
 	}
 
+	// Next tetromino.
 	for (int y = 0; y < T_HEIGHT; ++y)
 	{
 		for (int32_t x = 0; x < T_WIDTH; ++x)
@@ -315,6 +321,7 @@ void drawArena()
 		}
 	}
 
+	// Score
 	const int sox = (360 - 8 * 24) / 2;
 	int denom = 1;
 	for (int i = 0; i < 8; ++i)
@@ -335,6 +342,4 @@ void drawArena()
 	}
 
 	rt_video_present(1);
-
-	// printf("%s\n\nScore: %d\n\n", buffer, score);
 }
