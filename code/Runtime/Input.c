@@ -8,9 +8,11 @@
 */
 #include <stdio.h>
 #include <string.h>
+#include "Runtime/Cursor.h"
 #include "Runtime/I2C.h"
 #include "Runtime/Input.h"
 #include "Runtime/Kernel.h"
+#include "Runtime/Video.h"
 
 #include <HAL/Interrupt.h>
 #include <HAL/Sprite.h>
@@ -315,6 +317,14 @@ int32_t rt_input_init()
 
 	// Setup interrupt handler.
 	hal_interrupt_set_handler(IRQ_SOURCE_PLIC_0, input_interrupt);
+
+	// Setup default cursor.
+	hal_sprite_set_visible(0, 0xff);
+	hal_sprite_set_bits(0, c_mouseCursor, 32, 32);
+	rt_video_set_palette(2, 0xffffff);
+	rt_video_set_palette(3, 0x000000);
+	rt_input_set_hotspot(16, 16);
+	
 	return 0;
 }
 

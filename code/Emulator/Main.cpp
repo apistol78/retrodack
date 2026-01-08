@@ -72,6 +72,7 @@
 
 //
 #include "Emulator/FileSystemImage.h"
+#include "Emulator/FuelGauge.h"
 #include "Emulator/GPIOExtender.h"
 #include "Emulator/LoadELF.h"
 #include "Emulator/LoadHEX.h"
@@ -200,6 +201,9 @@ int main(int argc, const char** argv)
 
 	GPIOExtender gpio;
 	i2c.addSlave(0x20, &gpio);
+
+	FuelGauge fuelGauge;
+	i2c.addSlave(0x55, &fuelGauge);
 
 	video.setSprite(&sprite);
 

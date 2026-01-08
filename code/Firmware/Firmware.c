@@ -25,9 +25,7 @@
 #include "Runtime/USB/UsbMassStorage.h"
 #include "Runtime/USB/ScsiCommands.h"
 
-#include "Firmware/Cursor.h"
-
-typedef void (*call_fn_t)();
+typedef void __attribute__((noreturn)) (*call_fn_t)();
 
 void __register_exitproc(void) {}
 void __call_exitprocs(void) {}
@@ -156,12 +154,12 @@ static void remote_control()
 
 			if (cs == rx_u8())
 			{
-				hal_uart_tx_u8('O');	// Ok
-				rt_timer_wait_ms(100);	// Wait so UART have time to transmit response.
-
 				// Disable interrupts; assumed to be reinitialized
 				// by executable.
 				hal_interrupt_disable();
+
+				hal_uart_tx_u8('O');	// Ok
+				rt_timer_wait_ms(250);	// Wait so UART have time to transmit response.
 
 				// Ensure DCACHE is flushed.
 				__asm__ volatile (
@@ -217,9 +215,6 @@ void kickstart_main()
 
 	max3420_init_device();
 
-	rt_video_set_palette(2, 0xffffff);
-	rt_video_set_palette(3, 0x000000);
-
 	rt_console_printf("RetroDACK 0.2.1\n");
 	rt_console_printf("\n");
 
@@ -227,10 +222,6 @@ void kickstart_main()
 	rt_kernel_sleep(200);
 	hal_uart_reset();
 	rt_kernel_sleep(200);
-
-	hal_sprite_set_visible(0, 0xff);
-	hal_sprite_set_bits(0, c_mouseCursor, 32, 32);
-	rt_input_set_hotspot(16, 16);
 
 	int32_t card = SD_RESULT_NO_CARD;
 
@@ -333,18 +324,6 @@ void kickstart_main()
 
 			remote_control();
 		}
-
-		// // Check battery.
-		// battery_t bat;
-		// rt_battery_read(&bat);
-		// rt_console_printf("voltage     : %d mV\n", bat.voltage);
-		// rt_console_printf("f avail cap : %d mAh\n", bat.fullAvailableCapacity);
-		// rt_console_printf("f charge cap: %d mAh\n", bat.fullChargeCapacity);
-		// rt_console_printf("r capacity  : %d mAh\n", bat.remainingCapacity);
-		// rt_console_printf("current     : %d mA\n", bat.current);
-		// rt_console_printf("power       : %d mW\n", bat.power);
-		// rt_console_printf("state       : %d %%\n", bat.stageOfCharge);
-		// rt_console_printf("\n");	
 	}
 }
 
@@ -414,8 +393,8 @@ int main()
 	{
 		extern uint8_t BSS_START;
 		extern uint8_t BSS_END;
-        uint8_t* dest = (uint8_t*)&BSS_START;
-        uint32_t len = (uint32_t)(&BSS_END - &BSS_START);
+		uint8_t* dest = (uint8_t*)&BSS_START;
+		uint32_t len = (uint32_t)(&BSS_END - &BSS_START);
 		memset(dest, 0, len);
 	}
 

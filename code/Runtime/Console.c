@@ -31,6 +31,7 @@ char s_cbuffer[CC * CR];
 int s_x = 0;
 int s_y = 0;
 int s_cursor = 1;
+int s_stateOfCharge = 0;
 
 static void rt_console_draw_character(const unsigned char* font, char ch, int32_t col, int32_t row, uint8_t* framebuffer)
 {
@@ -70,6 +71,11 @@ static void rt_console_draw_console()
 				framebuffer[s_x * 8 + x + offset_x + (s_y * 8 + y + offset_y) * FW] = 1;
 		}
 	}
+
+	// Battery indicator.
+	rt_console_draw_character(font8x8_c64, '0' + (s_stateOfCharge / 100) % 10, CC - 3, 0, framebuffer);
+	rt_console_draw_character(font8x8_c64, '0' + (s_stateOfCharge / 10) % 10, CC - 2, 0, framebuffer);
+	rt_console_draw_character(font8x8_c64, '0' + (s_stateOfCharge / 1) % 10, CC - 1, 0, framebuffer);
 
 	rt_video_present(1);
 }
@@ -111,9 +117,20 @@ static void rt_console_putchar(char c)
 
 static void rt_console_thread_redraw()
 {
+	uint32_t last = 0;
 	for (;;)
 	{
 		rt_kernel_sig_try_wait(&s_redraw, 200);
+
+		const uint32_t ms = rt_timer_get_ms();
+		if ((ms - last) > 1000)
+		{
+			battery_t bat;
+			rt_battery_read(&bat);
+			s_stateOfCharge = bat.stageOfCharge;
+			last = ms;
+		}
+
 		rt_console_draw_console();
 		s_cursor = 1 - s_cursor;
 		rt_kernel_sig_raise(&s_redrawn);
