@@ -77,6 +77,7 @@
 #include "Emulator/LoadELF.h"
 #include "Emulator/LoadHEX.h"
 #include "Emulator/Profiler.h"
+#include "Emulator/RTC.h"
 #include "Emulator/SignalView.h"
 #include "Emulator/TrackBallDevice.h"
 
@@ -204,6 +205,9 @@ int main(int argc, const char** argv)
 
 	FuelGauge fuelGauge;
 	i2c.addSlave(0x55, &fuelGauge);
+
+	RTC rtc;
+	i2c.addSlave(0x68, &rtc);
 
 	video.setSprite(&sprite);
 
