@@ -18,7 +18,8 @@ end
 
 function main()
 
-	local FILES =
+	local DIR < const > = "constraints/ECP5/CABGA256"
+	local FILES < const > =
 	{
 		"pin-clock.csv",
 		"pin-lcd.csv",
@@ -37,7 +38,7 @@ function main()
 	local indexed = {}
 
 	for _, f in ipairs(FILES) do
-		local csv = CSV.load("docs/" .. f)
+		local csv = CSV.load(DIR .. "/" .. f)
 		for _, r in pairs(csv.rows) do
 			local name = csv:getValue(r, "Signal")
 			local direction = csv:getValue(r, "Direction")
