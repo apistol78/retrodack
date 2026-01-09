@@ -218,8 +218,8 @@ function main()
 		stdout:printLn("==============================")
 		stdout:printLn("Generating constraints...")
 		stdout:printLn("==============================")
-		run:run("./generate-constraints.run", "rtl/Constraints.lpf")
-		run:run("./generate-top-io.run", "rtl/RetroDACK_IO.sv")
+		run:run("./scripts/generate-constraints.run", "rtl/Constraints.lpf")
+		run:run("./scripts/generate-top-io.run", "rtl/RetroDACK_IO.sv")
 
 		-- Convert all source files into Verilog.
 		stdout:printLn("==============================")

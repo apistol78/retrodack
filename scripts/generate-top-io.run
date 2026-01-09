@@ -1,6 +1,6 @@
 import(traktor)
 
-run:loadScript("CSV.run")
+run:loadScript("$(RUN_SCRIPT_PATH)/CSV.run")
 
 function pairsByKeys (t, f)
 	local a = {}
