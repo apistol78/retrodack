@@ -17,6 +17,8 @@ void rt_rtc_read(rtc_t* rtc)
 	uint8_t ds, dm, dh;
 	uint8_t cd, cm, cy;
 
+	rt_i2c_acquire();
+
 	rt_i2c_read(DS231M_ADDR, 0x00, &ds, 1, RT_I2C_MODE_SLOW);
 	rt_i2c_read(DS231M_ADDR, 0x01, &dm, 1, RT_I2C_MODE_SLOW);
 	rt_i2c_read(DS231M_ADDR, 0x02, &dh, 1, RT_I2C_MODE_SLOW);
@@ -24,6 +26,8 @@ void rt_rtc_read(rtc_t* rtc)
 	rt_i2c_read(DS231M_ADDR, 0x03, &cd, 1, RT_I2C_MODE_SLOW);
 	rt_i2c_read(DS231M_ADDR, 0x04, &cm, 1, RT_I2C_MODE_SLOW);
 	rt_i2c_read(DS231M_ADDR, 0x05, &cy, 1, RT_I2C_MODE_SLOW);
+
+	rt_i2c_release();
 
 	rtc->year = 2000 + cy;
 	rtc->month = cm & 0x1f;
@@ -44,6 +48,8 @@ void rt_rtc_write(rtc_t* rtc)
 	const uint8_t cm = rtc->month;
 	const uint8_t cy = rtc->year % 100;
 
+	rt_i2c_acquire();
+
 	rt_i2c_write(DS231M_ADDR, 0x00, ds, RT_I2C_MODE_SLOW);
 	rt_i2c_write(DS231M_ADDR, 0x01, dm, RT_I2C_MODE_SLOW);
 	rt_i2c_write(DS231M_ADDR, 0x02, dh, RT_I2C_MODE_SLOW);
@@ -51,4 +57,6 @@ void rt_rtc_write(rtc_t* rtc)
 	rt_i2c_write(DS231M_ADDR, 0x03, cd, RT_I2C_MODE_SLOW);
 	rt_i2c_write(DS231M_ADDR, 0x04, cm, RT_I2C_MODE_SLOW);
 	rt_i2c_write(DS231M_ADDR, 0x05, cy, RT_I2C_MODE_SLOW);
+
+	rt_i2c_release();
 }

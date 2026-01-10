@@ -95,10 +95,17 @@ static void input_thread()
 
 	for (;;)
 	{
-		// Wait for signal.
+		// Ensure TB emit interrupt; seems unreliable.
+		rt_i2c_acquire();
 		rt_i2c_write(0x0a, TRACKBALL_REG_INT, 0, RT_I2C_MODE_FAST);
 		rt_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN, RT_I2C_MODE_FAST);
+		rt_i2c_release();
+
+		// Wait for signal.
 		rt_kernel_sig_try_wait(&s_input_signal, wait);
+
+		// Read devices.
+		rt_i2c_acquire();
 
 		// Trackball
 		{
@@ -255,6 +262,8 @@ static void input_thread()
 				}
 			}
 		}
+
+		rt_i2c_release();
 	}
 }
 

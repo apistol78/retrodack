@@ -28,6 +28,9 @@ int32_t runtime_init()
 	printf("** Initialize IRQ handler **\n");
 	hal_interrupt_init();
 
+	printf("** Initialize I2C **\n");
+	rt_i2c_init();
+
 	printf("** Initialize Kernel **\n");
 	rt_kernel_init();
 

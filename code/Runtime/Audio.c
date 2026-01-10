@@ -29,6 +29,7 @@ static void audio_interrupt(uint32_t source)
 int32_t rt_audio_init()
 {
 	// Initialize TLV320DAC3100 chip.
+	rt_i2c_acquire();
 
 	// Set register page 0.
 	rt_i2c_write(TLV320_ADDR, 0x00, 0x00, RT_I2C_MODE_SLOW);
@@ -98,6 +99,8 @@ int32_t rt_audio_init()
 
 	// Enable headset detection.
 	rt_i2c_write(TLV320_ADDR, 0x43, 0x80, RT_I2C_MODE_SLOW);
+
+	rt_i2c_release();
 
 	// Select initial filter.
 	rt_audio_set_filter(0);

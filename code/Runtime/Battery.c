@@ -17,6 +17,8 @@ void rt_battery_read(battery_t* bat)
 {
     uint8_t data[2] = { 0, 0 };
 
+    rt_i2c_acquire();
+
     rt_i2c_read(BQ27441_ADDR, 0x04, data, 2, RT_I2C_MODE_SLOW);
     bat->voltage = (((uint32_t)data[1]) << 8) | data[0];
 
@@ -37,4 +39,6 @@ void rt_battery_read(battery_t* bat)
 
     rt_i2c_read(BQ27441_ADDR, 0x1c, data, 2, RT_I2C_MODE_SLOW);
     bat->stageOfCharge = (((uint32_t)data[1]) << 8) | data[0];
+
+    rt_i2c_release();
 }
