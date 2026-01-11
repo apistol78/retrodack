@@ -51,6 +51,8 @@ public:
 
     Video* getVideo() const { return m_video; }
 
+    ICPU* getCPU() const { return m_cpu; }
+
 private:
     traktor::Ref< FileSystemImage > m_fs;
 
