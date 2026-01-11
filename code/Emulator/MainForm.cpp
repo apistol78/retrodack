@@ -5,6 +5,7 @@
 #include <Ui/Form.h>
 #include <Ui/FloodLayout.h>
 #include <Ui/GridView/GridColumn.h>
+#include <Ui/GridView/GridItem.h>
 #include <Ui/GridView/GridRow.h>
 #include <Ui/TableLayout.h>
 #include <Ui/Splitter.h>
@@ -74,6 +75,14 @@ bool MainForm::create()
 	m_gridRegisters->addColumn(new ui::GridColumn(L"Register", 100_ut));
 	m_gridRegisters->addColumn(new ui::GridColumn(L"Value", 100_ut));
 
+	for (int32_t i = 0; i < 32; ++i)
+	{
+		Ref< ui::GridRow > row = new ui::GridRow();
+		row->add(str(L"R%d", i));
+		row->add(L"");
+		m_gridRegisters->addRow(row);
+	}
+
 	update();
 	show();
 
@@ -101,18 +110,15 @@ void MainForm::updateVideo()
     m_image->setImage(m_uiImage);
 
 	// Update registers.
-	m_gridRegisters->removeAllRows();
-
 	const ICPU* cpu = m_emulator->getCPU();
 	for (int32_t i = 0; i < 32; ++i)
 	{
 		const uint32_t value = cpu->getRegister(i);
 
-		Ref< ui::GridRow > row = new ui::GridRow();
-		row->add(str(L"R%d", i));
-		row->add(str(L"%08x", value));
-		m_gridRegisters->addRow(row);
+		ui::GridRow* row = m_gridRegisters->getRow(i);
+		row->set(1, new ui::GridItem(str(L"%08x", value)));
 	}
+	m_gridRegisters->requestUpdate();
 }
 
 void MainForm::imageMouseButtonDown(traktor::ui::MouseButtonDownEvent* event)

@@ -267,9 +267,10 @@ void Emulator::shutdown()
 {
 	m_threadCpu->stop();
 	ThreadManager::getInstance().destroy(m_threadCpu);
+	m_threadCpu = nullptr;
 }
 
 bool Emulator::alive() const
 {
-    return !m_threadCpu->wait(0);
+    return m_threadCpu != nullptr && !m_threadCpu->wait(0);
 }
