@@ -10,5 +10,5 @@
 import(traktor)
 
 function main()
-	run:run("$(TRAKTOR_HOME)/scripts/misc/update-3rdp.run -packages=packages.run")
+	run:run("$(TRAKTOR_HOME)/scripts/misc/update-3rdp.run -packages=scripts/packages.run")
 end
