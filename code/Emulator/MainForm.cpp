@@ -16,6 +16,7 @@
 #include <Ui/ToolBar/ToolBarButton.h>
 #include <Ui/ToolBar/ToolBarButtonClickEvent.h>
 
+#include <Emulator2/CPU/Helpers.h>
 #include <Emulator2/CPU/ICPU.h>
 #include <Emulator2/Devices/Video.h>
 
@@ -72,13 +73,13 @@ bool MainForm::create()
 
 	m_gridRegisters = new ui::GridView();
 	m_gridRegisters->create(splitter, ui::GridView::WsColumnHeader);
-	m_gridRegisters->addColumn(new ui::GridColumn(L"Register", 100_ut));
-	m_gridRegisters->addColumn(new ui::GridColumn(L"Value", 100_ut));
+	m_gridRegisters->addColumn(new ui::GridColumn(L"Register", 60_ut));
+	m_gridRegisters->addColumn(new ui::GridColumn(L"Value", 80_ut));
 
 	for (int32_t i = 0; i < 32; ++i)
 	{
 		Ref< ui::GridRow > row = new ui::GridRow();
-		row->add(str(L"R%d", i));
+		row->add(getRegisterName(i));
 		row->add(L"");
 		m_gridRegisters->addRow(row);
 	}
