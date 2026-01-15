@@ -57,6 +57,7 @@
       }
     },
     "terminal.integrated.defaultProfile.linux": "BashWithStartup",
-    "workbench.colorTheme": "Monokai Dimmed"
+    "workbench.colorTheme": "Monokai Dimmed",
     
+    "task.autoDetect": "off"
 }
