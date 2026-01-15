@@ -60,6 +60,7 @@ local SOURCE < const > =
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_BRAM_1r1w.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_BranchPrediction.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_CSR.sv",
+	PATH_PERIFHERIALS .. "/cpu/private/CPU_CTZ.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_DCache_Comb.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_DCache_None.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_DCache_Reg.sv",
@@ -159,7 +160,7 @@ local function buildRV()
 
 	-- Create dump files.
 	-- run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Dashboard", "build/rv/ReleaseStatic/Dashboard.dump")
-	-- run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/ScummRV", "build/rv/ReleaseStatic/ScummRV.dump")
+	run:execute("riscv32-unknown-elf-objdump -D build/rv/DebugStatic/ScummRV", "build/rv/DebugStatic/ScummRV.dump")
 	-- run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/ModPlayer", "build/rv/ReleaseStatic/ModPlayer.dump")
 	-- run:execute("riscv32-unknown-elf-objdump -S -D build/rv/ReleaseStatic/SimpleNES", "build/rv/ReleaseStatic/SimpleNES.dump")
 
