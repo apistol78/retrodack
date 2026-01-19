@@ -60,7 +60,7 @@ local SOURCE < const > =
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_BRAM_1r1w.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_BranchPrediction.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_CSR.sv",
-	PATH_PERIFHERIALS .. "/cpu/private/CPU_CTZ.sv",
+	-- PATH_PERIFHERIALS .. "/cpu/private/CPU_CTZ.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_DCache_Comb.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_DCache_None.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/CPU_DCache_Reg.sv",

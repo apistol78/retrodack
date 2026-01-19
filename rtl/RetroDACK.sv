@@ -117,7 +117,6 @@ module RetroDACK(
 	// CPU
 	wire cpu_timer_interrupt;
 	wire cpu_external_interrupt;
-	wire cpu_external_interrupt_enable;
 	wire cpu_ibus_request;
 	wire cpu_ibus_ready;
 	wire [31:0] cpu_ibus_address;
@@ -147,7 +146,6 @@ module RetroDACK(
 		// Control
 		.i_timer_interrupt(cpu_timer_interrupt),
 		.i_external_interrupt(cpu_external_interrupt),
-		.o_external_interrupt_enable(cpu_external_interrupt_enable),
 
 		// Instruction bus
 		.o_ibus_request(cpu_ibus_request),
@@ -501,7 +499,6 @@ module RetroDACK(
 		.i_interrupt_2(vbi == 2'b01),
 		.i_interrupt_3(ubi == 2'b01),
 
-		.i_interrupt_enable(cpu_external_interrupt_enable),
 		.o_interrupt(cpu_external_interrupt),
 
 		.i_request(plic_request),
