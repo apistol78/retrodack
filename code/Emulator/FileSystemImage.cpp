@@ -97,7 +97,7 @@ Ref< FileSystemImage > FileSystemImage::createFromDirectory(const Path& path)
 
 		imageSize += ff->getSize();
 	}
-	log::info << L"[FS] Image size " << imageSize << L" byte(s)." << Endl;
+	log::info << L"[FS] image size " << imageSize << L" byte(s)." << Endl;
 
 	// Allocate image.
 	Ref< FileSystemImage > image = new FileSystemImage();
@@ -136,7 +136,7 @@ Ref< FileSystemImage > FileSystemImage::createFromDirectory(const Path& path)
 			rp
 		);
 
-		log::info << L"[FS] Creating directory \"" << rp.getPathName() << L"\"" << Endl;
+		log::info << L"[FS] creating directory \"" << rp.getPathName() << L"\"" << Endl;
 
 		char fn[512];
 		strcpy(fn, wstombs(rp.getPathName()).c_str());
@@ -163,7 +163,7 @@ Ref< FileSystemImage > FileSystemImage::createFromDirectory(const Path& path)
 				rp
 			);
 
-			log::info << L"[FS] Copying file \"" << rp.getPathName() << L"\"" << Endl;
+			log::info << L"[FS] copying file \"" << rp.getPathName() << L"\"" << Endl;
 
 			char fn[512];
 			strcpy(fn, wstombs(rp.getPathName()).c_str());

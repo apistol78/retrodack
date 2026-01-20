@@ -33,49 +33,34 @@ int s_y = 0;
 int s_cursor = 1;
 int s_stateOfCharge = 0;
 
-static void rt_console_draw_character(const unsigned char* font, char ch, int32_t col, int32_t row, uint8_t* framebuffer)
-{
-	for (int32_t x = 0; x < 8; ++x)
-	{
-		for (int32_t y = 0; y < 8; ++y)
-		{
-			const uint8_t set = font[(ch - ' ') * 8 + y] & (1 << x);
-			if (set)
-				framebuffer[(y + offset_y + col * 8) + (x + offset_x + row * 8) * FW] = 1;
-		}
-	}
-}
-
 static void rt_console_draw_console()
 {
-	uint8_t* framebuffer = (uint8_t*)rt_video_get_secondary_target();
+	rt_gfx_context_t ctx;
+	ctx.width = FW;
+	ctx.height = FH;
+	ctx.pixels = (uint8_t*)rt_video_get_secondary_target();
 
 	rt_video_clear(0);
 	rt_video_wait();
 
+	// Console characters,
 	for (int32_t y = 0; y < CR; ++y)
 	{
 		for (int32_t x = 0; x < CC; ++x)
 		{
 			const char ch = s_cbuffer[x + y * CC];
 			if (ch >= ' ')
-				rt_console_draw_character(font8x8_c64, ch, x, y, framebuffer);
+				rt_gfx_draw_char(&ctx, font8x8_c64, offset_x + x * 8, offset_y + y * 8, ch, 1);
 		}
 	}
 
+	// Blinking cursor.
 	if (s_cursor)
-	{
-		for (int32_t y = 0; y < 8; ++y)
-		{
-			for (int32_t x = 1; x < 7; ++x)
-				framebuffer[s_x * 8 + x + offset_x + (s_y * 8 + y + offset_y) * FW] = 1;
-		}
-	}
+		rt_gfx_fill_rect(&ctx, s_x * 8 + offset_x, s_y * 8 + offset_y, 7, 8, 1);
 
 	// Battery indicator.
-	rt_console_draw_character(font8x8_c64, '0' + (s_stateOfCharge / 100) % 10, CC - 3, 0, framebuffer);
-	rt_console_draw_character(font8x8_c64, '0' + (s_stateOfCharge / 10) % 10, CC - 2, 0, framebuffer);
-	rt_console_draw_character(font8x8_c64, '0' + (s_stateOfCharge / 1) % 10, CC - 1, 0, framebuffer);
+	rt_gfx_fill_rect(&ctx, FW - 30, 10, (s_stateOfCharge * 20) / 100, 10, 1);
+	rt_gfx_draw_rect(&ctx, FW - 30, 10, 20, 10, 1);
 
 	rt_video_present(1);
 }
@@ -118,6 +103,12 @@ static void rt_console_putchar(char c)
 static void rt_console_thread_redraw()
 {
 	uint32_t last = 0;
+	battery_t bat;
+
+	// Read initial battery status.
+	rt_battery_read(&bat);
+
+	// Redraw console async.
 	for (;;)
 	{
 		rt_kernel_sig_try_wait(&s_redraw, 200);
@@ -125,7 +116,6 @@ static void rt_console_thread_redraw()
 		const uint32_t ms = rt_timer_get_ms();
 		if ((ms - last) > 1000)
 		{
-			battery_t bat;
 			rt_battery_read(&bat);
 			s_stateOfCharge = bat.stageOfCharge;
 			last = ms;

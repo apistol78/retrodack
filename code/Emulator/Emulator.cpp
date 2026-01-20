@@ -86,12 +86,12 @@ bool Emulator::create(FileSystemImage* fs, bool highLevelCPU, bool traceFST, boo
     // Create the CPU.
     if (highLevelCPU)
 	{
-		log::info << L"Using high level CPU emulation." << Endl;
+		log::info << L"[EMU] using high level CPU emulation." << Endl;
 		m_cpu = new CPU_hl(m_bus, nullptr, true);
 	}
 	else
 	{
-		log::info << L"Using gate level CPU emulation." << Endl;
+		log::info << L"[EMU] using gate level CPU emulation." << Endl;
 		m_cpu = new CPU_gate(m_bus, traceFST ? "CPU_gate.fst" : nullptr);
 	}
     m_cpu->setSP(0x12000000 - 4);

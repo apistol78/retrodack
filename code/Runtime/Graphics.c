@@ -322,3 +322,18 @@ void rt_gfx_fill_rect(rt_gfx_context_t* ctx, int32_t x, int32_t y, int32_t width
 void rt_gfx_draw_line(rt_gfx_context_t* ctx, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint8_t color)
 {
 }
+
+void rt_gfx_draw_char(rt_gfx_context_t* ctx, const void* font, int32_t x, int32_t y, char ch, uint8_t color)
+{
+	const int32_t w = ctx->width;
+	uint8_t* dp = ctx->pixels + y * w + x;
+	for (int32_t y = 0; y < 8; ++y)
+	{
+		for (int32_t x = 0; x < 8; ++x)
+		{
+			if (((const uint8_t*)font)[(ch - ' ') * 8 + x] & (1 << y))
+				dp[x] = color;
+		}
+		dp += w;
+	}
+}

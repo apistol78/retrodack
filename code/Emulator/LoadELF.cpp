@@ -88,14 +88,14 @@ bool loadELF(const std::wstring& fileName, ICPU& cpu, Bus& bus)
 		Ref< IStream > f = FileSystem::getInstance().open(fileName, File::FmRead);
 		if (!f)
 		{
-			log::error << L"Unable to open ELF \"" << fileName << L"\"." << Endl;
+			log::error << L"[ELF] unable to open ELF \"" << fileName << L"\"." << Endl;
 			return false;
 		}
 
 		DynamicMemoryStream dms(elf, false, true);
 		if (!StreamCopy(&dms, f).execute())
 		{
-			log::error << L"Unable to open ELF \"" << fileName << L"\"; failed to read file." << Endl;
+			log::error << L"[ELF] unable to open ELF \"" << fileName << L"\"; failed to read file." << Endl;
 			return false;
 		}
 	}
@@ -103,7 +103,7 @@ bool loadELF(const std::wstring& fileName, ICPU& cpu, Bus& bus)
 	auto hdr = (const ELF32_Header*)elf.c_ptr();
 	if (hdr->e_machine != 0xF3)
 	{
-		log::error << L"Unable to parse ELF \"" << fileName << L"\"; incorrect machine type." << Endl;
+		log::error << L"[ELF] unable to parse ELF \"" << fileName << L"\"; incorrect machine type." << Endl;
 		return false;		
 	}
 
@@ -134,7 +134,10 @@ bool loadELF(const std::wstring& fileName, ICPU& cpu, Bus& bus)
 			{
 				const char* name = strings + sym[j].st_name;
 				if (strcmp(name, "_start") == 0)
+				{
+					log::info << L"[ELF] moving PC to 0x" << str(L"%08x", sym[j].st_value) << Endl;
 					cpu.jump(sym[j].st_value);
+				}
 			}
 		}
 	}

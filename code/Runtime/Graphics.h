@@ -71,3 +71,6 @@ EXTERN_C void rt_gfx_draw_rect(rt_gfx_context_t* ctx, int32_t x, int32_t y, int3
 EXTERN_C void rt_gfx_fill_rect(rt_gfx_context_t* ctx, int32_t x, int32_t y, int32_t width, int32_t height, uint8_t color);
 
 EXTERN_C void rt_gfx_draw_line(rt_gfx_context_t* ctx, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint8_t color);
+
+EXTERN_C void rt_gfx_draw_char(rt_gfx_context_t* ctx, const void* font, int32_t x, int32_t y, char ch, uint8_t color);
+
