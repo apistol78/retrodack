@@ -61,16 +61,21 @@ OSystem_RebelV::OSystem_RebelV()
 			_this->update_timer();
 		}
 	});
+	printf("Timer thread %d\n", tid);
+
 	tid = rt_kernel_create_thread([](){
 		for (;;) {
 			_this->update_sound();
 		}
 	});
+	printf("Sound thread %d\n", tid);
+
 	tid = rt_kernel_create_thread([](){
 		for (;;) {
 			_this->update_frame();
 		}
-	});	
+	});
+	printf("Update thread %d\n", tid);
 
 	m_target = (byte*)rt_video_create_target();
 }
@@ -441,20 +446,17 @@ void OSystem_RebelV::quit()
 void OSystem_RebelV::update_sound()
 {
 	const int32_t NumSamples = 1024;
-	static int32_t buf[64][NumSamples];
+	static int32_t buf[8][NumSamples];
 	static int32_t toggle = 0;
 
 	if (m_soundProc)
 	{
-		for (int32_t i = 0; i < 4; ++i)
-		{
-			m_soundProc(m_soundParam, (byte*)buf[toggle], sizeof(buf[toggle]));
-			
-			rt_audio_wait(1 << 0);
-			rt_audio_play(0, buf[toggle], NumSamples, RT_AUDIO_MODE_APPEND | RT_AUDIO_MODE_STEREO);
+		m_soundProc(m_soundParam, (byte*)buf[toggle], sizeof(buf[toggle]));
+		
+		rt_audio_wait(1 << 0);
+		rt_audio_play(0, buf[toggle], NumSamples, RT_AUDIO_MODE_APPEND | RT_AUDIO_MODE_STEREO);
 
-			toggle = (toggle + 1) & 63;
-		}
+		toggle = (toggle + 1) & 7;
 	}
 
 	rt_kernel_sleep(1);

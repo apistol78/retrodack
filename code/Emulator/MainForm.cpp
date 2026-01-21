@@ -7,6 +7,7 @@
 #include <Ui/GridView/GridColumn.h>
 #include <Ui/GridView/GridItem.h>
 #include <Ui/GridView/GridRow.h>
+#include <Ui/MultiSplitter.h>
 #include <Ui/TableLayout.h>
 #include <Ui/Splitter.h>
 #include <Ui/StyleBitmap.h>
@@ -57,7 +58,7 @@ bool MainForm::create()
 	});
 
 	Ref< ui::Splitter > splitter = new ui::Splitter();
-	splitter->create(this, true, 450_ut);
+	splitter->create(this, true, -150_ut);
 
 	Ref< ui::Container > containerImage = new ui::Container();
 	containerImage->create(splitter, ui::WsNone, new ui::AspectLayout());
@@ -71,18 +72,37 @@ bool MainForm::create()
 	m_image->addEventHandler< ui::KeyDownEvent >(this, &MainForm::imageKeyDown);
 	m_image->addEventHandler< ui::KeyUpEvent >(this, &MainForm::imageKeyUp);
 
+	Ref< ui::MultiSplitter > splitter2 = new ui::MultiSplitter();
+	splitter2->create(splitter, false);
+
 	m_gridRegisters = new ui::GridView();
-	m_gridRegisters->create(splitter, ui::GridView::WsColumnHeader);
+	m_gridRegisters->create(splitter2, ui::GridView::WsColumnHeader);
 	m_gridRegisters->addColumn(new ui::GridColumn(L"Register", 60_ut));
 	m_gridRegisters->addColumn(new ui::GridColumn(L"Value", 80_ut));
 
+	m_gridInterrupts = new ui::GridView();
+	m_gridInterrupts->create(splitter2, ui::GridView::WsColumnHeader);
+	m_gridInterrupts->addColumn(new ui::GridColumn(L"Interrupt", 60_ut));
+	m_gridInterrupts->addColumn(new ui::GridColumn(L"Count", 80_ut));
+
+	m_gridThreads = new ui::GridView();
+	m_gridThreads->create(splitter2, ui::GridView::WsColumnHeader);
+	m_gridThreads->addColumn(new ui::GridColumn(L"Thread", 60_ut));
+	m_gridThreads->addColumn(new ui::GridColumn(L"Count", 80_ut));
+
+	// Add rows for all registers.
 	for (int32_t i = 0; i < 32; ++i)
-	{
-		Ref< ui::GridRow > row = new ui::GridRow();
-		row->add(getRegisterName(i));
-		row->add(L"");
-		m_gridRegisters->addRow(row);
-	}
+		m_gridRegisters->addRow({ getRegisterName(i), L"" });
+
+	// Add rows for all interrupts.
+	m_gridInterrupts->addRow({ L"Timer", L"" });
+	m_gridInterrupts->addRow({ L"Input", L"" });
+	m_gridInterrupts->addRow({ L"Video", L"" });
+	m_gridInterrupts->addRow({ L"Audio", L"" });
+	
+	// Add rows for all threads.
+	for (int32_t i = 0; i < 8; ++i)
+		m_gridThreads->addRow({ str(L"%d", i), L"" });
 
 	update();
 	show();
@@ -115,11 +135,28 @@ void MainForm::updateVideo()
 	for (int32_t i = 0; i < 32; ++i)
 	{
 		const uint32_t value = cpu->getRegister(i);
-
 		ui::GridRow* row = m_gridRegisters->getRow(i);
-		row->set(1, new ui::GridItem(str(L"%08x", value)));
+		row->set(1, str(L"%08x", value));
 	}
 	m_gridRegisters->requestUpdate();
+
+	// Update interrupt counters.
+	const uint32_t* irqCounters = m_emulator->getIRQCounters();
+	for (int32_t i = 0; i < 4; ++i)
+	{
+		ui::GridRow* row = m_gridInterrupts->getRow(i);
+		row->set(1, str(L"%d", irqCounters[i]));
+	}
+	m_gridInterrupts->requestUpdate();
+
+	// Update thread counters.
+	const uint32_t* threadActiveCounters = m_emulator->getThreadActiveCounters();
+	for (int32_t i = 0; i < 8; ++i)
+	{
+		ui::GridRow* row = m_gridThreads->getRow(i);
+		row->set(1, str(L"%d", threadActiveCounters[i]));
+	}
+	m_gridThreads->requestUpdate();
 }
 
 void MainForm::imageMouseButtonDown(traktor::ui::MouseButtonDownEvent* event)

@@ -53,6 +53,10 @@ public:
 
     ICPU* getCPU() const { return m_cpu; }
 
+    const uint32_t* getIRQCounters() const { return m_irqCounters; }
+
+    const uint32_t* getThreadActiveCounters() const { return m_threadActiveCounters; }
+
 private:
     traktor::Ref< FileSystemImage > m_fs;
 
@@ -85,4 +89,6 @@ private:
     traktor::Ref< GDBServer > m_gdbServer;
     traktor::Thread* m_threadCpu = nullptr;
     bool m_enableInterrupt = true;
+    uint32_t m_irqCounters[4] = { 0, 0, 0, 0 };
+    uint32_t m_threadActiveCounters[8] = { 0, 0, 0, 0 };
 };

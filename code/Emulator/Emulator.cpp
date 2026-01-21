@@ -127,6 +127,7 @@ bool Emulator::create(FileSystemImage* fs, bool highLevelCPU, bool traceFST, boo
             if (m_vcd) 
                 m_vcd->toggle(0);
             m_cpu->interrupt(TIMER);
+			m_irqCounters[0]++;
         }
     });
 	m_trackBallDevice->setCallback([&, this]() {
@@ -135,6 +136,7 @@ bool Emulator::create(FileSystemImage* fs, bool highLevelCPU, bool traceFST, boo
             if (m_vcd)
                 m_vcd->toggle(1);
             m_plic->raise(0);
+			m_irqCounters[1]++;
         }
     });
 	m_gpioExtender->setCallback([&, this]() {
@@ -143,6 +145,7 @@ bool Emulator::create(FileSystemImage* fs, bool highLevelCPU, bool traceFST, boo
             if (m_vcd)
                 m_vcd->toggle(2);
             m_plic->raise(0);
+			m_irqCounters[1]++;
         }
     });
 	m_video->setCallback([&, this]() {
@@ -151,6 +154,7 @@ bool Emulator::create(FileSystemImage* fs, bool highLevelCPU, bool traceFST, boo
             if (m_vcd) 
                 m_vcd->toggle(3);
             m_plic->raise(2);
+			m_irqCounters[2]++;
         }
     });
 	m_audio->setCallback([&, this]() {
@@ -159,6 +163,7 @@ bool Emulator::create(FileSystemImage* fs, bool highLevelCPU, bool traceFST, boo
             if (m_vcd)
                 m_vcd->toggle(4);
             m_plic->raise(1);
+			m_irqCounters[3]++;
         }
     });
     
@@ -176,7 +181,7 @@ bool Emulator::create(FileSystemImage* fs, bool highLevelCPU, bool traceFST, boo
 			{
 			case GDBServer::ModeRun:
 				{
-					for (int32_t i = 0; i < 1000; ++i)
+					for (int32_t i = 0; i < 10000; ++i)
 					{
 						if (!m_cpu->tick(1) || m_bus->error())
 						{
@@ -187,6 +192,10 @@ bool Emulator::create(FileSystemImage* fs, bool highLevelCPU, bool traceFST, boo
 						m_gdbServer->tick();
 						if (m_gdbServer->getMode() != GDBServer::ModeRun)
 							break;
+
+						const uint32_t scratch = m_cpu->getCSR(MSCRATCH);
+						if (scratch < 8)
+							m_threadActiveCounters[scratch]++;
 					}
 				}
 				break;

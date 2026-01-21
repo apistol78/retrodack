@@ -24,6 +24,8 @@ private:
 	traktor::Ref< traktor::ui::Bitmap > m_uiImage;
 	traktor::Ref< traktor::ui::Image > m_image;
 	traktor::Ref< traktor::ui::GridView > m_gridRegisters;
+	traktor::Ref< traktor::ui::GridView > m_gridInterrupts;
+	traktor::Ref< traktor::ui::GridView > m_gridThreads;
 	float m_lptx = 0.0f;
 	float m_lpty = 0.0f;
 	float m_dptx = 0.0f;

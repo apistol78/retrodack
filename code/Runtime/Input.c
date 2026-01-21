@@ -65,8 +65,8 @@ static rt_event_t s_events[NEVENTS];
 static int32_t s_events_in = 0;
 static int32_t s_events_out = 0;
 
-static kernel_cs_t s_input_lock;
-static kernel_sig_t s_input_signal;
+static volatile kernel_cs_t s_input_lock;
+static volatile kernel_sig_t s_input_signal;
 
 static void input_interrupt(uint32_t source)
 {

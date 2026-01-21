@@ -19,7 +19,7 @@
 #define TLV320_ADDR 0x18
 
 static uint32_t s_dma_tag = 0;
-static kernel_sig_t s_audio_signal;
+static volatile kernel_sig_t s_audio_signal;
 
 static void audio_interrupt(uint32_t source)
 {

@@ -132,8 +132,8 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel
 		);
 
 		int32_t next = g_current;
+		int8_t found_signaled = 0;
 
-#ifdef SIGNAL_AWARE
 		// Prioritize thread which are waiting for a signal.
 		for (int32_t i = 0; i < g_count; ++i)
 		{
@@ -148,6 +148,7 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel
 					{
 						// Signal has been raised; awake this thread.
 						t->waiting = 0;
+						found_signaled = 1;
 						break;
 					}
 				}
@@ -162,34 +163,31 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel
 
 		// If no thread awoken from signals then we
 		// select next thread round-robin style.
-		if (next == g_current)
-#endif
+		if (!found_signaled)
 		{
+			next = g_current;
 			for (int32_t i = 0; i < g_count + 1; ++i)
 			{
 				if (++next >= g_count)
 					next = 0;
 
 				kernel_thread_t* t = &g_threads[next];
-#ifdef SIGNAL_AWARE
 				if (t->waiting == 0 && t->sleep <= ms)
+				{
+					// Not waiting nor sleeping.
 					break;
-#else				
-				if (t->sleep <= ms)
-					break;
-#endif
+				}
 			}
 		}
 
 		g_current = next;
 
 		// Write new current thread to scratch so we can debug scheduling.
-		// ++g_schedule;
-		// __asm__ volatile (
-		// 	"csrw	mscratch, %0\n"
-		// 	:
-		// 	: "r" ((g_schedule << 16) | g_current)
-		// );
+		__asm__ volatile (
+			"csrw	mscratch, %0\n"
+			:
+			: "r" (g_current)
+		);
 	}
 
 	// Setup next timer interrupt, do this inline since we
@@ -390,7 +388,9 @@ void rt_kernel_yield()
 
 void rt_kernel_sleep(uint32_t ms)
 {
+	uint32_t cur_ms;
 	uint32_t fin_ms;
+
 	__asm__ volatile (
 		"rdtime %0"
 		: "=r" (fin_ms)
@@ -403,11 +403,17 @@ void rt_kernel_sleep(uint32_t ms)
 	t->sleep = fin_ms;
 	rt_kernel_leave_critical();
 
-	do
+	for (;;)
 	{
 		rt_kernel_yield();
+	
+		__asm__ volatile (
+			"rdtime %0"
+			: "=r" (cur_ms)
+		);
+		if (cur_ms >= fin_ms)
+			break;
 	}
-	while (t->sleep >= hal_timer_get_ms());
 
 	rt_kernel_enter_critical();
 	t->sleep = 0;
@@ -500,7 +506,14 @@ void rt_kernel_sig_wait(volatile kernel_sig_t* sig)
 
 int32_t rt_kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 {
-	const uint32_t fin_ms = hal_timer_get_ms() + timeout;
+	uint32_t cur_ms;
+	uint32_t fin_ms;
+
+	__asm__ volatile (
+		"rdtime %0"
+		: "=r" (fin_ms)
+	);
+	fin_ms += timeout;
 
 	rt_kernel_enter_critical();
 
@@ -522,7 +535,12 @@ int32_t rt_kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 	while (sig->counter == 0)
 	{
 		rt_kernel_yield();
-		if (hal_timer_get_ms() >= fin_ms)
+
+		__asm__ volatile (
+			"rdtime %0"
+			: "=r" (cur_ms)
+		);
+		if (cur_ms >= fin_ms)
 			break;
 	}
 

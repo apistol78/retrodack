@@ -17,7 +17,7 @@
 #include "Runtime/Video.h"
 
 static uint32_t s_dma_tag = 0;
-static kernel_sig_t s_vblank_signal;
+static volatile kernel_sig_t s_vblank_signal;
 
 static void video_interrupt(uint32_t source)
 {
@@ -107,9 +107,6 @@ void rt_video_wait()
 void rt_video_present(uint8_t waitVBlank)
 {
 	for (uint8_t i = 0; i < waitVBlank; ++i)
-	{
-		rt_kernel_sig_reset(&s_vblank_signal);
 		rt_kernel_sig_wait(&s_vblank_signal);
-	}
 	hal_video_present();
 }

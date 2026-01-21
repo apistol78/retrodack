@@ -12,13 +12,13 @@
 
 typedef struct
 {
-	uint32_t counter;
+	volatile uint32_t counter;
 }
 kernel_cs_t;
 
 typedef struct
 {
-	uint32_t counter;
+	volatile uint32_t counter;
 }
 kernel_sig_t;
 
