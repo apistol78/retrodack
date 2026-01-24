@@ -57,6 +57,8 @@ public:
 
     const uint32_t* getThreadActiveCounters() const { return m_threadActiveCounters; }
 
+    const uint32_t* getThreadWaitingCounters() const { return m_threadWaitingCounters; }
+
 private:
     traktor::Ref< FileSystemImage > m_fs;
 
@@ -89,6 +91,10 @@ private:
     traktor::Ref< GDBServer > m_gdbServer;
     traktor::Thread* m_threadCpu = nullptr;
     bool m_enableInterrupt = true;
-    uint32_t m_irqCounters[4] = { 0, 0, 0, 0 };
-    uint32_t m_threadActiveCounters[8] = { 0, 0, 0, 0 };
+    uint32_t m_irqCounters[4] = {};
+    
+    uint32_t m_threadActiveCounters[16] = {};
+    uint32_t m_threadWaitingCounters[16] = {};
+
+    void readDebugVector();
 };

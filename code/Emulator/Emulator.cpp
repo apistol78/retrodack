@@ -1,4 +1,5 @@
 #include <Core/Log/Log.h>
+#include <Core/Misc/String.h>
 #include <Core/Thread/ThreadManager.h>
 
 #include <Emulator2/VCDTrace.h>
@@ -32,6 +33,21 @@
 #include "Emulator/TrackBallDevice.h"
 
 using namespace traktor;
+
+namespace
+{
+
+template < typename T >
+T snoopReadData(const ICPU* cpu, uint32_t addr)
+{
+	constexpr uint32_t ns = (sizeof(T) + 3) / 4;
+	uint32_t d[ns];
+	for (uint32_t i = 0; i < ns; ++i)
+		d[i] = cpu->snoopReadU32(addr + i * 4);
+	return *(const T*)d;
+}
+
+}
 
 T_IMPLEMENT_RTTI_CLASS(L"Emulator", Emulator, Object)
 
@@ -181,7 +197,7 @@ bool Emulator::create(FileSystemImage* fs, bool highLevelCPU, bool traceFST, boo
 			{
 			case GDBServer::ModeRun:
 				{
-					for (int32_t i = 0; i < 10000; ++i)
+					for (int32_t i = 0; i < 100; ++i)
 					{
 						if (!m_cpu->tick(1) || m_bus->error())
 						{
@@ -193,9 +209,7 @@ bool Emulator::create(FileSystemImage* fs, bool highLevelCPU, bool traceFST, boo
 						if (m_gdbServer->getMode() != GDBServer::ModeRun)
 							break;
 
-						const uint32_t scratch = m_cpu->getCSR(MSCRATCH);
-						if (scratch < 8)
-							m_threadActiveCounters[scratch]++;
+						readDebugVector();
 					}
 				}
 				break;
@@ -282,4 +296,44 @@ void Emulator::shutdown()
 bool Emulator::alive() const
 {
     return m_threadCpu != nullptr && !m_threadCpu->wait(0);
+}
+
+void Emulator::readDebugVector()
+{
+	struct debug_thread_t
+	{
+		uint32_t id;
+		uint32_t stack_addr;
+		uint32_t sp;
+		uint32_t epc;
+		uint32_t sleep;
+		uint32_t waiting_addr;
+	};
+
+	struct debug_vector_t
+	{
+		uint32_t threads_addr;
+		uint32_t current_addr;
+		uint32_t count_addr;	
+	};
+
+	const uint32_t dva = m_cpu->getCSR(MSCRATCH);
+	if (dva == 0)
+		return;
+
+	const debug_vector_t dv = snoopReadData< debug_vector_t >(m_cpu, dva);
+	
+	const uint32_t count = m_cpu->snoopReadU32(dv.count_addr);
+	for (uint32_t i = 0; i < count; ++i)
+	{
+		const debug_thread_t dt = snoopReadData< debug_thread_t >(m_cpu, dv.threads_addr + i * sizeof(debug_thread_t));
+		if (dt.waiting_addr != 0)
+			m_threadWaitingCounters[i]++;
+	}
+
+	const uint32_t current = m_cpu->snoopReadU32(dv.current_addr);
+	if (current < 16)
+	 	m_threadActiveCounters[current]++;
+
+	
 }

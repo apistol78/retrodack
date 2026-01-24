@@ -89,6 +89,7 @@ bool MainForm::create()
 	m_gridThreads->create(splitter2, ui::GridView::WsColumnHeader);
 	m_gridThreads->addColumn(new ui::GridColumn(L"Thread", 60_ut));
 	m_gridThreads->addColumn(new ui::GridColumn(L"Count", 80_ut));
+	m_gridThreads->addColumn(new ui::GridColumn(L"Wait", 80_ut));
 
 	// Add rows for all registers.
 	for (int32_t i = 0; i < 32; ++i)
@@ -101,8 +102,8 @@ bool MainForm::create()
 	m_gridInterrupts->addRow({ L"Audio", L"" });
 	
 	// Add rows for all threads.
-	for (int32_t i = 0; i < 8; ++i)
-		m_gridThreads->addRow({ str(L"%d", i), L"" });
+	for (int32_t i = 0; i < 16; ++i)
+		m_gridThreads->addRow({ str(L"%d", i), L"", L"" });
 
 	update();
 	show();
@@ -151,10 +152,12 @@ void MainForm::updateVideo()
 
 	// Update thread counters.
 	const uint32_t* threadActiveCounters = m_emulator->getThreadActiveCounters();
-	for (int32_t i = 0; i < 8; ++i)
+	const uint32_t* threadWaitingCounters = m_emulator->getThreadWaitingCounters();
+	for (int32_t i = 0; i < 16; ++i)
 	{
 		ui::GridRow* row = m_gridThreads->getRow(i);
 		row->set(1, str(L"%d", threadActiveCounters[i]));
+		row->set(2, str(L"%d", threadWaitingCounters[i]));
 	}
 	m_gridThreads->requestUpdate();
 }

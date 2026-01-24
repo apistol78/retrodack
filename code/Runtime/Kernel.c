@@ -12,7 +12,6 @@
 
 #include <HAL/CSR.h>
 #include <HAL/Interrupt.h>
-#include <HAL/Timer.h>
 
 #include "Runtime/Kernel.h"
 
@@ -38,8 +37,15 @@ static kernel_thread_t g_threads[16];
 static int32_t g_current = 0;
 static int32_t g_count = 0;
 static int32_t g_critical = 0;
-static int32_t g_schedule = 0;
 static uint32_t g_next_id = 1;
+
+static struct
+{
+	kernel_thread_t* threads;
+	int32_t* current;
+	int32_t* count;	
+}
+g_debug_vector;
 
 static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel_scheduler(uint32_t source)
 {
@@ -181,13 +187,6 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel
 		}
 
 		g_current = next;
-
-		// Write new current thread to scratch so we can debug scheduling.
-		__asm__ volatile (
-			"csrw	mscratch, %0\n"
-			:
-			: "r" (g_current)
-		);
 	}
 
 	// Setup next timer interrupt, do this inline since we
@@ -310,7 +309,18 @@ void rt_kernel_init()
 	g_current = 0;
 	g_count = 1;
 	g_critical = 0;
-	g_schedule = 0;
+
+	// Setup debug vector to expose some kernel data to emulator.
+	g_debug_vector.threads = g_threads;
+	g_debug_vector.current = &g_current;
+	g_debug_vector.count = &g_count;
+	__asm__ volatile (
+		"csrw	mscratch, %0\n"
+		"fence				\n"
+		:
+		: "r" (&g_debug_vector)
+	);
+	printf("G %08x\n", (uint32_t)&g_current);
 
 	// Setup timer interrupt for kernel scheduler.
 	hal_interrupt_set_handler(IRQ_SOURCE_TIMER, rt_kernel_scheduler);
