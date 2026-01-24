@@ -25,6 +25,7 @@
 typedef struct
 {
 	uint32_t id;
+	const char* name;
 	void* stack;
 	uint32_t sp;
 	uint32_t epc;
@@ -43,7 +44,7 @@ static struct
 {
 	kernel_thread_t* threads;
 	int32_t* current;
-	int32_t* count;	
+	int32_t* count;
 }
 g_debug_vector;
 
@@ -141,7 +142,7 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel
 		int8_t found_signaled = 0;
 
 		// Prioritize thread which are waiting for a signal.
-		for (int32_t i = 0; i < g_count; ++i)
+		for (int32_t i = 0; i < g_count - 1; ++i)
 		{
 			if (++next >= g_count)
 				next = 0;
@@ -153,6 +154,7 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel
 					if (t->waiting->counter > 0)
 					{
 						// Signal has been raised; awake this thread.
+						t->sleep = 0;
 						t->waiting = 0;
 						found_signaled = 1;
 						break;
@@ -162,6 +164,7 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel
 				{
 					// Wait has timed out; do not select immediately
 					// since it's no longer prioritized.
+					t->sleep = 0;
 					t->waiting = 0;
 				}
 			}
@@ -181,6 +184,7 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel
 				if (t->waiting == 0 && t->sleep <= ms)
 				{
 					// Not waiting nor sleeping.
+					t->sleep = 0;
 					break;
 				}
 			}
@@ -294,11 +298,12 @@ static void* rt_kernel_alloc_stack()
 
 void rt_kernel_init()
 {
-	kernel_thread_t* t;
+	volatile kernel_thread_t* t;
 
 	// Initialize main thread.
 	t = &g_threads[0];
 	t->id = 0;
+	t->name = "base";
 	t->stack = 0;
 	t->sp = 0;
 	t->epc = 0;
@@ -332,12 +337,13 @@ void rt_kernel_init()
 	hal_csr_set_bits_mie(MIE_MTI_BIT_MASK);			// Enable timer interrupts.	
 }
 
-uint32_t rt_kernel_create_thread(kernel_thread_fn_t fn)
+uint32_t rt_kernel_create_thread(kernel_thread_fn_t fn, const char* const name)
 {
 	rt_kernel_enter_critical();
 	
-	kernel_thread_t* t = &g_threads[g_count];
+	volatile kernel_thread_t* t = &g_threads[g_count];
 	t->id = g_next_id++;
+	t->name = name;
 	t->stack = rt_kernel_alloc_stack();
 	t->sp = (uint32_t)t->stack;
 	t->epc = (uint32_t)fn;
@@ -358,7 +364,7 @@ void rt_kernel_destroy_thread(uint32_t tid)
 
 	rt_kernel_enter_critical();
 
-	kernel_thread_t* t = 0;
+	volatile kernel_thread_t* t = 0;
 	uint32_t i = 0;
 
 	// Find thread entry.
@@ -408,7 +414,7 @@ void rt_kernel_sleep(uint32_t ms)
 	fin_ms += ms;
 	
 	rt_kernel_enter_critical();
-	kernel_thread_t* t = &g_threads[g_current];
+	volatile kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = 0;
 	t->sleep = fin_ms;
 	rt_kernel_leave_critical();
@@ -499,7 +505,7 @@ void rt_kernel_sig_raise(volatile kernel_sig_t* sig)
 void rt_kernel_sig_wait(volatile kernel_sig_t* sig)
 {
 	rt_kernel_enter_critical();
-	kernel_thread_t* t = &g_threads[g_current];
+	volatile kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = sig;
 	t->sleep = 0;
 	rt_kernel_leave_critical();
@@ -536,7 +542,7 @@ int32_t rt_kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 	}	
 
 	// Attach signal to current thread and start waiting.
-	kernel_thread_t* t = &g_threads[g_current];
+	volatile kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = sig;
 	t->sleep = fin_ms;
 
@@ -556,8 +562,8 @@ int32_t rt_kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 
 	rt_kernel_enter_critical();
 
-	t->waiting = 0;
 	t->sleep = 0;
+	t->waiting = 0;
 	
 	// Check result if we got the signal or timed out.
 	int32_t result = 0;

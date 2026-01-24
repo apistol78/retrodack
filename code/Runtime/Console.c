@@ -142,7 +142,7 @@ void rt_console_init()
 	rt_kernel_sig_init(&s_redraw);
 	rt_kernel_sig_init(&s_redrawn);
 
-	s_thread = rt_kernel_create_thread(rt_console_thread_redraw);
+	s_thread = rt_kernel_create_thread(rt_console_thread_redraw, "console");
 }
 
 void rt_console_shutdown()

@@ -59,6 +59,8 @@ public:
 
     const uint32_t* getThreadWaitingCounters() const { return m_threadWaitingCounters; }
 
+    const uint32_t* getThreadSleepingCounters() const { return m_threadSleepingCounters; }
+
 private:
     traktor::Ref< FileSystemImage > m_fs;
 
@@ -95,6 +97,7 @@ private:
     
     uint32_t m_threadActiveCounters[16] = {};
     uint32_t m_threadWaitingCounters[16] = {};
+    uint32_t m_threadSleepingCounters[16] = {};
 
     void readDebugVector();
 };

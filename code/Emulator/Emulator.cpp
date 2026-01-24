@@ -142,7 +142,8 @@ bool Emulator::create(FileSystemImage* fs, bool highLevelCPU, bool traceFST, boo
         {
             if (m_vcd) 
                 m_vcd->toggle(0);
-            m_cpu->interrupt(TIMER);
+            //m_cpu->interrupt(TIMER);
+			m_cpu->getInterruptPending() |= TIMER;
 			m_irqCounters[0]++;
         }
     });
@@ -197,7 +198,7 @@ bool Emulator::create(FileSystemImage* fs, bool highLevelCPU, bool traceFST, boo
 			{
 			case GDBServer::ModeRun:
 				{
-					for (int32_t i = 0; i < 100; ++i)
+					for (int32_t i = 0; i < 10000; ++i)
 					{
 						if (!m_cpu->tick(1) || m_bus->error())
 						{
@@ -303,6 +304,7 @@ void Emulator::readDebugVector()
 	struct debug_thread_t
 	{
 		uint32_t id;
+		uint32_t name_addr;
 		uint32_t stack_addr;
 		uint32_t sp;
 		uint32_t epc;
@@ -329,6 +331,8 @@ void Emulator::readDebugVector()
 		const debug_thread_t dt = snoopReadData< debug_thread_t >(m_cpu, dv.threads_addr + i * sizeof(debug_thread_t));
 		if (dt.waiting_addr != 0)
 			m_threadWaitingCounters[i]++;
+		else if (dt.sleep != 0)
+			m_threadSleepingCounters[i]++;
 	}
 
 	const uint32_t current = m_cpu->snoopReadU32(dv.current_addr);

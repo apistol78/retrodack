@@ -302,7 +302,7 @@ int32_t rt_input_init()
 	// Create input queue thread.
 	rt_kernel_cs_init(&s_input_lock);
 	rt_kernel_sig_init(&s_input_signal);
-	rt_kernel_create_thread(input_thread);
+	rt_kernel_create_thread(input_thread, "input");
 
 	// Setup trackball.
 	// if (found)

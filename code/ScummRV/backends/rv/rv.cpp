@@ -60,21 +60,21 @@ OSystem_RebelV::OSystem_RebelV()
 		for (;;) {
 			_this->update_timer();
 		}
-	});
+	}, "rv timer");
 	printf("Timer thread %d\n", tid);
 
 	tid = rt_kernel_create_thread([](){
 		for (;;) {
 			_this->update_sound();
 		}
-	});
+	}, "rv sound");
 	printf("Sound thread %d\n", tid);
 
 	tid = rt_kernel_create_thread([](){
 		for (;;) {
 			_this->update_frame();
 		}
-	});
+	}, "rv update");
 	printf("Update thread %d\n", tid);
 
 	m_target = (byte*)rt_video_create_target();
@@ -458,8 +458,8 @@ void OSystem_RebelV::update_sound()
 
 		toggle = (toggle + 1) & 7;
 	}
-
-	rt_kernel_sleep(1);
+	else
+		rt_kernel_sleep(100);
 }
 
 void OSystem_RebelV::update_timer()

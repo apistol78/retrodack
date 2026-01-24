@@ -1,6 +1,6 @@
 /*
  RetroDÄCK
- Copyright (c) 2025 Anders Pistol.
+ Copyright (c) 2025-2026 Anders Pistol.
 
  This Source Code Form is subject to the terms of the Mozilla Public
  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -26,7 +26,7 @@ typedef void (*kernel_thread_fn_t)();
 
 EXTERN_C void rt_kernel_init();
 
-EXTERN_C uint32_t rt_kernel_create_thread(kernel_thread_fn_t fn);
+EXTERN_C uint32_t rt_kernel_create_thread(kernel_thread_fn_t fn, const char* const name);
 
 EXTERN_C void rt_kernel_destroy_thread(uint32_t tid);
 

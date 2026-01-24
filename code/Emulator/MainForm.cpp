@@ -35,7 +35,7 @@ MainForm::MainForm(Emulator* emulator)
 
 bool MainForm::create()
 {
-	if (!ui::Form::create(L"RetroDACK", 620_ut, 420_ut, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%", 0_ut, 0_ut)))
+	if (!ui::Form::create(L"RetroDACK", 720_ut, 420_ut, ui::Form::WsDefault, new ui::TableLayout(L"100%", L"*,100%", 0_ut, 0_ut)))
         return false;
 
 	addEventHandler< ui::CloseEvent >([&](ui::CloseEvent* event) {
@@ -58,7 +58,7 @@ bool MainForm::create()
 	});
 
 	Ref< ui::Splitter > splitter = new ui::Splitter();
-	splitter->create(this, true, -150_ut);
+	splitter->create(this, true, -300_ut);
 
 	Ref< ui::Container > containerImage = new ui::Container();
 	containerImage->create(splitter, ui::WsNone, new ui::AspectLayout());
@@ -90,6 +90,7 @@ bool MainForm::create()
 	m_gridThreads->addColumn(new ui::GridColumn(L"Thread", 60_ut));
 	m_gridThreads->addColumn(new ui::GridColumn(L"Count", 80_ut));
 	m_gridThreads->addColumn(new ui::GridColumn(L"Wait", 80_ut));
+	m_gridThreads->addColumn(new ui::GridColumn(L"Sleep", 80_ut));
 
 	// Add rows for all registers.
 	for (int32_t i = 0; i < 32; ++i)
@@ -103,7 +104,7 @@ bool MainForm::create()
 	
 	// Add rows for all threads.
 	for (int32_t i = 0; i < 16; ++i)
-		m_gridThreads->addRow({ str(L"%d", i), L"", L"" });
+		m_gridThreads->addRow({ str(L"%d", i), L"", L"", L"" });
 
 	update();
 	show();
@@ -153,11 +154,13 @@ void MainForm::updateVideo()
 	// Update thread counters.
 	const uint32_t* threadActiveCounters = m_emulator->getThreadActiveCounters();
 	const uint32_t* threadWaitingCounters = m_emulator->getThreadWaitingCounters();
+	const uint32_t* threadSleepingCounters = m_emulator->getThreadSleepingCounters();
 	for (int32_t i = 0; i < 16; ++i)
 	{
 		ui::GridRow* row = m_gridThreads->getRow(i);
 		row->set(1, str(L"%d", threadActiveCounters[i]));
 		row->set(2, str(L"%d", threadWaitingCounters[i]));
+		row->set(3, str(L"%d", threadSleepingCounters[i]));
 	}
 	m_gridThreads->requestUpdate();
 }
