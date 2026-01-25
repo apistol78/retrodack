@@ -54,6 +54,20 @@ T_IMPLEMENT_RTTI_CLASS(L"Emulator", Emulator, Object)
 bool Emulator::create(FileSystemImage* fs, bool highLevelCPU, bool traceFST, bool traceVCD)
 {
     m_fs = fs;
+    m_bus = new Bus();
+
+	// Create the CPU.
+    if (highLevelCPU)
+	{
+		log::info << L"[EMU] using high level CPU emulation." << Endl;
+		m_cpu = new CPU_hl(m_bus, nullptr, true);
+	}
+	else
+	{
+		log::info << L"[EMU] using gate level CPU emulation." << Endl;
+		m_cpu = new CPU_gate(m_bus, traceFST ? "CPU_gate.fst" : nullptr);
+	}
+    m_cpu->setSP(0x12000000 - 4);
 
     // Create bus devices.
 	m_rom = new Memory(0x00100000, false);
@@ -63,7 +77,7 @@ bool Emulator::create(FileSystemImage* fs, bool highLevelCPU, bool traceFST, boo
 	m_i2c = new I2C();
 	m_sd = new SD(m_fs->ptr(), m_fs->size());
 	m_timer = new ::Timer();
-	m_plic = new PLIC();
+	m_plic = new PLIC(m_cpu);
 	m_audio = new Audio();
 	m_dma = new DMA();
 	m_sprite = new Sprite();
@@ -85,7 +99,6 @@ bool Emulator::create(FileSystemImage* fs, bool highLevelCPU, bool traceFST, boo
     m_video->setSprite(m_sprite);
 
     // Setup the bus.
-    m_bus = new Bus();
 	m_bus->map(0x00000000, 0x00000000 + m_rom->getCapacity(), m_rom);
  	m_bus->map(0x10000000, 0x10000000 + m_sdram->getCapacity(), m_sdram);
 	m_bus->map(0x20000000, 0x20000100, m_uart);
@@ -98,19 +111,6 @@ bool Emulator::create(FileSystemImage* fs, bool highLevelCPU, bool traceFST, boo
 	m_bus->map(0x90000000, 0x90000100, m_dma);
 	m_bus->map(0xa0000000, 0xa0010000, m_sprite);
 	m_bus->map(0xb0000000, 0xb0010000, m_spi);
-
-    // Create the CPU.
-    if (highLevelCPU)
-	{
-		log::info << L"[EMU] using high level CPU emulation." << Endl;
-		m_cpu = new CPU_hl(m_bus, nullptr, true);
-	}
-	else
-	{
-		log::info << L"[EMU] using gate level CPU emulation." << Endl;
-		m_cpu = new CPU_gate(m_bus, traceFST ? "CPU_gate.fst" : nullptr);
-	}
-    m_cpu->setSP(0x12000000 - 4);
 
 	// Create GDB server.
 	m_gdbServer = new GDBServer(m_cpu, m_bus);
