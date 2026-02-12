@@ -107,6 +107,6 @@ void rt_video_wait()
 void rt_video_present(uint8_t waitVBlank)
 {
 	for (uint8_t i = 0; i < waitVBlank; ++i)
-		rt_kernel_sig_wait(&s_vblank_signal);
+		rt_kernel_sig_try_wait(&s_vblank_signal, 30);
 	hal_video_present();
 }

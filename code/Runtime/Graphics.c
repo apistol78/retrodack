@@ -58,6 +58,19 @@ rt_gfx_image_t* rt_gfx_create_image(int32_t width, int32_t height)
 	return image;
 }
 
+rt_gfx_image_t* rt_gfx_create_external_image(int32_t width, int32_t height, const uint8_t* bits)
+{
+	rt_gfx_image_t* image = (rt_gfx_image_t*)malloc(sizeof(rt_gfx_image_t));
+	if (!image)
+		return 0;
+
+	image->width = width;
+	image->height = height;
+	image->pixels = (uint8_t*)bits;
+	image->palette = 0;
+	return image;
+}
+
 void rt_gfx_destroy_image(rt_gfx_image_t* image)
 {
 	free(image);

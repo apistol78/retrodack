@@ -333,13 +333,13 @@ OSystem::MutexRef OSystem_RebelV::create_mutex()
 void OSystem_RebelV::lock_mutex(MutexRef mutex)
 {
 	kernel_cs_t* cs = (kernel_cs_t*)mutex;
-	// rt_kernel_cs_lock(cs);
+	rt_kernel_cs_lock(cs);
 }
 
 void OSystem_RebelV::unlock_mutex(MutexRef mutex)
 {
 	kernel_cs_t* cs = (kernel_cs_t*)mutex;
-	// rt_kernel_cs_unlock(cs);
+	rt_kernel_cs_unlock(cs);
 }
 
 void OSystem_RebelV::delete_mutex(MutexRef mutex)

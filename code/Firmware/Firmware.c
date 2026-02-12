@@ -21,9 +21,9 @@
 
 #include "Runtime/Runtime.h"
 
-#include "Runtime/USB/Max3420.h"
-#include "Runtime/USB/UsbMassStorage.h"
-#include "Runtime/USB/ScsiCommands.h"
+// #include "Runtime/USB/Max3420.h"
+// #include "Runtime/USB/UsbMassStorage.h"
+// #include "Runtime/USB/ScsiCommands.h"
 
 typedef void __attribute__((noreturn)) (*call_fn_t)();
 
@@ -213,9 +213,9 @@ void kickstart_main()
 	rt_console_init();
 	rt_input_init();
 
-	max3420_init_device();
+	// max3420_init_device();
 
-	rt_console_printf("RetroDACK 0.2.1\n");
+	rt_console_printf("RetroDACK 0.2.4\n");
 	rt_console_printf("\n");
 
 	hal_uart_reset();
@@ -225,6 +225,9 @@ void kickstart_main()
 
 	int32_t card = SD_RESULT_NO_CARD;
 
+	rt_event_t ev;
+	while (rt_input_get_event(&ev));
+
 	for (;;)
 	{
 		const int32_t chk = hal_sd_card_inserted();
@@ -233,7 +236,7 @@ void kickstart_main()
 			if (chk == SD_RESULT_OK)
 			{
 				rt_console_printf("Initialize SD...\n");
-				hal_sd_init(SD_MODE_SW);
+				hal_sd_init(SD_MODE_HW);
 				
 				rt_console_printf("Initialize DISK...\n");
 				rt_disk_init();
@@ -241,21 +244,21 @@ void kickstart_main()
 				rt_console_printf("Initialize FILE...\n");
 				file_init();
 
-				rt_console_printf("Initialize USB...\n");
-				max3420_init_usb();
+				// rt_console_printf("Initialize USB...\n");
+				// max3420_init_usb();
 				// scsi_write_enable(1);
 
 				rt_console_printf("\n");
 				rt_console_printf("Press S1 for Doom\n");
 				rt_console_printf("Press S2 for ScummRV\n");
-				rt_console_printf("Press  A for Quake\n");
+				rt_console_printf("Press  A for Tetris\n");
 				rt_console_printf("\n");
 			}
-			else
-			{
-				rt_console_printf("Terminate USB...\n");
-				max3420_terminate_usb();
-			}
+			// else
+			// {
+			// 	rt_console_printf("Terminate USB...\n");
+			// 	max3420_terminate_usb();
+			// }
 			card = chk;
 		}
 
@@ -267,47 +270,47 @@ void kickstart_main()
 			{
 				if (ev.button == RT_INPUT_BUTTON_S1)
 				{
-					max3420_usb_suspend();
+					// max3420_usb_suspend();
 					load("doom");
 				}
 				else if (ev.button == RT_INPUT_BUTTON_S2)
 				{
-					max3420_usb_suspend();
+					// max3420_usb_suspend();
 					load("scummrv");
 				}
 				else if (ev.button == RT_INPUT_BUTTON_A)
 				{
-					max3420_usb_suspend();
-					load("quake");
+					// max3420_usb_suspend();
+					load("tetris");
 				}
 			}
 
-			// Process USB event.
-			const usbEvent_t event = max3420_get_usb_event();
-			switch (event)
-			{
-				case USB_VBUS_LOST:
-					break;
+			// // Process USB event.
+			// const usbEvent_t event = max3420_get_usb_event();
+			// switch (event)
+			// {
+			// 	case USB_VBUS_LOST:
+			// 		break;
 					
-				case BUS_RESET:
-					usb_mass_process_bus_reset();
-					break;
+			// 	case BUS_RESET:
+			// 		usb_mass_process_bus_reset();
+			// 		break;
 					
-				case SETUP_PACKET_AVAILABLE:
-					usb_mass_process_setup_packet();
-					break;
+			// 	case SETUP_PACKET_AVAILABLE:
+			// 		usb_mass_process_setup_packet();
+			// 		break;
 					
-				case EP1_OUT_DATA:
-					usb_mass_process_bulk_out_transaction();
-					break;
+			// 	case EP1_OUT_DATA:
+			// 		usb_mass_process_bulk_out_transaction();
+			// 		break;
 					
-				case USB_SUSPEND:
-					max3420_usb_suspend();
-					break;
+			// 	case USB_SUSPEND:
+			// 		max3420_usb_suspend();
+			// 		break;
 					
-				default:
-					break;
-			}			
+			// 	default:
+			// 		break;
+			// }			
 		}
 		else
 		{
@@ -319,8 +322,8 @@ void kickstart_main()
 		{
 			rt_console_printf("\nEntering remote control...\n");
 
-			if (card == SD_RESULT_OK)
-				max3420_terminate_usb();
+			// if (card == SD_RESULT_OK)
+			// 	max3420_terminate_usb();
 
 			remote_control();
 		}
@@ -380,6 +383,15 @@ int main()
 		}
 	}
 */
+
+	// Fill memory with EBREAK instructions.
+	volatile uint32_t* start = (volatile uint32_t*)0x10000000;
+	volatile uint32_t* end = (volatile uint32_t*)0x12000000;
+	for (volatile uint32_t* ptr = start; ptr != end; ++ptr)
+		*ptr = (uint32_t)0x00100073;
+	__asm__ volatile ("fence");
+	__asm__ volatile ("fence");
+
 	// Initialize segments when running from ROM.
 	{
 		extern uint8_t INIT_DATA_VALUES;

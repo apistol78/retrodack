@@ -84,5 +84,10 @@ PACKAGES =
 		name = "SimpleNES",
 		url = "https://github.com/amhndu/SimpleNES.git"
 	},	
+	{
+		type = "GIT",
+		name = "jtaglet",
+		url = "https://github.com/ChrisPVille/jtaglet.git"
+	},	
 }
 

@@ -324,14 +324,22 @@ int32_t rt_input_init()
 		}
 	}
 
+	// Dummy read from GPIO extender.
+	for (int i = 0; i < 100; ++i)
+	{
+		uint16_t data = 0;
+		rt_i2c_read(0x20, 0x00, (uint8_t*)&data, 2, RT_I2C_MODE_FAST);
+		hal_timer_wait_ms(10);
+	}
+
 	// Setup interrupt handler.
 	hal_interrupt_set_handler(IRQ_SOURCE_PLIC_0, input_interrupt);
 
 	// Setup default cursor.
 	hal_sprite_set_visible(0, 0xff);
 	hal_sprite_set_bits(0, c_mouseCursor, 32, 32);
-	rt_video_set_palette(2, 0xffffff);
-	rt_video_set_palette(3, 0x000000);
+  	rt_video_set_palette(253, 0x000000);
+  	rt_video_set_palette(254, 0xffffff);
 	rt_input_set_hotspot(16, 16);
 	
 	return 0;

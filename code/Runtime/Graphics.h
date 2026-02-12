@@ -50,6 +50,8 @@ rt_gfx_image_t;
 
 EXTERN_C rt_gfx_image_t* rt_gfx_create_image(int32_t width, int32_t height);
 
+EXTERN_C rt_gfx_image_t* rt_gfx_create_external_image(int32_t width, int32_t height, const uint8_t* bits);
+
 EXTERN_C void rt_gfx_destroy_image(rt_gfx_image_t* image);
 
 EXTERN_C rt_gfx_palette_t* rt_gfx_create_palette();

@@ -21,20 +21,9 @@ module RetroDACK(
 	wire clock_video;
 	wire clock_locked;
 
-	assign LED_R = cpu_fault;
-	assign LED_G = 1'b0;
-	assign LED_B = 1'b0;
-
-	// bit [3:0] shf = 0;
-	// always_ff @(posedge clock) begin
-	// 	shf <= { shf[2:0], cpu_external_interrupt };
-	// end
-
-	// assign DEBUG_0 = ~KEYPAD_INTERRUPT;
-	// assign DEBUG_1 = cpu_external_interrupt_enable;
-	// assign DEBUG_2 = |shf;
-	// assign DEBUG_3 = cpu_scratch[0];
-	// assign DEBUG_4 = I2C_SDA;
+	// assign LED_R = cpu_fault;
+	// assign LED_G = 1'b0;
+	// assign LED_B = 1'b0;
 
 	// Unimplemeneted pins.
 	assign LCD_CS = 1'b0;
@@ -113,6 +102,117 @@ module RetroDACK(
 	);
 
 
+
+	//====================================================
+	// JTAG monitor
+
+	bit tck_r = 1'b0;
+	always_ff @(posedge clock) begin
+		tck_r <= JTAG_TCK;
+	end
+
+    wire[7:0] jtag_userOp;
+	bit [31:0] jtag_userDataIn;
+    wire[31:0] jtag_userDataOut;
+	wire jtag_userOp_ready;
+
+	jtaglet #(
+		.ID_PARTVER(4'h1),
+		.ID_PARTNUM(16'hBEEF),
+		.ID_MANF(11'h035)
+	) jl (
+		.tck(tck_r),
+		.tms(JTAG_TMS),
+		.tdi(JTAG_TDI),
+		.tdo(JTAG_TDO),
+		.trst(~reset),
+
+		.userData_in(jtag_userDataIn),
+		.userData_out(jtag_userDataOut),
+		.userOp(jtag_userOp),
+		.userOp_ready(jtag_userOp_ready)
+	);
+
+	assign JTAG_VREF = 1'b1;
+
+	always_ff @(posedge clock) begin
+		if (jtag_userOp_ready) begin
+			case (jtag_userOp)
+			8'h01: jtag_userDataIn <= cpu_debug_pc;
+			8'h02: jtag_userDataIn <= cpu_debug_registers[0];
+			8'h03: jtag_userDataIn <= cpu_debug_registers[1];
+			8'h04: jtag_userDataIn <= cpu_debug_registers[2];
+			8'h05: jtag_userDataIn <= cpu_debug_registers[3];
+			8'h06: jtag_userDataIn <= cpu_debug_registers[4];
+			8'h07: jtag_userDataIn <= cpu_debug_registers[5];
+			8'h08: jtag_userDataIn <= cpu_debug_registers[6];
+			8'h09: jtag_userDataIn <= cpu_debug_registers[7];
+			8'h0a: jtag_userDataIn <= cpu_debug_registers[8];
+			8'h0b: jtag_userDataIn <= cpu_debug_registers[9];
+			8'h0c: jtag_userDataIn <= cpu_debug_registers[10];
+			8'h0d: jtag_userDataIn <= cpu_debug_registers[11];
+			8'h0e: jtag_userDataIn <= cpu_debug_registers[12];
+			8'h0f: jtag_userDataIn <= cpu_debug_registers[13];
+			8'h10: jtag_userDataIn <= cpu_debug_registers[14];
+			8'h11: jtag_userDataIn <= cpu_debug_registers[15];
+			8'h12: jtag_userDataIn <= cpu_debug_registers[16];
+			8'h13: jtag_userDataIn <= cpu_debug_registers[17];
+			8'h14: jtag_userDataIn <= cpu_debug_registers[18];
+			8'h15: jtag_userDataIn <= cpu_debug_registers[19];
+			8'h16: jtag_userDataIn <= cpu_debug_registers[20];
+			8'h17: jtag_userDataIn <= cpu_debug_registers[21];
+			8'h18: jtag_userDataIn <= cpu_debug_registers[22];
+			8'h19: jtag_userDataIn <= cpu_debug_registers[23];
+			8'h1a: jtag_userDataIn <= cpu_debug_registers[24];
+			8'h1b: jtag_userDataIn <= cpu_debug_registers[25];
+			8'h1c: jtag_userDataIn <= cpu_debug_registers[26];
+			8'h1d: jtag_userDataIn <= cpu_debug_registers[27];
+			8'h1e: jtag_userDataIn <= cpu_debug_registers[28];
+			8'h1f: jtag_userDataIn <= cpu_debug_registers[29];
+			8'h20: jtag_userDataIn <= cpu_debug_registers[30];
+			8'h21: jtag_userDataIn <= cpu_debug_registers[31];
+			8'h22: jtag_userDataIn <=
+				{
+					cpu_ibus_request  ? (                      8'h11) : 8'h00,
+					cpu_dbus_request  ? (cpu_dbus_rw ? 8'h22 : 8'h21) : 8'h00,
+					audio_dma_request ? (                      8'h31) : 8'h00,
+					dma_bus_request   ? (dma_bus_rw  ? 8'h42 : 8'h41) : 8'h00
+				};
+			8'h23: jtag_userDataIn <= cpu_ibus_address;
+			8'h24: jtag_userDataIn <= cpu_dbus_address;
+			8'h25: jtag_userDataIn <= audio_dma_address;
+			8'h26: jtag_userDataIn <= dma_bus_address;
+			8'h27: jtag_userDataIn <= cpu_external_interrupt ? 32'h1 : 32'h0;
+			8'h28: jtag_userDataIn <= cpu_debug_epc;
+			
+			8'h29: jtag_userDataIn <= cpu_debug_status;
+			8'h2a: jtag_userDataIn <= cpu_debug_ie;
+			8'h2b: jtag_userDataIn <= cpu_debug_ip;
+
+			8'h30: jtag_userDataIn <= cpu_debug_pc_trace[0];
+			8'h31: jtag_userDataIn <= cpu_debug_pc_trace[1];
+			8'h32: jtag_userDataIn <= cpu_debug_pc_trace[2];
+			8'h33: jtag_userDataIn <= cpu_debug_pc_trace[3];
+
+			default: jtag_userDataIn <= { 24'hb00b_00, jtag_userOp };
+			endcase
+		end
+	end
+
+
+
+
+	bit [31:0] tck_count = 0;
+
+	always_ff @(posedge tck_r) begin
+		tck_count <= tck_count + 1;
+	end
+
+	assign LED_R = tck_count[0];
+	assign LED_G = 1'b0;
+	assign LED_B = 1'b0;
+
+
 	//====================================================
 	// CPU
 	wire cpu_timer_interrupt;
@@ -128,15 +228,23 @@ module RetroDACK(
 	wire [31:0] cpu_dbus_rdata;
 	wire [31:0] cpu_dbus_wdata;
 	wire [3:0] cpu_dbus_wmask;
+
+	// Debug
 	wire cpu_fault;
-	wire [31:0] cpu_scratch;
+	wire [31:0] cpu_debug_pc;
+	wire [31:0] cpu_debug_registers [32];
+	wire [31:0] cpu_debug_epc;
+	wire [31:0] cpu_debug_status;
+	wire [31:0] cpu_debug_ie;
+	wire [31:0] cpu_debug_ip;
+	wire [31:0] cpu_debug_pc_trace [4];
 
 	CPU #(
 		.STACK_POINTER(32'h12000000 - 4),
 		.FREQUENCY(`FREQUENCY),
 		.DCACHE_SIZE(12),
 		.DCACHE_REGISTERED(1),
-		.DCACHE_WB_QUEUE(1),
+		.DCACHE_WB_QUEUE(0),
 		.ICACHE_SIZE(12),
 		.ICACHE_REGISTERED(1)		
 	) cpu(
@@ -166,7 +274,13 @@ module RetroDACK(
 		.o_execute_busy(),
 		.o_memory_busy(),
 		.o_fault(cpu_fault),
-		.o_scratch(cpu_scratch)
+		.o_debug_pc(cpu_debug_pc),
+		.o_debug_registers(cpu_debug_registers),
+		.o_debug_epc(cpu_debug_epc),
+		.o_debug_status(cpu_debug_status),
+		.o_debug_ie(cpu_debug_ie),
+		.o_debug_ip(cpu_debug_ip),
+		.o_debug_pc_trace(cpu_debug_pc_trace)
 	);
 
 
@@ -328,14 +442,6 @@ module RetroDACK(
 	//====================================================
 	// SD
 
-	wire bd_sd_card;
-
-	Debounce bd_sd(
-		.i_clock(clock),
-		.i_data(SD_EXTERNAL_CARD),
-		.o_stable(bd_sd_card)
-	);
-
 	wire sd_request;
 	wire sd_rw;
 	wire [31:0] sd_address;
@@ -368,7 +474,7 @@ module RetroDACK(
 		.SD_DAT_dir(sd_dat_dir),
 		.SD_DAT_in(SD_EXTERNAL_DAT),
 		.SD_DAT_out(sd_dat_out),
-		.SD_CARD(bd_sd_card)
+		.SD_CARD(SD_EXTERNAL_CARD)
 	);
 
 
@@ -435,7 +541,7 @@ module RetroDACK(
 
 	wire audio_interrupt;
 
-	AUDIO_controller_4 audio_controller(
+	AUDIO_controller_2 audio_controller(
 		.i_reset(reset),
 		.i_clock(clock),
 

@@ -1,6 +1,6 @@
 /*
  RetroDÄCK
- Copyright (c) 2025 Anders Pistol.
+ Copyright (c) 2025-2026 Anders Pistol.
 
  This Source Code Form is subject to the terms of the Mozilla Public
  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,7 +15,7 @@
 #include <HAL/Interrupt.h>
 #include <HAL/Timer.h>
 
-#define NUM_CHANNELS 4
+#define NUM_CHANNELS 2
 #define TLV320_ADDR 0x18
 
 static uint32_t s_dma_tag = 0;
@@ -171,7 +171,7 @@ void rt_audio_wait(uint32_t channel_mask)
 			return;
 
 		// Channels are busy; wait on interrupt.
-		rt_kernel_sig_wait(&s_audio_signal);
+		rt_kernel_sig_try_wait(&s_audio_signal, 100);
 	}
 }
 

@@ -1,6 +1,6 @@
 /*
  RetroDÄCK
- Copyright (c) 2025 Anders Pistol.
+ Copyright (c) 2025-2026 Anders Pistol.
 
  This Source Code Form is subject to the terms of the Mozilla Public
  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,6 +12,7 @@
 
 #include <HAL/CSR.h>
 #include <HAL/Interrupt.h>
+#include <HAL/Timer.h>
 
 #include "Runtime/Kernel.h"
 
@@ -25,7 +26,6 @@
 typedef struct
 {
 	uint32_t id;
-	const char* name;
 	void* stack;
 	uint32_t sp;
 	uint32_t epc;
@@ -34,7 +34,7 @@ typedef struct
 }
 kernel_thread_t;
 
-static kernel_thread_t g_threads[16];
+static kernel_thread_t g_threads[32];
 static int32_t g_current = 0;
 static int32_t g_count = 0;
 static int32_t g_critical = 0;
@@ -122,13 +122,23 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel
 
 	// Save current interrupt return address and stack pointer.
 	{
-		kernel_thread_t* t = &g_threads[g_current];
+		volatile kernel_thread_t* t = &g_threads[g_current];
 		__asm__ volatile (
 			"csrr	%0, mepc\n"
 			"mv 	%1, sp\n"
 			: "=r" (t->epc), "=r" (t->sp)
 		);
 	}
+
+	// Set scheduler stack pointer.
+	// {
+	// 	void* ssp = scheduler_stack; 
+	// 	__asm__ volatile (
+	// 		"mv		sp, %0\n"
+	// 		:
+	// 		: "r" (ssp)
+	// 	);
+	// }
 
 	// Select new thread.
 	{
@@ -139,14 +149,14 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel
 		);
 
 		int32_t next = g_current;
-		int8_t found_signaled = 0;
+		int32_t found_signaled = 0;
 
 		// Prioritize thread which are waiting for a signal.
-		for (int32_t i = 0; i < g_count - 1; ++i)
+		for (int32_t i = 0; i < g_count; ++i)
 		{
 			if (++next >= g_count)
 				next = 0;
-			kernel_thread_t* t = &g_threads[next];
+			volatile kernel_thread_t* t = &g_threads[next];
 			if (t->waiting != 0)
 			{
 				if (t->sleep == 0 || ms < t->sleep)
@@ -180,7 +190,7 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel
 				if (++next >= g_count)
 					next = 0;
 
-				kernel_thread_t* t = &g_threads[next];
+				volatile kernel_thread_t* t = &g_threads[next];
 				if (t->waiting == 0 && t->sleep <= ms)
 				{
 					// Not waiting nor sleeping.
@@ -199,7 +209,7 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel
 
 	// Restore new thread.
 	{
-		kernel_thread_t* t = &g_threads[g_current];
+		volatile kernel_thread_t* t = &g_threads[g_current];
 		__asm__ volatile (
 			"csrw	mepc, %0\n"
 			"mv		sp, %1\n"
@@ -283,14 +293,15 @@ static __attribute__((naked)) /*__attribute__((optimize("O3")))*/ void rt_kernel
 	);
 }
 
+static const int32_t c_stackSize = 0x80000;
+
 static void* rt_kernel_alloc_stack()
 {
-	const int32_t stackSize = 0x60000;
-	uint8_t* stack = malloc(stackSize);
+	uint8_t* stack = malloc(c_stackSize);
 	if (stack)
 	{
-		memset(stack, 0, stackSize);
-		return stack + stackSize - 0x2000;
+		memset(stack, 0, c_stackSize);
+		return stack + c_stackSize - 0x2000;
 	}
 	else
 		return 0;
@@ -303,7 +314,6 @@ void rt_kernel_init()
 	// Initialize main thread.
 	t = &g_threads[0];
 	t->id = 0;
-	t->name = "base";
 	t->stack = 0;
 	t->sp = 0;
 	t->epc = 0;
@@ -316,16 +326,15 @@ void rt_kernel_init()
 	g_critical = 0;
 
 	// Setup debug vector to expose some kernel data to emulator.
-	g_debug_vector.threads = g_threads;
-	g_debug_vector.current = &g_current;
-	g_debug_vector.count = &g_count;
-	__asm__ volatile (
-		"csrw	mscratch, %0\n"
-		"fence				\n"
-		:
-		: "r" (&g_debug_vector)
-	);
-	printf("G %08x\n", (uint32_t)&g_current);
+	// g_debug_vector.threads = g_threads;
+	// g_debug_vector.current = &g_current;
+	// g_debug_vector.count = &g_count;
+	// __asm__ volatile (
+	// 	"csrw	mscratch, %0\n"
+	// 	"fence				\n"
+	// 	:
+	// 	: "r" (&g_debug_vector)
+	// );
 
 	// Setup timer interrupt for kernel scheduler.
 	hal_interrupt_set_handler(IRQ_SOURCE_TIMER, rt_kernel_scheduler);
@@ -343,7 +352,6 @@ uint32_t rt_kernel_create_thread(kernel_thread_fn_t fn, const char* const name)
 	
 	volatile kernel_thread_t* t = &g_threads[g_count];
 	t->id = g_next_id++;
-	t->name = name;
 	t->stack = rt_kernel_alloc_stack();
 	t->sp = (uint32_t)t->stack;
 	t->epc = (uint32_t)fn;
@@ -404,7 +412,6 @@ void rt_kernel_yield()
 
 void rt_kernel_sleep(uint32_t ms)
 {
-	uint32_t cur_ms;
 	uint32_t fin_ms;
 
 	__asm__ volatile (
@@ -414,22 +421,16 @@ void rt_kernel_sleep(uint32_t ms)
 	fin_ms += ms;
 	
 	rt_kernel_enter_critical();
-	volatile kernel_thread_t* t = &g_threads[g_current];
+	kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = 0;
 	t->sleep = fin_ms;
 	rt_kernel_leave_critical();
 
-	for (;;)
+	do
 	{
 		rt_kernel_yield();
-	
-		__asm__ volatile (
-			"rdtime %0"
-			: "=r" (cur_ms)
-		);
-		if (cur_ms >= fin_ms)
-			break;
 	}
+	while (t->sleep >= hal_timer_get_ms());
 
 	rt_kernel_enter_critical();
 	t->sleep = 0;
@@ -505,7 +506,7 @@ void rt_kernel_sig_raise(volatile kernel_sig_t* sig)
 void rt_kernel_sig_wait(volatile kernel_sig_t* sig)
 {
 	rt_kernel_enter_critical();
-	volatile kernel_thread_t* t = &g_threads[g_current];
+	kernel_thread_t* t = &g_threads[g_current];
 	t->waiting = sig;
 	t->sleep = 0;
 	rt_kernel_leave_critical();
@@ -522,24 +523,9 @@ void rt_kernel_sig_wait(volatile kernel_sig_t* sig)
 
 int32_t rt_kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 {
-	uint32_t cur_ms;
-	uint32_t fin_ms;
-
-	__asm__ volatile (
-		"rdtime %0"
-		: "=r" (fin_ms)
-	);
-	fin_ms += timeout;
+	const uint32_t fin_ms = hal_timer_get_ms() + timeout;
 
 	rt_kernel_enter_critical();
-
-	// Check if already been signaled; no need to yield this thread.
-	if (sig->counter != 0)
-	{
-		sig->counter = 0;
-		rt_kernel_leave_critical();
-		return 1;
-	}	
 
 	// Attach signal to current thread and start waiting.
 	volatile kernel_thread_t* t = &g_threads[g_current];
@@ -551,12 +537,7 @@ int32_t rt_kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 	while (sig->counter == 0)
 	{
 		rt_kernel_yield();
-
-		__asm__ volatile (
-			"rdtime %0"
-			: "=r" (cur_ms)
-		);
-		if (cur_ms >= fin_ms)
+		if (hal_timer_get_ms() >= fin_ms)
 			break;
 	}
 
@@ -565,7 +546,6 @@ int32_t rt_kernel_sig_try_wait(volatile kernel_sig_t* sig, uint32_t timeout)
 	t->sleep = 0;
 	t->waiting = 0;
 	
-	// Check result if we got the signal or timed out.
 	int32_t result = 0;
 	if (sig->counter != 0)
 	{

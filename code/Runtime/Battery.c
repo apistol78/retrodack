@@ -13,6 +13,11 @@
 
 #define BQ27441_ADDR 0x55
 
+static int32_t clamp(int32_t v, int32_t mn, int32_t mx)
+{
+    return (v < mn) ? mn : ((v > mx) ? mx : v);
+}
+
 void rt_battery_read(battery_t* bat)
 {
     uint8_t data[2] = { 0, 0 };
@@ -38,7 +43,7 @@ void rt_battery_read(battery_t* bat)
     bat->power = (((uint32_t)data[1]) << 8) | data[0];
 
     rt_i2c_read(BQ27441_ADDR, 0x1c, data, 2, RT_I2C_MODE_SLOW);
-    bat->stageOfCharge = (((uint32_t)data[1]) << 8) | data[0];
+    bat->stageOfCharge = clamp((((uint32_t)data[1]) << 8) | data[0], 0, 100);
 
     rt_i2c_release();
 }

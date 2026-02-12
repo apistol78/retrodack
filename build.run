@@ -12,19 +12,23 @@ import(traktor.run)
 
 run:loadScript("../klara-rv/sv2v.run")
 
+local rtl < const > = "RetroDACK"
+-- local rtl < const > = "RetroDACK_VGA"
+-- local rtl < const > = "RetroDACK_SRAM"
+-- local rtl < const > = "RetroDACK_JTAG"
+
 local FREQUENCY < const > = 100
 local PATH_SOC < const > = "rtl"
 local PATH_PERIFHERIALS < const > = "../klara-rv/rtl"
+local PATH_3RDP < const > = "3rdp"
 
 local SOURCE < const > =
 {
-	PATH_SOC .. "/RetroDACK.sv",
-	-- PATH_SOC .. "/RetroDACK_VGA.sv",
-	-- PATH_SOC .. "/RetroDACK_SRAM.sv",
+	PATH_SOC .. "/" .. rtl .. ".sv",
 	-- Library
 	PATH_PERIFHERIALS .. "/audio2/AUDIO_mul_16x4.sv",
 	PATH_PERIFHERIALS .. "/audio2/AUDIO_channel.sv",
-	PATH_PERIFHERIALS .. "/audio2/AUDIO_controller_4.sv",
+	PATH_PERIFHERIALS .. "/audio2/AUDIO_controller_2.sv",
 	PATH_PERIFHERIALS .. "/audio2/AUDIO_cmdq.sv",
 	PATH_PERIFHERIALS .. "/audio2/AUDIO_i2s_output.sv",
 	PATH_PERIFHERIALS .. "/block/BRAM.sv",
@@ -87,7 +91,15 @@ local SOURCE < const > =
 	PATH_PERIFHERIALS .. "/cpu/private/fpu/CPU_FPU_Float.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/fpu/CPU_FPU_Int.sv",
 	PATH_PERIFHERIALS .. "/cpu/private/fpu/CPU_FPU_Mul.sv",
-	PATH_PERIFHERIALS .. "/cpu/private/fpu/CPU_FPU_MulAdd.sv"
+	PATH_PERIFHERIALS .. "/cpu/private/fpu/CPU_FPU_MulAdd.sv",
+
+	-- PATH_PERIFHERIALS .. "/jtag/JTAG_Simple.sv",
+
+	-- JTAGlet
+	PATH_3RDP .. "/jtaglet/jtaglet.v",
+	PATH_3RDP .. "/jtaglet/jtaglet/ff_sync.v",
+	PATH_3RDP .. "/jtaglet/jtaglet/jtag_reg.v",
+	PATH_3RDP .. "/jtaglet/jtaglet/jtag_state_machine.v",
 }
 
 function run.writeFile(fn, lines)
@@ -160,7 +172,7 @@ local function buildRV()
 
 	-- Create dump files.
 	-- run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Dashboard", "build/rv/ReleaseStatic/Dashboard.dump")
-	run:execute("riscv32-unknown-elf-objdump -D build/rv/DebugStatic/ScummRV", "build/rv/DebugStatic/ScummRV.dump")
+	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/ScummRV", "build/rv/ReleaseStatic/ScummRV.dump")
 	-- run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/ModPlayer", "build/rv/ReleaseStatic/ModPlayer.dump")
 	-- run:execute("riscv32-unknown-elf-objdump -S -D build/rv/ReleaseStatic/SimpleNES", "build/rv/ReleaseStatic/SimpleNES.dump")
 
@@ -202,10 +214,6 @@ function main()
 	local flash < const > = run.commandLine:hasOption("flash")
 	local program < const > = run.commandLine:hasOption("prog") or flash
 
-	local rtl < const > = "RetroDACK"
-	-- local rtl < const > = "RetroDACK_VGA"
-	-- local rtl < const > = "RetroDACK_SRAM"
-
 	-- Compile firmware and tools.
 	if compile then
 		if not buildRV() then return 1 end
@@ -230,7 +238,7 @@ function main()
 		for _, sv in ipairs(SOURCE) do
 			local v = sv2v(
 				sv,
-				{ ".", "./rtl", PATH_PERIFHERIALS .. "/cpu" },
+				{ ".", "./rtl", PATH_PERIFHERIALS .. "/cpu", "./3rdp/jtaglet", "./3rdp/jtaglet/jtaglet" },
 				{},
 				"build/rtl-v"
 			)

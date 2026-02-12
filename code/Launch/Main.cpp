@@ -216,7 +216,7 @@ int main(int argc, const char** argv)
 		const uint8_t ch = 0xff;
 		target->write(&ch, 1);
 		target->write(&ch, 1);
-		ThreadManager::getInstance().getCurrentThread()->sleep(2000);
+		ThreadManager::getInstance().getCurrentThread()->sleep(4000);
 	}
 
 	// Purge incoming data.
@@ -246,7 +246,7 @@ int main(int argc, const char** argv)
 		if (!uploadELF(target, elf, sp))
 		{
 			log::error << L"Unable to upload ELF." << Endl;
-			return 1;
+			// return 1;
 		}
 	}
 	else if (commandLine.hasOption('f', L"file"))
