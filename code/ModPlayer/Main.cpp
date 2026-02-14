@@ -60,7 +60,7 @@ int main()
 
 	struct xmp_frame_info fi;
 
-	uint8_t buffer[64][1024 * 2 * sizeof(int16_t)];
+	uint8_t buffer[4][1024 * 2 * sizeof(int16_t)];
 	int32_t i = 0;
 
 	for (;;)
@@ -68,7 +68,7 @@ int main()
 		xmp_play_buffer(ctx, buffer[i], 1024 * 2 * sizeof(int16_t), 0);
 		rt_audio_wait(1 << 0);
 		rt_audio_play(0, buffer[i], 1024, RT_AUDIO_MODE_APPEND | RT_AUDIO_MODE_STEREO);
-		i = (i + 1) & 63;
+		i = (i + 1) & 3;
 	}
 
 	return 0;

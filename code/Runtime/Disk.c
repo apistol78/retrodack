@@ -6,6 +6,7 @@
  License, v. 2.0. If a copy of the MPL was not distributed with this
  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -44,16 +45,20 @@ int32_t rt_disk_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLe
 	}
 
 	// Not cached, load from SD.
-	if (hal_sd_read_block512(s, buffer, 512) != 512)
+	if (s_cacheSectorBufs[c] == 0)
+	{
+		// Allocate cached shadow; assume malloc return 4-byte
+		// aligned pointer for the HAL.
+		s_cacheSectorBufs[c] = malloc(512);
+	}
+
+	if (hal_sd_read_block512(s, s_cacheSectorBufs[c], 512) != 512)
 	{
 		rt_kernel_leave_critical();
 		return 0;
 	}
 
-	if (s_cacheSectorBufs[c] == 0)
-		s_cacheSectorBufs[c] = malloc(512);
-
-	memcpy(s_cacheSectorBufs[c], buffer, 512);
+	memcpy(buffer, s_cacheSectorBufs[c], 512);
 	s_cacheSectors[c] = s;
 
 	rt_kernel_leave_critical();
