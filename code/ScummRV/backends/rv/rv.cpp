@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <HAL/DMA.h>
 #include <HAL/Sprite.h>
 
 #include <Runtime/Audio.h>
@@ -61,21 +62,18 @@ OSystem_RebelV::OSystem_RebelV()
 			_this->update_timer();
 		}
 	}, "rv timer");
-	printf("Timer thread %d\n", tid);
 
 	tid = rt_kernel_create_thread([](){
 		for (;;) {
 			_this->update_sound();
 		}
 	}, "rv sound");
-	printf("Sound thread %d\n", tid);
 
 	tid = rt_kernel_create_thread([](){
 		for (;;) {
 			_this->update_frame();
 		}
 	}, "rv update");
-	printf("Update thread %d\n", tid);
 
 	m_target = (byte*)rt_video_create_target();
 }
@@ -147,7 +145,7 @@ void OSystem_RebelV::copy_rect(const byte *src, int pitch, int x, int y, int w, 
 
 void OSystem_RebelV::move_screen(int dx, int dy, int height)
 {
-	printf("move_screen\n");
+	// printf("move_screen\n");
 }
 
 void OSystem_RebelV::update_screen()
@@ -156,7 +154,7 @@ void OSystem_RebelV::update_screen()
 
 void OSystem_RebelV::set_shake_pos(int shake_pos)
 {
-	printf("set_shake_pos\n");
+	// printf("set_shake_pos\n");
 }
 
 NewGuiColor OSystem_RebelV::RGBToColor(uint8 r, uint8 g, uint8 b)
@@ -353,7 +351,12 @@ void OSystem_RebelV::show_overlay()
 	if (m_overlayVisible)
 		return;
 
-	memcpy(m_overlayTarget, m_target, 320 * 200);
+	uint32_t tag = hal_dma_copy(m_overlayTarget, m_target, 320 * 200 / 4);
+	while (hal_dma_retired() < tag)
+		rt_kernel_yield();
+
+	// memcpy(m_overlayTarget, m_target, 320 * 200);
+
 	m_overlayVisible = true;
 }
 
@@ -371,7 +374,11 @@ void OSystem_RebelV::clear_overlay()
 	if (!m_overlayVisible)
 		return;
 
-	memcpy(m_overlayTarget, m_target, 320 * 200);
+	uint32_t tag = hal_dma_copy(m_overlayTarget, m_target, 320 * 200 / 4);
+	while (hal_dma_retired() < tag)
+		rt_kernel_yield();
+
+	// memcpy(m_overlayTarget, m_target, 320 * 200);
 }
 
 void OSystem_RebelV::grab_overlay(NewGuiColor *buf, int pitch)
