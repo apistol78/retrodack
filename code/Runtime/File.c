@@ -285,20 +285,13 @@ int32_t file_enumerate(const char* path, void* user, fn_enum_t fnen)
 	FILINFO fno;
 	DIR dp;
 
-	rt_kernel_cs_lock(&lock);
-
 	if (f_opendir(&dp, path) != FR_OK)
-	{
-		rt_kernel_cs_unlock(&lock);
 		return 1;
-	}
 
 	while (f_readdir(&dp, &fno) == FR_OK && fno.fname[0] != 0)
 		fnen(user, fno.fname, fno.fsize, (fno.fattrib & AM_DIR) != 0);
 
 	f_closedir(&dp);
-
-	rt_kernel_cs_unlock(&lock);
 	return 0;
 }
 

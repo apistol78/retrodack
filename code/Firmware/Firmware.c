@@ -193,14 +193,105 @@ static void load(const char* game)
 {
 	// Try to execute BOOT executable from SD
 	// card, if available.
-	rt_console_printf("Loading \"%s\"...\n", game);
+	// rt_console_printf("Loading \"%s\"...\n", game);
 	rt_kernel_sleep(200);
 
 	rt_elf_launch(game);
 
 	// No BOOT executable found.
-	rt_console_printf("\"%s\" not found!\n", game);
+	// rt_console_printf("\"%s\" not found!\n", game);
 }
+
+
+
+static int ends_with(const char *str, const char *suffix)
+{
+    if (!str || !suffix)
+        return 0;
+    const size_t lenstr = strlen(str);
+    const size_t lensuffix = strlen(suffix);
+    if (lensuffix >  lenstr)
+        return 0;
+    return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
+}
+
+
+typedef struct
+{
+	char image[64];
+	char executable[64];
+	rt_gfx_image_t* img;
+}
+app_info_t;
+
+static app_info_t s_apps[32];
+static int32_t s_apps_count = 0;
+
+
+static void enum_files(void* user, const char* filename, uint32_t size, uint8_t directory)
+{
+	if (ends_with(filename, ".nfo"))
+	{
+		FILE* fp = fopen(filename, "r");
+		if (fp != 0)
+		{
+			fgets(s_apps[s_apps_count].image, 64, fp);
+			fgets(s_apps[s_apps_count].executable, 64, fp);
+			fclose(fp);
+
+			printf("loading thumb \"%s\"...\n", s_apps[s_apps_count].image);
+
+			s_apps[s_apps_count].img = rt_gfx_load_image(s_apps[s_apps_count].image);
+
+			++s_apps_count;
+		}
+	}
+}
+
+
+static void load_available_applications()
+{
+	printf("scanning applications...\n");
+	file_enumerate("", 0, enum_files);
+}
+
+
+void draw()
+{
+	rt_gfx_context_t cx;
+	cx.width = 360;
+	cx.height = 360;
+	cx.pixels = rt_video_get_secondary_target();
+
+	int32_t m[2];
+	rt_input_get_absolute_position(m);
+
+	for (int32_t i = 0; i < 3; ++i)
+	{
+		for (int32_t j = 0; j < 3; ++j)
+		{
+			int32_t x = j * 108 + 18;
+			int32_t y = i * 108 + 18;
+
+			if (m[0] >= x && m[1] >= y && m[0] < x + 100 && m[1] < y + 100)
+			{
+				x -= 4;
+				y -= 4;
+			}
+
+			int32_t idx = j + i * 3;
+			if (idx < s_apps_count && s_apps[idx].img != 0)
+			{
+				rt_gfx_blit_image(&cx, s_apps[idx].img, x, y);
+			}
+			else
+				rt_gfx_fill_rect(&cx, x, y, 100, 100, 1);
+		}
+	}
+
+	rt_video_present(1);
+}
+
 
 void kickstart_main()
 {
@@ -210,13 +301,17 @@ void kickstart_main()
 	hal_interrupt_init();
 	rt_video_init();
 	rt_kernel_init();
-	rt_console_init();
+	// rt_console_init();
 	rt_input_init();
 
 	// max3420_init_device();
 
-	rt_console_printf("RetroDACK 0.2.4\n");
-	rt_console_printf("\n");
+	// rt_console_printf("RetroDACK 0.2.4\n");
+	// rt_console_printf("\n");
+
+	rt_video_set_mode(VMODE_360_360_8);
+	rt_video_set_palette(0, 0x808080);
+  	rt_video_set_palette(1, 0xff0000);
 
 	hal_uart_reset();
 	rt_kernel_sleep(200);
@@ -235,24 +330,26 @@ void kickstart_main()
 		{
 			if (chk == SD_RESULT_OK)
 			{
-				rt_console_printf("Initialize SD...\n");
-				hal_sd_init(SD_MODE_HW);
+				// rt_console_printf("Initialize SD...\n");
+				hal_sd_init(SD_MODE_SW);
 				
-				rt_console_printf("Initialize DISK...\n");
+				// rt_console_printf("Initialize DISK...\n");
 				rt_disk_init();
 				
-				rt_console_printf("Initialize FILE...\n");
+				// rt_console_printf("Initialize FILE...\n");
 				file_init();
 
 				// rt_console_printf("Initialize USB...\n");
 				// max3420_init_usb();
 				// scsi_write_enable(1);
 
-				rt_console_printf("\n");
-				rt_console_printf("Press S1 for Doom\n");
-				rt_console_printf("Press S2 for ScummRV\n");
-				rt_console_printf("Press  A for Tetris\n");
-				rt_console_printf("\n");
+				// rt_console_printf("\n");
+				// rt_console_printf("Press S1 for Doom\n");
+				// rt_console_printf("Press S2 for ScummRV\n");
+				// rt_console_printf("Press  A for Tetris\n");
+				// rt_console_printf("\n");
+
+				load_available_applications();
 			}
 			// else
 			// {
@@ -320,13 +417,15 @@ void kickstart_main()
 		// Check for commands on UART.
 		if (!hal_uart_rx_empty())
 		{
-			rt_console_printf("\nEntering remote control...\n");
+			// rt_console_printf("\nEntering remote control...\n");
 
 			// if (card == SD_RESULT_OK)
 			// 	max3420_terminate_usb();
 
 			remote_control();
 		}
+
+		draw();
 	}
 }
 
