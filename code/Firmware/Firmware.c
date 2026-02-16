@@ -194,7 +194,7 @@ static void load(const char* game)
 	// Try to execute BOOT executable from SD
 	// card, if available.
 	// rt_console_printf("Loading \"%s\"...\n", game);
-	rt_kernel_sleep(200);
+	// rt_kernel_sleep(200);
 
 	rt_elf_launch(game);
 
@@ -216,6 +216,14 @@ static int ends_with(const char *str, const char *suffix)
 }
 
 
+static void read_no_lf(FILE* fp, char* buf)
+{
+	fgets(buf, 64, fp);
+	char* ptr = strchr(buf, '\n');
+	if (ptr) *ptr = 0;
+}
+
+
 typedef struct
 {
 	char image[64];
@@ -232,17 +240,16 @@ static void enum_files(void* user, const char* filename, uint32_t size, uint8_t 
 {
 	if (ends_with(filename, ".nfo"))
 	{
+		printf("found nfo \"%s\"\n", filename);
+		
 		FILE* fp = fopen(filename, "r");
 		if (fp != 0)
 		{
-			fgets(s_apps[s_apps_count].image, 64, fp);
-			fgets(s_apps[s_apps_count].executable, 64, fp);
+			read_no_lf(fp, s_apps[s_apps_count].image);
+			read_no_lf(fp, s_apps[s_apps_count].executable);
 			fclose(fp);
 
-			printf("loading thumb \"%s\"...\n", s_apps[s_apps_count].image);
-
 			s_apps[s_apps_count].img = rt_gfx_load_image(s_apps[s_apps_count].image);
-
 			++s_apps_count;
 		}
 	}
@@ -251,41 +258,100 @@ static void enum_files(void* user, const char* filename, uint32_t size, uint8_t 
 
 static void load_available_applications()
 {
-	printf("scanning applications...\n");
 	file_enumerate("", 0, enum_files);
 }
 
+static void reset_available_applications()
+{
+	s_apps_count = 0;
+}
+
+
+
+static const app_info_t* get_app_info_from_position(int32_t qx, int32_t qy)
+{
+	for (int32_t i = 0; i < 2; ++i)
+	{
+		for (int32_t j = 0; j < 3; ++j)
+		{
+			int32_t x = j * 110 + 20;
+			int32_t y = (i + 1) * 110 + 20;
+			if (qx >= x && qy >= y && qx < x + 100 && qy < y + 100)
+			{
+				const int32_t idx = j + i * 3;
+				return &s_apps[idx];
+			}
+		}
+	}
+	return 0;
+}
+
+
+const static uint8_t c_circle[16][16] =
+{
+	{ 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0 },
+	{ 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0 },
+	{ 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0 },
+	{ 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0 },
+	{ 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0 },
+	{ 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0 },
+	{ 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0 },
+	{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+	{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+	{ 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0 },
+	{ 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0 },
+	{ 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0 },
+	{ 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0 },
+	{ 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0 },
+	{ 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0 },
+	{ 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0 }
+};
+
+rt_gfx_image_t* s_circle = 0;
 
 void draw()
 {
+	const int32_t FW = 360;
+	const int32_t FH = 360;
+
 	rt_gfx_context_t cx;
 	cx.width = 360;
 	cx.height = 360;
 	cx.pixels = rt_video_get_secondary_target();
 
+	rt_video_clear(0);
+	rt_video_wait();
+
+	const int32_t sh = 8;
+	rt_gfx_fill_rect(&cx, 8 + sh, sh, FW - 8 * 2 - sh * 2, FH - sh * 2, 1);
+	rt_gfx_fill_rect(&cx, 0 + sh, 8 + sh,  8, FH - 8 * 2 - sh * 2,  1);
+	rt_gfx_fill_rect(&cx, FW - 8 - sh, 8 + sh, 8, FH - 8 * 2 - sh * 2, 1);
+
+	rt_gfx_blit_image_region(&cx, s_circle, 0, 0, 8, 8, sh, sh);
+	rt_gfx_blit_image_region(&cx, s_circle, 8, 0, 8, 8, FW - 8 - sh, sh);
+	rt_gfx_blit_image_region(&cx, s_circle, 0, 8, 8, 8, sh, FH - 8 - sh);
+	rt_gfx_blit_image_region(&cx, s_circle, 8, 8, 8, 8, FW - 8 - sh, FH - 8 - sh);
+
 	int32_t m[2];
 	rt_input_get_absolute_position(m);
 
-	for (int32_t i = 0; i < 3; ++i)
+	for (int32_t i = 0; i < 2; ++i)
 	{
 		for (int32_t j = 0; j < 3; ++j)
 		{
-			int32_t x = j * 108 + 18;
-			int32_t y = i * 108 + 18;
-
-			if (m[0] >= x && m[1] >= y && m[0] < x + 100 && m[1] < y + 100)
-			{
-				x -= 4;
-				y -= 4;
-			}
+			int32_t x = j * 110 + 20;
+			int32_t y = (i + 1) * 110 + 20;
 
 			int32_t idx = j + i * 3;
 			if (idx < s_apps_count && s_apps[idx].img != 0)
 			{
 				rt_gfx_blit_image(&cx, s_apps[idx].img, x, y);
+
+				if (m[0] >= x && m[1] >= y && m[0] < x + 100 && m[1] < y + 100)
+					rt_gfx_draw_rect(&cx, x - 1, y - 1, 102, 102, 2);
 			}
 			else
-				rt_gfx_fill_rect(&cx, x, y, 100, 100, 1);
+				rt_gfx_draw_rect(&cx, x, y, 100, 100, 2);
 		}
 	}
 
@@ -301,17 +367,16 @@ void kickstart_main()
 	hal_interrupt_init();
 	rt_video_init();
 	rt_kernel_init();
-	// rt_console_init();
-	rt_input_init();
-
-	// max3420_init_device();
-
-	// rt_console_printf("RetroDACK 0.2.4\n");
-	// rt_console_printf("\n");
 
 	rt_video_set_mode(VMODE_360_360_8);
-	rt_video_set_palette(0, 0x808080);
-  	rt_video_set_palette(1, 0xff0000);
+	rt_video_set_palette(0, 0x000000);
+	rt_video_set_palette(1, 0x808080);
+  	rt_video_set_palette(2, 0xffffff);
+
+	rt_input_init();
+
+	s_circle = rt_gfx_create_external_image(16, 16, (const uint8_t*)c_circle);
+	draw();
 
 	hal_uart_reset();
 	rt_kernel_sleep(200);
@@ -320,9 +385,6 @@ void kickstart_main()
 
 	int32_t card = SD_RESULT_NO_CARD;
 
-	rt_event_t ev;
-	while (rt_input_get_event(&ev));
-
 	for (;;)
 	{
 		const int32_t chk = hal_sd_card_inserted();
@@ -330,98 +392,38 @@ void kickstart_main()
 		{
 			if (chk == SD_RESULT_OK)
 			{
-				// rt_console_printf("Initialize SD...\n");
 				hal_sd_init(SD_MODE_SW);
-				
-				// rt_console_printf("Initialize DISK...\n");
 				rt_disk_init();
-				
-				// rt_console_printf("Initialize FILE...\n");
 				file_init();
-
-				// rt_console_printf("Initialize USB...\n");
-				// max3420_init_usb();
-				// scsi_write_enable(1);
-
-				// rt_console_printf("\n");
-				// rt_console_printf("Press S1 for Doom\n");
-				// rt_console_printf("Press S2 for ScummRV\n");
-				// rt_console_printf("Press  A for Tetris\n");
-				// rt_console_printf("\n");
-
 				load_available_applications();
 			}
-			// else
-			// {
-			// 	rt_console_printf("Terminate USB...\n");
-			// 	max3420_terminate_usb();
-			// }
+			else
+			{
+				reset_available_applications();
+			}
 			card = chk;
 		}
 
 		if (card == SD_RESULT_OK)
 		{
-			// Process user input.
 			rt_event_t ev;
 			while (rt_input_get_event(&ev))
 			{
-				if (ev.button == RT_INPUT_BUTTON_S1)
+				if (ev.button == RT_INPUT_BUTTON_A || ev.button == RT_INPUT_TB)
 				{
-					// max3420_usb_suspend();
-					load("doom");
-				}
-				else if (ev.button == RT_INPUT_BUTTON_S2)
-				{
-					// max3420_usb_suspend();
-					load("scummrv");
-				}
-				else if (ev.button == RT_INPUT_BUTTON_A)
-				{
-					// max3420_usb_suspend();
-					load("tetris");
+					const app_info_t* app = get_app_info_from_position(ev.x, ev.y);
+					if (app)
+					{
+						printf("loading \"%s\"...\n", app->executable);
+						load(app->executable);
+					}
 				}
 			}
-
-			// // Process USB event.
-			// const usbEvent_t event = max3420_get_usb_event();
-			// switch (event)
-			// {
-			// 	case USB_VBUS_LOST:
-			// 		break;
-					
-			// 	case BUS_RESET:
-			// 		usb_mass_process_bus_reset();
-			// 		break;
-					
-			// 	case SETUP_PACKET_AVAILABLE:
-			// 		usb_mass_process_setup_packet();
-			// 		break;
-					
-			// 	case EP1_OUT_DATA:
-			// 		usb_mass_process_bulk_out_transaction();
-			// 		break;
-					
-			// 	case USB_SUSPEND:
-			// 		max3420_usb_suspend();
-			// 		break;
-					
-			// 	default:
-			// 		break;
-			// }			
-		}
-		else
-		{
-			rt_kernel_sleep(100);
 		}
 
 		// Check for commands on UART.
 		if (!hal_uart_rx_empty())
 		{
-			// rt_console_printf("\nEntering remote control...\n");
-
-			// if (card == SD_RESULT_OK)
-			// 	max3420_terminate_usb();
-
 			remote_control();
 		}
 
