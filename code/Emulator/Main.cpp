@@ -189,5 +189,6 @@ int main(int argc, const char** argv)
 		mainForm = nullptr;
 	}
 
+	ui::Application::getInstance()->finalize();
 	return 0;
 }
