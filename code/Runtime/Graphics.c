@@ -1,6 +1,6 @@
 /*
  RetroDÄCK
- Copyright (c) 2025 Anders Pistol.
+ Copyright (c) 2025-2026 Anders Pistol.
 
  This Source Code Form is subject to the terms of the Mozilla Public
  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "Runtime/File.h"
 #include "Runtime/Graphics.h"
@@ -196,10 +197,7 @@ void rt_gfx_blit_image(rt_gfx_context_t* ctx, const rt_gfx_image_t* image, int32
 	uint8_t* dp = ctx->pixels + (y + oy) * w + (x + ox);
 	for (int32_t iy = 0; iy < dh; ++iy)
 	{
-		for (int32_t ix = 0; ix < dw; ++ix)
-		{
-			dp[ix] = sp[ix];
-		}
+		memcpy(dp, sp, dw);
 		sp += image->width;
 		dp += w;
 	}
@@ -222,10 +220,7 @@ void rt_gfx_blit_image_region(rt_gfx_context_t* ctx, const rt_gfx_image_t* image
 	uint8_t* dp = ctx->pixels + (destY + oy) * w + (destX + ox);
 	for (int32_t iy = 0; iy < dh; ++iy)
 	{
-		for (int32_t ix = 0; ix < dw; ++ix)
-		{
-			dp[ix] = sp[ix];
-		}
+		memcpy(dp, sp, dw);
 		sp += image->width;
 		dp += w;
 	}	

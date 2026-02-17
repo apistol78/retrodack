@@ -222,6 +222,7 @@ static int32_t s_apps_count = 0;
 static const app_info_t* s_app_loading = 0;
 static rt_gfx_image_t* s_circle = 0;
 static rt_gfx_image_t* s_banner = 0;
+static int32_t s_anim_offset = 240;
 
 static int ends_with(const char *str, const char *suffix)
 {
@@ -290,8 +291,8 @@ static const app_info_t* get_app_info_from_position(int32_t qx, int32_t qy)
 	{
 		for (int32_t j = 0; j < 3; ++j)
 		{
-			int32_t x = j * 110 + 20;
-			int32_t y = (i + 1) * 110 + 20;
+			const int32_t x = j * 110 + 20;
+			const int32_t y = (i + 1) * 110 + 20 + s_anim_offset;
 			if (qx >= x && qy >= y && qx < x + 100 && qy < y + 100)
 			{
 				const int32_t idx = j + i * 3;
@@ -307,31 +308,23 @@ void draw()
 {
 	const int32_t FW = 360;
 	const int32_t FH = 360;
-	const int32_t sh = 8;
-
-	uint8_t bg = 1;
-	if (s_banner)
-		bg = s_banner->pixels[0];
 
 	rt_gfx_context_t cx;
 	cx.width = 360;
 	cx.height = 360;
 	cx.pixels = rt_video_get_secondary_target();
 
-	rt_video_clear(214);
-	rt_video_wait();
-
-	rt_gfx_fill_rect(&cx, 8 + sh, sh, FW - 8 * 2 - sh * 2, FH - sh * 2, bg);
-	rt_gfx_fill_rect(&cx, 0 + sh, 8 + sh,  8, FH - 8 * 2 - sh * 2, bg);
-	rt_gfx_fill_rect(&cx, FW - 8 - sh, 8 + sh, 8, FH - 8 * 2 - sh * 2, bg);
-
-	rt_gfx_blit_image_region(&cx, s_circle, 0, 0, 8, 8, sh, sh);
-	rt_gfx_blit_image_region(&cx, s_circle, 8, 0, 8, 8, FW - 8 - sh, sh);
-	rt_gfx_blit_image_region(&cx, s_circle, 0, 8, 8, 8, sh, FH - 8 - sh);
-	rt_gfx_blit_image_region(&cx, s_circle, 8, 8, 8, 8, FW - 8 - sh, FH - 8 - sh);
-
 	if (s_banner)
-		rt_gfx_blit_image(&cx, s_banner, 30, 14);
+	{
+		// rt_gfx_blit_image(&cx, s_banner, 0, 0);
+		rt_video_blit(s_banner->pixels);
+		rt_video_wait();
+	}
+	else
+	{
+		rt_video_clear(215);
+		rt_video_wait();
+	}
 
 	if (!s_app_loading)
 	{
@@ -343,7 +336,7 @@ void draw()
 			for (int32_t j = 0; j < 3; ++j)
 			{
 				const int32_t x = j * 110 + 20;
-				const int32_t y = (i + 1) * 110 + 20;
+				const int32_t y = (i + 1) * 110 + 20 + s_anim_offset;
 				const int32_t idx = j + i * 3;
 				if (idx < s_apps_count && s_apps[idx].img != 0)
 				{
@@ -367,6 +360,9 @@ void draw()
 	}
 
 	rt_video_present(1);
+
+	if (s_anim_offset > 0)
+		s_anim_offset--;
 }
 
 
