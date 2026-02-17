@@ -301,7 +301,7 @@ static void* rt_kernel_alloc_stack()
 	if (stack)
 	{
 		memset(stack, 0, c_stackSize);
-		return stack + c_stackSize - 0x2000;
+		return stack + c_stackSize - 256;
 	}
 	else
 		return 0;

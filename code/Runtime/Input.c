@@ -1,6 +1,6 @@
 /*
  RetroDÄCK
- Copyright (c) 2025 Anders Pistol.
+ Copyright (c) 2025-2026 Anders Pistol.
 
  This Source Code Form is subject to the terms of the Mozilla Public
  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -332,16 +332,14 @@ int32_t rt_input_init()
 		hal_timer_wait_ms(10);
 	}
 
-	// Setup interrupt handler.
-	hal_interrupt_set_handler(IRQ_SOURCE_PLIC_0, input_interrupt);
-
 	// Setup default cursor.
-	hal_sprite_set_visible(0, 0xff);
 	hal_sprite_set_bits(0, c_mouseCursor, 32, 32);
   	rt_video_set_palette(253, 0x000000);
   	rt_video_set_palette(254, 0xffffff);
 	rt_input_set_hotspot(16, 16);
-	
+
+	// Setup interrupt handler.
+	hal_interrupt_set_handler(IRQ_SOURCE_PLIC_0, input_interrupt);
 	return 0;
 }
 
@@ -410,6 +408,16 @@ void rt_input_set_tb_color(int32_t clr)
 		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_BLU, 0x00, RT_I2C_MODE_FAST);
 		break;
 	}
+}
+
+void rt_input_show_cursor()
+{
+	hal_sprite_set_visible(0, 0xff);
+}
+
+void rt_input_hide_cursor()
+{
+	hal_sprite_set_visible(0, 0x00);
 }
 
 void rt_input_set_hotspot(int32_t x, int32_t y)

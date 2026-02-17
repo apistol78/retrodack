@@ -76,6 +76,8 @@ OSystem_RebelV::OSystem_RebelV()
 	}, "rv update");
 
 	m_target = (byte*)rt_video_create_target();
+
+	rt_input_show_cursor();
 }
 
 void OSystem_RebelV::init_size(uint w, uint h)

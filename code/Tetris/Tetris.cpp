@@ -53,7 +53,7 @@ int tetrisMain()
 		rt_video_set_palette(i, img_foreground->palette->colors[i].dw);
 	}
 
-	for (;;)
+	// for (;;)
 	{
 		score = 0;
 		gameOver = false;

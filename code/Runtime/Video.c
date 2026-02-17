@@ -28,6 +28,11 @@ void rt_video_init()
 {
 	hal_video_init();
 
+	// Ensure framebuffer is initially cleared.
+	rt_video_clear(0);
+	rt_video_wait();
+	rt_video_present(0);
+
 	// Register vblank interrupt.
 	rt_kernel_sig_init(&s_vblank_signal);
 	hal_interrupt_set_handler(IRQ_SOURCE_PLIC_2, video_interrupt);

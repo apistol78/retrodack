@@ -1,6 +1,6 @@
 /*
  RetroDÄCK
- Copyright (c) 2025 Anders Pistol.
+ Copyright (c) 2025-2026 Anders Pistol.
 
  This Source Code Form is subject to the terms of the Mozilla Public
  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,6 +20,9 @@
 #include <HAL/Sprite.h>
 
 #include "Runtime/Runtime.h"
+
+#include "Firmware/Circle.h"
+#include "Firmware/Palette.h"
 
 // #include "Runtime/USB/Max3420.h"
 // #include "Runtime/USB/UsbMassStorage.h"
@@ -204,24 +207,6 @@ static void load(const char* game)
 
 
 
-static int ends_with(const char *str, const char *suffix)
-{
-    if (!str || !suffix)
-        return 0;
-    const size_t lenstr = strlen(str);
-    const size_t lensuffix = strlen(suffix);
-    if (lensuffix >  lenstr)
-        return 0;
-    return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
-}
-
-
-static void read_no_lf(FILE* fp, char* buf)
-{
-	fgets(buf, 64, fp);
-	char* ptr = strchr(buf, '\n');
-	if (ptr) *ptr = 0;
-}
 
 
 typedef struct
@@ -234,7 +219,27 @@ app_info_t;
 
 static app_info_t s_apps[32];
 static int32_t s_apps_count = 0;
+static const app_info_t* s_app_loading = 0;
+static rt_gfx_image_t* s_circle = 0;
+static rt_gfx_image_t* s_banner = 0;
 
+static int ends_with(const char *str, const char *suffix)
+{
+    if (!str || !suffix)
+        return 0;
+    const size_t lenstr = strlen(str);
+    const size_t lensuffix = strlen(suffix);
+    if (lensuffix >  lenstr)
+        return 0;
+    return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
+}
+
+static void read_no_lf(FILE* fp, char* buf)
+{
+	fgets(buf, 64, fp);
+	char* ptr = strchr(buf, '\n');
+	if (ptr) *ptr = 0;
+}
 
 static void enum_files(void* user, const char* filename, uint32_t size, uint8_t directory)
 {
@@ -255,18 +260,29 @@ static void enum_files(void* user, const char* filename, uint32_t size, uint8_t 
 	}
 }
 
-
 static void load_available_applications()
 {
+	s_banner = rt_gfx_load_image("banner.pcx");
 	file_enumerate("", 0, enum_files);
 }
 
 static void reset_available_applications()
 {
+	if (s_banner)
+	{
+		rt_gfx_destroy_image(s_banner);
+		s_banner = 0;
+	}
+	for (int32_t i = 0; i < s_apps_count; ++i)
+	{
+		if (s_apps[i].img)
+		{
+			rt_gfx_destroy_image(s_apps[i].img);
+			s_apps[i].img = 0;
+		}
+	}
 	s_apps_count = 0;
 }
-
-
 
 static const app_info_t* get_app_info_from_position(int32_t qx, int32_t qy)
 {
@@ -279,339 +295,75 @@ static const app_info_t* get_app_info_from_position(int32_t qx, int32_t qy)
 			if (qx >= x && qy >= y && qx < x + 100 && qy < y + 100)
 			{
 				const int32_t idx = j + i * 3;
-				return &s_apps[idx];
+				if (idx < s_apps_count)
+					return &s_apps[idx];
 			}
 		}
 	}
 	return 0;
 }
 
-
-static unsigned char header_data_cmap[256][3] = {
-	{255,255,255},
-	{255,255,204},
-	{255,255,153},
-	{255,255,102},
-	{255,255, 51},
-	{255,255,  0},
-	{255,204,255},
-	{255,204,204},
-	{255,204,153},
-	{255,204,102},
-	{255,204, 51},
-	{255,204,  0},
-	{255,153,255},
-	{255,153,204},
-	{255,153,153},
-	{255,153,102},
-	{255,153, 51},
-	{255,153,  0},
-	{255,102,255},
-	{255,102,204},
-	{255,102,153},
-	{255,102,102},
-	{255,102, 51},
-	{255,102,  0},
-	{255, 51,255},
-	{255, 51,204},
-	{255, 51,153},
-	{255, 51,102},
-	{255, 51, 51},
-	{255, 51,  0},
-	{255,  0,255},
-	{255,  0,204},
-	{255,  0,153},
-	{255,  0,102},
-	{255,  0, 51},
-	{255,  0,  0},
-	{204,255,255},
-	{204,255,204},
-	{204,255,153},
-	{204,255,102},
-	{204,255, 51},
-	{204,255,  0},
-	{204,204,255},
-	{204,204,204},
-	{204,204,153},
-	{204,204,102},
-	{204,204, 51},
-	{204,204,  0},
-	{204,153,255},
-	{204,153,204},
-	{204,153,153},
-	{204,153,102},
-	{204,153, 51},
-	{204,153,  0},
-	{204,102,255},
-	{204,102,204},
-	{204,102,153},
-	{204,102,102},
-	{204,102, 51},
-	{204,102,  0},
-	{204, 51,255},
-	{204, 51,204},
-	{204, 51,153},
-	{204, 51,102},
-	{204, 51, 51},
-	{204, 51,  0},
-	{204,  0,255},
-	{204,  0,204},
-	{204,  0,153},
-	{204,  0,102},
-	{204,  0, 51},
-	{204,  0,  0},
-	{153,255,255},
-	{153,255,204},
-	{153,255,153},
-	{153,255,102},
-	{153,255, 51},
-	{153,255,  0},
-	{153,204,255},
-	{153,204,204},
-	{153,204,153},
-	{153,204,102},
-	{153,204, 51},
-	{153,204,  0},
-	{153,153,255},
-	{153,153,204},
-	{153,153,153},
-	{153,153,102},
-	{153,153, 51},
-	{153,153,  0},
-	{153,102,255},
-	{153,102,204},
-	{153,102,153},
-	{153,102,102},
-	{153,102, 51},
-	{153,102,  0},
-	{153, 51,255},
-	{153, 51,204},
-	{153, 51,153},
-	{153, 51,102},
-	{153, 51, 51},
-	{153, 51,  0},
-	{153,  0,255},
-	{153,  0,204},
-	{153,  0,153},
-	{153,  0,102},
-	{153,  0, 51},
-	{153,  0,  0},
-	{102,255,255},
-	{102,255,204},
-	{102,255,153},
-	{102,255,102},
-	{102,255, 51},
-	{102,255,  0},
-	{102,204,255},
-	{102,204,204},
-	{102,204,153},
-	{102,204,102},
-	{102,204, 51},
-	{102,204,  0},
-	{102,153,255},
-	{102,153,204},
-	{102,153,153},
-	{102,153,102},
-	{102,153, 51},
-	{102,153,  0},
-	{102,102,255},
-	{102,102,204},
-	{102,102,153},
-	{102,102,102},
-	{102,102, 51},
-	{102,102,  0},
-	{102, 51,255},
-	{102, 51,204},
-	{102, 51,153},
-	{102, 51,102},
-	{102, 51, 51},
-	{102, 51,  0},
-	{102,  0,255},
-	{102,  0,204},
-	{102,  0,153},
-	{102,  0,102},
-	{102,  0, 51},
-	{102,  0,  0},
-	{ 51,255,255},
-	{ 51,255,204},
-	{ 51,255,153},
-	{ 51,255,102},
-	{ 51,255, 51},
-	{ 51,255,  0},
-	{ 51,204,255},
-	{ 51,204,204},
-	{ 51,204,153},
-	{ 51,204,102},
-	{ 51,204, 51},
-	{ 51,204,  0},
-	{ 51,153,255},
-	{ 51,153,204},
-	{ 51,153,153},
-	{ 51,153,102},
-	{ 51,153, 51},
-	{ 51,153,  0},
-	{ 51,102,255},
-	{ 51,102,204},
-	{ 51,102,153},
-	{ 51,102,102},
-	{ 51,102, 51},
-	{ 51,102,  0},
-	{ 51, 51,255},
-	{ 51, 51,204},
-	{ 51, 51,153},
-	{ 51, 51,102},
-	{ 51, 51, 51},
-	{ 51, 51,  0},
-	{ 51,  0,255},
-	{ 51,  0,204},
-	{ 51,  0,153},
-	{ 51,  0,102},
-	{ 51,  0, 51},
-	{ 51,  0,  0},
-	{  0,255,255},
-	{  0,255,204},
-	{  0,255,153},
-	{  0,255,102},
-	{  0,255, 51},
-	{  0,255,  0},
-	{  0,204,255},
-	{  0,204,204},
-	{  0,204,153},
-	{  0,204,102},
-	{  0,204, 51},
-	{  0,204,  0},
-	{  0,153,255},
-	{  0,153,204},
-	{  0,153,153},
-	{  0,153,102},
-	{  0,153, 51},
-	{  0,153,  0},
-	{  0,102,255},
-	{  0,102,204},
-	{  0,102,153},
-	{  0,102,102},
-	{  0,102, 51},
-	{  0,102,  0},
-	{  0, 51,255},
-	{  0, 51,204},
-	{  0, 51,153},
-	{  0, 51,102},
-	{  0, 51, 51},
-	{  0, 51,  0},
-	{  0,  0,255},
-	{  0,  0,204},
-	{  0,  0,153},
-	{  0,  0,102},
-	{  0,  0, 51},
-	{  0,  0,  0},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255},
-	{255,255,255}
-	}; 
-
-const static uint8_t c_circle[16][16] =
-{
-	{ 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0 },
-	{ 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0 },
-	{ 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0 },
-	{ 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0 },
-	{ 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0 },
-	{ 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0 },
-	{ 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0 },
-	{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-	{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-	{ 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0 },
-	{ 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0 },
-	{ 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0 },
-	{ 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0 },
-	{ 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0 },
-	{ 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0 },
-	{ 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0 }
-};
-
-rt_gfx_image_t* s_circle = 0;
-
 void draw()
 {
 	const int32_t FW = 360;
 	const int32_t FH = 360;
+	const int32_t sh = 8;
+
+	uint8_t bg = 1;
+	if (s_banner)
+		bg = s_banner->pixels[0];
 
 	rt_gfx_context_t cx;
 	cx.width = 360;
 	cx.height = 360;
 	cx.pixels = rt_video_get_secondary_target();
 
-	rt_video_clear(0);
+	rt_video_clear(214);
 	rt_video_wait();
 
-	const int32_t sh = 8;
-	rt_gfx_fill_rect(&cx, 8 + sh, sh, FW - 8 * 2 - sh * 2, FH - sh * 2, 1);
-	rt_gfx_fill_rect(&cx, 0 + sh, 8 + sh,  8, FH - 8 * 2 - sh * 2,  1);
-	rt_gfx_fill_rect(&cx, FW - 8 - sh, 8 + sh, 8, FH - 8 * 2 - sh * 2, 1);
+	rt_gfx_fill_rect(&cx, 8 + sh, sh, FW - 8 * 2 - sh * 2, FH - sh * 2, bg);
+	rt_gfx_fill_rect(&cx, 0 + sh, 8 + sh,  8, FH - 8 * 2 - sh * 2, bg);
+	rt_gfx_fill_rect(&cx, FW - 8 - sh, 8 + sh, 8, FH - 8 * 2 - sh * 2, bg);
 
 	rt_gfx_blit_image_region(&cx, s_circle, 0, 0, 8, 8, sh, sh);
 	rt_gfx_blit_image_region(&cx, s_circle, 8, 0, 8, 8, FW - 8 - sh, sh);
 	rt_gfx_blit_image_region(&cx, s_circle, 0, 8, 8, 8, sh, FH - 8 - sh);
 	rt_gfx_blit_image_region(&cx, s_circle, 8, 8, 8, 8, FW - 8 - sh, FH - 8 - sh);
 
-	int32_t m[2];
-	rt_input_get_absolute_position(m);
+	if (s_banner)
+		rt_gfx_blit_image(&cx, s_banner, 30, 14);
 
-	for (int32_t i = 0; i < 2; ++i)
+	if (!s_app_loading)
 	{
-		for (int32_t j = 0; j < 3; ++j)
+		int32_t m[2];
+		rt_input_get_absolute_position(m);
+
+		for (int32_t i = 0; i < 2; ++i)
 		{
-			int32_t x = j * 110 + 20;
-			int32_t y = (i + 1) * 110 + 20;
-
-			int32_t idx = j + i * 3;
-			if (idx < s_apps_count && s_apps[idx].img != 0)
+			for (int32_t j = 0; j < 3; ++j)
 			{
-				rt_gfx_blit_image(&cx, s_apps[idx].img, x, y);
-
-				if (m[0] >= x && m[1] >= y && m[0] < x + 100 && m[1] < y + 100)
-					rt_gfx_draw_rect(&cx, x - 1, y - 1, 102, 102, 2);
+				const int32_t x = j * 110 + 20;
+				const int32_t y = (i + 1) * 110 + 20;
+				const int32_t idx = j + i * 3;
+				if (idx < s_apps_count && s_apps[idx].img != 0)
+				{
+					rt_gfx_blit_image(&cx, s_apps[idx].img, x, y);
+					if (m[0] >= x && m[1] >= y && m[0] < x + 100 && m[1] < y + 100)
+					{
+						rt_gfx_draw_rect(&cx, x - 1, y - 1, 102, 102, 119);
+						rt_gfx_draw_rect(&cx, x - 2, y - 2, 104, 104, 119);
+					}
+				}
+				else
+					rt_gfx_draw_rect(&cx, x, y, 100, 100, 162);
 			}
-			else
-				rt_gfx_draw_rect(&cx, x, y, 100, 100, 2);
 		}
+	}
+	else
+	{
+		const int32_t x = (360 - 100) / 2;
+		const int32_t y = (360 - 100) / 2;
+		rt_gfx_blit_image(&cx, s_app_loading->img, x, y);
 	}
 
 	rt_video_present(1);
@@ -649,6 +401,8 @@ void kickstart_main()
 	hal_uart_reset();
 	rt_kernel_sleep(200);
 
+	rt_input_show_cursor();
+
 	int32_t card = SD_RESULT_NO_CARD;
 
 	for (;;)
@@ -680,8 +434,15 @@ void kickstart_main()
 					const app_info_t* app = get_app_info_from_position(ev.x, ev.y);
 					if (app)
 					{
-						printf("loading \"%s\"...\n", app->executable);
+						s_app_loading = app;
+						rt_input_hide_cursor();
+						draw();
+
 						load(app->executable);
+
+						s_app_loading = 0;
+						rt_input_show_cursor();
+						draw();
 					}
 				}
 			}

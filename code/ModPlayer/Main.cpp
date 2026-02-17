@@ -20,50 +20,37 @@ int main()
 	rt_audio_set_playback_rate(SAMPLE_RATE);
 	rt_console_init();
 
-
-	printf("reading mod file...\n");
+	rt_console_printf("reading mod file...\n");
 	if (!(file = fopen("song.mod", "rb")))
-	{
-		//printf("error: can't open '%s' for reading\n", argv[1]);
 		return -1;
-	}
+
 	fseek(file, 0, SEEK_END);
 	const int32_t mod_size = ftell(file);
 	rewind(file);
-	printf("size %d bytes...\n", mod_size);
+
+	rt_console_printf("size %d bytes...\n", mod_size);
 	if (!(mod_data = malloc(mod_size)))
-	{
-		rt_console_printf("error: %d-byte memory allocation failed\n", mod_size);
 		return -1;
-	}
 	else if (!fread(mod_data, mod_size, 1, file))
-	{
-		//printf("error: error reading file '%s'\n", argv[1]);
 		return -1;
-	}
 	fclose(file);
 
-
-
-	printf("initialize XMP...\n");
+	rt_console_printf("initialize XMP...\n");
 
 	ctx = xmp_create_context();
 
-	printf("preparing XMP...\n");
-	// xmp_load_module(ctx, "song.mod");
+	rt_console_printf("preparing XMP...\n");
 	xmp_load_module_from_memory(ctx, mod_data, mod_size);
 
-	printf("playing...\n");
+	rt_console_printf("playing...\n");
 	xmp_start_player(ctx, SAMPLE_RATE, 0);
 	xmp_set_player(ctx, XMP_PLAYER_INTERP, XMP_INTERP_LINEAR);
-	//xmp_set_player(ctx, XMP_PLAYER_DSP, 0);
 
 	struct xmp_frame_info fi;
-
 	uint8_t buffer[4][1024 * 2 * sizeof(int16_t)];
 	int32_t i = 0;
 
-	for (;;)
+	while (rt_input_get_state() == 0)
 	{
 		xmp_play_buffer(ctx, buffer[i], 1024 * 2 * sizeof(int16_t), 0);
 		rt_audio_wait(1 << 0);
@@ -71,5 +58,6 @@ int main()
 		i = (i + 1) & 3;
 	}
 
+	rt_console_printf("bye!\n");
 	return 0;
 }

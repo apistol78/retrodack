@@ -50,4 +50,8 @@ EXTERN_C uint32_t rt_input_get_event(rt_event_t* ev);
 
 EXTERN_C void rt_input_set_tb_color(int32_t clr);
 
+EXTERN_C void rt_input_show_cursor();
+
+EXTERN_C void rt_input_hide_cursor();
+
 EXTERN_C void rt_input_set_hotspot(int32_t x, int32_t y);

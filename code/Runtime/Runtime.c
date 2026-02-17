@@ -1,6 +1,6 @@
 /*
  RetroDÄCK
- Copyright (c) 2025 Anders Pistol.
+ Copyright (c) 2025-2026 Anders Pistol.
 
  This Source Code Form is subject to the terms of the Mozilla Public
  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,6 +10,7 @@
 
 #include <HAL/Interrupt.h>
 #include <HAL/SD.h>
+#include <HAL/Sprite.h>
 #include <HAL/UART.h>
 
 #include "Runtime/Runtime.h"
@@ -62,6 +63,9 @@ int32_t runtime_init()
 void runtime_warm_restart()
 {
 	typedef void (*call_fn_t)();
+
+	hal_interrupt_disable();
+	hal_sprite_set_visible(0, 0x00);
 
 	const uint32_t sp = 0x12000000 - 4;
 	__asm__ volatile (
