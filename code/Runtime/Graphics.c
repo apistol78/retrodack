@@ -345,3 +345,12 @@ void rt_gfx_draw_char(rt_gfx_context_t* ctx, const void* font, int32_t x, int32_
 		dp += w;
 	}
 }
+
+void rt_gfx_draw_string(rt_gfx_context_t* ctx, const void* font, int32_t x, int32_t y, const char* str, uint8_t color)
+{
+	for (const char* ch = str; *ch; ++ch)
+	{
+		rt_gfx_draw_char(ctx, font, x, y, *ch, color);
+		x += 8;
+	}
+}

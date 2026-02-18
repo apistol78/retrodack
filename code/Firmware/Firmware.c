@@ -20,198 +20,22 @@
 #include <HAL/Sprite.h>
 
 #include "Runtime/Runtime.h"
+#include "Runtime/font8x8_c64.h"
 
-#include "Firmware/Circle.h"
 #include "Firmware/Palette.h"
+#include "Firmware/Remote.h"
 
 // #include "Runtime/USB/Max3420.h"
 // #include "Runtime/USB/UsbMassStorage.h"
 // #include "Runtime/USB/ScsiCommands.h"
 
-typedef void __attribute__((noreturn)) (*call_fn_t)();
-
 void __register_exitproc(void) {}
 void __call_exitprocs(void) {}
-
-static uint8_t from_hex(char hex)
-{
-	if (hex >= '0' && hex <= '9')
-		return hex - '0';
-	else if (hex >= 'a' && hex <= 'f')
-		return hex - 'a' + 10;
-	else if (hex >= 'A' && hex <= 'F')
-		return hex - 'A' + 10;
-	else
-		return 0;
-}
-
-static uint8_t rx_u8()
-{
-	const uint8_t h = from_hex(hal_uart_rx_u8());
-	const uint8_t l = from_hex(hal_uart_rx_u8());
-	return (h << 4) | l;
-}
-
-static uint16_t rx_u16()
-{
-	const uint8_t h = rx_u8();
-	const uint8_t l = rx_u8();
-	return (h << 8) | l;
-}
-
-static uint32_t rx_u32()
-{
-	const uint16_t h = rx_u16();
-	const uint16_t l = rx_u16();
-	return (h << 16) | l;
-}
-
-static void remote_control()
-{
-	static char filename[256];
-	static int32_t fd;
-	static uint8_t r[1024];
-
-	for (;;)
-	{
-		// wait until any data has been receieved.
-		while (hal_uart_rx_empty())
-			rt_kernel_yield();
-
-		const uint8_t cmd = hal_uart_rx_u8();
-		if (cmd == 'W')	// "write"
-		{
-			const uint32_t addr = rx_u32();
-			const uint16_t nb = rx_u16();
-			uint8_t cs = 0;
-
-			if (nb == 0 || nb > 1024)
-			{
-				hal_uart_tx_u8('E');
-				continue;
-			}
-
-			// Add address to checksum.
-			const uint8_t* p = (const uint8_t*)&addr;
-			cs ^= p[0];
-			cs ^= p[1];
-			cs ^= p[2];
-			cs ^= p[3];
-
-			// Receive 
-			for (uint16_t i = 0; i < nb; ++i)
-			{
-				const uint8_t d = rx_u8();
-				r[i] = d;
-				cs ^= d;
-			}
-
-			if (cs == rx_u8())
-			{
-				// Write data to memory.
-				for (uint16_t i = 0; i < nb; ++i)
-					*(volatile uint8_t*)(addr + i) = r[i];
-
-				// Flush DCACHE.
-				__asm__ volatile ("fence");
-
-				// Verify data in memory.
-				uint8_t result = 'O';
-				for (uint16_t i = 0; i < nb; ++i)
-				{
-					if (*(volatile uint8_t*)(addr + i) != r[i])
-					{
-						result = 'E';
-						break;
-					}
-				}
-
-				hal_uart_tx_u8(result);
-			}
-			else
-				hal_uart_tx_u8('E');	// Invalid checksum.
-		}
-		else if (cmd == 'J')	// "jump to"
-		{
-			const uint32_t addr = rx_u32();
-			const uint32_t sp = rx_u32();
-			uint8_t cs = 0;
-
-			// Add address to checksum.
-			{
-				const uint8_t* p = (const uint8_t*)&addr;
-				cs ^= p[0];
-				cs ^= p[1];
-				cs ^= p[2];
-				cs ^= p[3];
-			}
-
-			// Add stack to checksum.
-			{
-				const uint8_t* p = (const uint8_t*)&sp;
-				cs ^= p[0];
-				cs ^= p[1];
-				cs ^= p[2];
-				cs ^= p[3];
-			}
-
-			if (cs == rx_u8())
-			{
-				// Disable interrupts; assumed to be reinitialized
-				// by executable.
-				hal_interrupt_disable();
-
-				hal_uart_tx_u8('O');	// Ok
-				rt_timer_wait_ms(250);	// Wait so UART have time to transmit response.
-
-				// Ensure DCACHE is flushed.
-				__asm__ volatile (
-					"fence	\n"
-					"fence	\n"
-				);
-
-				// Set initial stack pointer.
-				if (sp != 0)
-				{
-					__asm__ volatile (
-						"mv	sp, %0\n"
-						:
-						: "r" (sp)
-					);
-				}
-				
-				((call_fn_t)addr)();
-			}
-			else
-				hal_uart_tx_u8('E');	// Invalid checksum.
-		}
-		else
-		{
-			hal_uart_tx_u8('E');	// Unknown command.
-		}
-	}
-}
-
-static void load(const char* game)
-{
-	// Try to execute BOOT executable from SD
-	// card, if available.
-	// rt_console_printf("Loading \"%s\"...\n", game);
-	// rt_kernel_sleep(200);
-
-	rt_elf_launch(game);
-
-	// No BOOT executable found.
-	// rt_console_printf("\"%s\" not found!\n", game);
-}
-
-
-
-
 
 typedef struct
 {
 	char image[64];
+	char title[64];
 	char executable[64];
 	rt_gfx_image_t* img;
 }
@@ -220,7 +44,6 @@ app_info_t;
 static app_info_t s_apps[32];
 static int32_t s_apps_count = 0;
 static const app_info_t* s_app_loading = 0;
-static rt_gfx_image_t* s_circle = 0;
 static rt_gfx_image_t* s_banner = 0;
 static int32_t s_anim_offset = 240;
 
@@ -246,12 +69,11 @@ static void enum_files(void* user, const char* filename, uint32_t size, uint8_t 
 {
 	if (ends_with(filename, ".nfo"))
 	{
-		printf("found nfo \"%s\"\n", filename);
-		
 		FILE* fp = fopen(filename, "r");
 		if (fp != 0)
 		{
 			read_no_lf(fp, s_apps[s_apps_count].image);
+			read_no_lf(fp, s_apps[s_apps_count].title);
 			read_no_lf(fp, s_apps[s_apps_count].executable);
 			fclose(fp);
 
@@ -283,6 +105,7 @@ static void reset_available_applications()
 		}
 	}
 	s_apps_count = 0;
+	s_anim_offset = 240;
 }
 
 static const app_info_t* get_app_info_from_position(int32_t qx, int32_t qy)
@@ -316,7 +139,6 @@ void draw()
 
 	if (s_banner)
 	{
-		// rt_gfx_blit_image(&cx, s_banner, 0, 0);
 		rt_video_blit(s_banner->pixels);
 		rt_video_wait();
 	}
@@ -354,9 +176,8 @@ void draw()
 	}
 	else
 	{
-		const int32_t x = (360 - 100) / 2;
-		const int32_t y = (360 - 100) / 2;
-		rt_gfx_blit_image(&cx, s_app_loading->img, x, y);
+		rt_gfx_draw_string(&cx, font8x8_c64, 20, 360 - 20, "Loading", 162);
+		rt_gfx_draw_string(&cx, font8x8_c64, 20 + 8 * 8, 360 - 20, s_app_loading->title, 162);
 	}
 
 	rt_video_present(1);
@@ -389,7 +210,6 @@ void kickstart_main()
 
 	rt_input_init();
 
-	s_circle = rt_gfx_create_external_image(16, 16, (const uint8_t*)c_circle);
 	draw();
 
 	hal_uart_reset();
@@ -400,7 +220,6 @@ void kickstart_main()
 	rt_input_show_cursor();
 
 	int32_t card = SD_RESULT_NO_CARD;
-
 	for (;;)
 	{
 		const int32_t chk = hal_sd_card_inserted();
@@ -434,7 +253,7 @@ void kickstart_main()
 						rt_input_hide_cursor();
 						draw();
 
-						load(app->executable);
+						rt_elf_launch(app->executable);
 
 						s_app_loading = 0;
 						rt_input_show_cursor();
