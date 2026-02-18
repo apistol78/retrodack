@@ -97,8 +97,8 @@ static void input_thread()
 	{
 		// Ensure TB emit interrupt; seems unreliable.
 		rt_i2c_acquire();
-		rt_i2c_write(0x0a, TRACKBALL_REG_INT, 0, RT_I2C_MODE_FAST);
-		rt_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN, RT_I2C_MODE_FAST);
+		rt_i2c_write(0x0a, TRACKBALL_REG_INT, 0, RT_I2C_MODE_SLOW);
+		rt_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN, RT_I2C_MODE_SLOW);
 		rt_i2c_release();
 
 		// Wait for signal.
@@ -110,7 +110,7 @@ static void input_thread()
 		// Trackball
 		{
 			uint8_t data[5] = { 0, 0, 0, 0, 0 };
-			rt_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5, RT_I2C_MODE_FAST);
+			rt_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5, RT_I2C_MODE_SLOW);
 
 			#define TB_DATA(N) ((int32_t)data[N])
 
@@ -316,7 +316,7 @@ int32_t rt_input_init()
 
 		// Read data from TB; to ensure interrupt state
 		// in TB is reset.
-		for (int i = 0; i < 100; ++i)
+		for (int i = 0; i < 40; ++i)
 		{
 			uint8_t data[5] = { 0, 0, 0, 0, 0 };
 			rt_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5, RT_I2C_MODE_FAST);
