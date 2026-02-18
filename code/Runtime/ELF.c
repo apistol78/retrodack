@@ -1,6 +1,6 @@
 /*
  RetroDÄCK
- Copyright (c) 2025 Anders Pistol.
+ Copyright (c) 2025-2026 Anders Pistol.
 
  This Source Code Form is subject to the terms of the Mozilla Public
  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <HAL/SD.h>
 #include <HAL/Interrupt.h>
 
 #include "Runtime/ELF.h"
@@ -162,6 +163,9 @@ int32_t rt_elf_launch(const char* filename)
 		// Disable interrupts; assumed to be reinitialized
 		// by executable.
 		hal_interrupt_disable();
+
+		// Ensure SD card is shutdown.
+		hal_sd_shutdown();
 
 		const uint32_t sp = 0x12000000 - 4;
 		__asm__ volatile (

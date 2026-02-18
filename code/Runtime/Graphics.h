@@ -62,6 +62,8 @@ EXTERN_C rt_gfx_image_t* rt_gfx_load_image(const char* filename);
 
 EXTERN_C void rt_gfx_blit_image(rt_gfx_context_t* ctx, const rt_gfx_image_t* image, int32_t x, int32_t y);
 
+EXTERN_C void rt_gfx_blit_image_key(rt_gfx_context_t* ctx, const rt_gfx_image_t* image, int32_t x, int32_t y);
+
 EXTERN_C void rt_gfx_blit_image_region(rt_gfx_context_t* ctx, const rt_gfx_image_t* image, int32_t srcX, int32_t srcY, int32_t width, int32_t height, int32_t destX, int32_t destY);
 
 EXTERN_C void rt_gfx_draw_hline(rt_gfx_context_t* ctx, int32_t x1, int32_t x2, int32_t y, uint8_t color);

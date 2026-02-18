@@ -162,7 +162,7 @@ void draw()
 				const int32_t idx = j + i * 3;
 				if (idx < s_apps_count && s_apps[idx].img != 0)
 				{
-					rt_gfx_blit_image(&cx, s_apps[idx].img, x, y);
+					rt_gfx_blit_image_key(&cx, s_apps[idx].img, x, y);
 					if (m[0] >= x && m[1] >= y && m[0] < x + 100 && m[1] < y + 100)
 					{
 						rt_gfx_draw_rect(&cx, x - 1, y - 1, 102, 102, 119);
@@ -207,6 +207,9 @@ void kickstart_main()
 	}
 	rt_video_set_palette(1, 0x808080);
   	rt_video_set_palette(2, 0xffffff);
+	rt_video_clear(215);
+	rt_video_wait();
+	rt_video_present(0);
 
 	rt_input_init();
 

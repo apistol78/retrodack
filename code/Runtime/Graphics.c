@@ -203,6 +203,33 @@ void rt_gfx_blit_image(rt_gfx_context_t* ctx, const rt_gfx_image_t* image, int32
 	}
 }
 
+void rt_gfx_blit_image_key(rt_gfx_context_t* ctx, const rt_gfx_image_t* image, int32_t x, int32_t y)
+{
+	const int32_t w = ctx->width;
+	const int32_t h = ctx->height;
+
+	const int32_t ox = max(0, -x);
+	const int32_t oy = max(0, -y);
+
+	const int32_t dw = min(image->width - ox, w - x);
+	const int32_t dh = min(image->height - oy, h - y);
+	if (dw <= 0 || dh <= 0)
+		return;
+
+	const uint8_t* sp = image->pixels + oy * image->width + ox;
+	uint8_t* dp = ctx->pixels + (y + oy) * w + (x + ox);
+	for (int32_t iy = 0; iy < dh; ++iy)
+	{
+		for (int32_t ix = 0; ix < dw; ++ix)
+		{
+			if (sp[ix] != 255)
+				dp[ix] = sp[ix];
+		}
+		sp += image->width;
+		dp += w;
+	}
+}
+
 void rt_gfx_blit_image_region(rt_gfx_context_t* ctx, const rt_gfx_image_t* image, int32_t srcX, int32_t srcY, int32_t width, int32_t height, int32_t destX, int32_t destY)
 {
 	const int32_t w = ctx->width;

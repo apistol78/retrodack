@@ -66,6 +66,7 @@ void runtime_warm_restart()
 
 	hal_interrupt_disable();
 	hal_sprite_set_visible(0, 0x00);
+	hal_sd_shutdown();
 
 	const uint32_t sp = 0x12000000 - 4;
 	__asm__ volatile (
