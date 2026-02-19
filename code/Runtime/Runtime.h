@@ -1,6 +1,6 @@
 /*
  RetroDÄCK
- Copyright (c) 2025 Anders Pistol.
+ Copyright (c) 2025-2026 Anders Pistol.
 
  This Source Code Form is subject to the terms of the Mozilla Public
  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,7 +14,6 @@
 #include "Runtime/Battery.h"
 #include "Runtime/Console.h"
 #include "Runtime/CRT.h"
-#include "Runtime/Disk.h"
 #include "Runtime/ELF.h"
 #include "Runtime/File.h"
 #include "Runtime/Graphics.h"
@@ -26,5 +25,13 @@
 #include "Runtime/Video.h"
 
 EXTERN_C int32_t runtime_init();
+
+EXTERN_C int32_t runtime_is_disk_connected();
+
+EXTERN_C int32_t runtime_mount_disk();
+
+EXTERN_C void runtime_unmount_disk();
+
+EXTERN_C int32_t runtime_is_disk_mounted();
 
 EXTERN_C void runtime_warm_restart();

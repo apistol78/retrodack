@@ -124,6 +124,16 @@
 						</item>
 					</items>
 				</item>
+				<item type="traktor.sb.Filter">
+					<name>Internal</name>
+					<items>
+						<item type="traktor.sb.File" version="1">
+							<fileName>Internal/*.*</fileName>
+							<excludeFilter/>
+							<items/>
+						</item>
+					</items>
+				</item>
 			</items>
 			<dependencies>
 				<item type="traktor.sb.ExternalDependency" version="3">
@@ -1585,90 +1595,6 @@
 			</dependencies>
 		</item>
 		<item ref="/object/projects/item[4]/dependencies/item[1]/project"/>
-		<item ref="/object/projects/item[2]/dependencies/item[1]/project"/>
-		<item type="traktor.sb.Project" version="1">
-			<enable>false</enable>
-			<name>SimpleNES</name>
-			<sourcePath>code/SimpleNES</sourcePath>
-			<configurations>
-				<item type="traktor.sb.Configuration" version="5">
-					<name>DebugStatic</name>
-					<targetFormat>TfExecutableConsole</targetFormat>
-					<targetProfile>TpDebug</targetProfile>
-					<precompiledHeader/>
-					<includePaths>
-						<item>code/SimpleNES/src</item>
-					</includePaths>
-					<definitions/>
-					<libraryPaths/>
-					<libraries/>
-					<warningLevel>WlCompilerDefault</warningLevel>
-					<additionalCompilerOptions/>
-					<additionalLinkerOptions>-T$(MAKE_HOME)/code/Runtime/Link.ld</additionalLinkerOptions>
-					<debugExecutable/>
-					<debugArguments/>
-					<debugEnvironment/>
-					<debugWorkingDirectory/>
-					<aggregationItems/>
-					<consumerLibraryPath/>
-				</item>
-				<item type="traktor.sb.Configuration" version="5">
-					<name>ReleaseStatic</name>
-					<targetFormat>TfExecutableConsole</targetFormat>
-					<targetProfile>TpRelease</targetProfile>
-					<precompiledHeader/>
-					<includePaths>
-						<item>code/SimpleNES/src</item>
-					</includePaths>
-					<definitions/>
-					<libraryPaths/>
-					<libraries/>
-					<warningLevel>WlCompilerDefault</warningLevel>
-					<additionalCompilerOptions/>
-					<additionalLinkerOptions>-T$(MAKE_HOME)/code/Runtime/Link.ld</additionalLinkerOptions>
-					<debugExecutable/>
-					<debugArguments/>
-					<debugEnvironment/>
-					<debugWorkingDirectory/>
-					<aggregationItems/>
-					<consumerLibraryPath/>
-				</item>
-			</configurations>
-			<items>
-				<item type="traktor.sb.Filter">
-					<name>src</name>
-					<items>
-						<item type="traktor.sb.File" version="1">
-							<fileName>src/*.*</fileName>
-							<excludeFilter/>
-							<items/>
-						</item>
-						<item type="traktor.sb.Filter">
-							<name>APU</name>
-							<items>
-								<item type="traktor.sb.File" version="1">
-									<fileName>src/APU/*.*</fileName>
-									<excludeFilter/>
-									<items/>
-								</item>
-							</items>
-						</item>
-					</items>
-				</item>
-				<item type="traktor.sb.File" version="1">
-					<fileName>MainRV.cpp</fileName>
-					<excludeFilter/>
-					<items/>
-				</item>
-			</items>
-			<dependencies>
-				<item type="traktor.sb.ProjectDependency" version="3">
-					<inheritIncludePaths>true</inheritIncludePaths>
-					<link>LnkYes</link>
-					<project ref="/object/projects/item"/>
-				</item>
-			</dependencies>
-		</item>
 		<item type="traktor.sb.Project" version="1">
 			<enable>true</enable>
 			<name>Tetris</name>
@@ -1839,6 +1765,16 @@
 								<items>
 									<item type="traktor.sb.File" version="1">
 										<fileName>USB/*.*</fileName>
+										<excludeFilter/>
+										<items/>
+									</item>
+								</items>
+							</item>
+							<item type="traktor.sb.Filter">
+								<name>Internal</name>
+								<items>
+									<item type="traktor.sb.File" version="1">
+										<fileName>Internal/*.*</fileName>
 										<excludeFilter/>
 										<items/>
 									</item>

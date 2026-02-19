@@ -1,6 +1,6 @@
 /*
  RetroDÄCK
- Copyright (c) 2025 Anders Pistol.
+ Copyright (c) 2025-2026 Anders Pistol.
 
  This Source Code Form is subject to the terms of the Mozilla Public
  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,6 +20,8 @@
 typedef void (*fn_enum_t)(void* user, const char* filename, uint32_t size, uint8_t directory);
 
 EXTERN_C int32_t file_init();
+
+EXTERN_C void file_shutdown();
 
 EXTERN_C int32_t file_open(const char* name, int32_t mode);
 

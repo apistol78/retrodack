@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "Runtime/Disk.h"
+#include "Runtime/Internal/Disk.h"
 #include "Runtime/USB/AccessIO.h"
 
 #define BUS_RW_BUFFER_SIZE      64

@@ -6,6 +6,7 @@
  License, v. 2.0. If a copy of the MPL was not distributed with this
  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
+
 #include <ctype.h>
 #include <math.h>
 #include <stddef.h>
@@ -222,27 +223,26 @@ void kickstart_main()
 
 	rt_input_show_cursor();
 
-	int32_t card = SD_RESULT_NO_CARD;
+	int32_t card = 0;
 	for (;;)
 	{
-		const int32_t chk = hal_sd_card_inserted();
+		const int32_t chk = runtime_is_disk_connected();
 		if (chk != card)
 		{
-			if (chk == SD_RESULT_OK)
+			if (chk)
 			{
-				hal_sd_init(SD_MODE_SW);
-				rt_disk_init();
-				file_init();
+				runtime_mount_disk();
 				load_available_applications();
 			}
 			else
 			{
+				runtime_unmount_disk();
 				reset_available_applications();
 			}
 			card = chk;
 		}
 
-		if (card == SD_RESULT_OK)
+		if (runtime_is_disk_mounted())
 		{
 			rt_event_t ev;
 			while (rt_input_get_event(&ev))

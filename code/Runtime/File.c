@@ -14,9 +14,9 @@
 #include <ff.h>
 #include <diskio.h>
 
-#include "Runtime/Disk.h"
 #include "Runtime/File.h"
 #include "Runtime/Kernel.h"
+#include "Runtime/Internal/Disk.h"
 
 // FatFs hooks
 
@@ -117,10 +117,18 @@ int32_t file_init()
 
 	fpa = 0;
 
+	rt_disk_init();
+
 	if (f_mount(&fsInternal, "", 1) != FR_OK)
 		return 1;
 
 	return 0;
+}
+
+void file_shutdown()
+{
+	f_unmount("");
+	rt_disk_shutdown();
 }
 
 int32_t file_open(const char* name, int32_t mode)

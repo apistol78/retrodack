@@ -1,6 +1,6 @@
 /*
  RetroDÄCK
- Copyright (c) 2025 Anders Pistol.
+ Copyright (c) 2025-2026 Anders Pistol.
 
  This Source Code Form is subject to the terms of the Mozilla Public
  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,8 +12,8 @@
 
 #include <HAL/SD.h>
 
-#include "Runtime/Disk.h"
 #include "Runtime/Kernel.h"
+#include "Runtime/Internal/Disk.h"
 
 #define CACHE_SIZE 128
 
@@ -26,6 +26,19 @@ void rt_disk_init()
 	{
 		s_cacheSectors[i] = ~0;
 		s_cacheSectorBufs[i] = 0;
+	}
+}
+
+void rt_disk_shutdown()
+{
+	for (uint32_t i = 0; i < CACHE_SIZE; ++i)
+	{
+		s_cacheSectors[i] = ~0;
+		if (s_cacheSectorBufs[i])
+		{
+			free(s_cacheSectorBufs[i]);
+			s_cacheSectorBufs[i] = 0;
+		}
 	}
 }
 

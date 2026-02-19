@@ -15,6 +15,8 @@
 
 #include "Runtime/Runtime.h"
 
+static int32_t s_disk_mounted = 0;
+
 // Needed by custom printf implementation.
 void _putchar(char character)
 {
@@ -41,23 +43,55 @@ int32_t runtime_init()
 	printf("** Initialize Audio **\n");
 	rt_audio_init();
 
-	printf("** Initialize Disk **\n");
-	rt_disk_init();
-
-	printf("** Initialize SD card **\n");
-	const int32_t result = hal_sd_init(SD_MODE_SW);
-	if (result != SD_RESULT_OK)
-		printf("SD card init failed (result = %d)!\n", result);
-
-	printf("** Initialize FS **\n");
-	if (file_init() != 0)
-		printf("FS init failed!\n");
-
 	printf("** Initialize Input **\n");
 	rt_input_init();
 
+	// Automatically mount SD if card is inserted into reader.
+	if (runtime_is_disk_connected())
+		runtime_mount_disk();
+
 	printf("** Ready **\n");
     return 0;
+}
+
+int32_t runtime_is_disk_connected()
+{
+	const int32_t chk = hal_sd_card_inserted();
+	return (chk == SD_RESULT_OK) ? 1 : 0;
+}
+
+int32_t runtime_mount_disk()
+{
+	if (s_disk_mounted)
+		return 0;
+
+	const int32_t result = hal_sd_init(SD_MODE_SW);
+	if (result != SD_RESULT_OK)
+		return 1;
+
+	if (file_init() != 0)
+	{
+		hal_sd_shutdown();
+		return 1;
+	}
+
+	s_disk_mounted = 1;
+	return 0;
+}
+
+void runtime_unmount_disk()
+{
+	if (!s_disk_mounted)
+		return;
+
+	hal_sd_shutdown();
+	file_shutdown();
+	s_disk_mounted = 0;
+}
+
+int32_t runtime_is_disk_mounted()
+{
+	return s_disk_mounted;
 }
 
 void runtime_warm_restart()
