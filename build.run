@@ -174,6 +174,7 @@ local function buildRV()
 	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/ScummRV", "build/rv/ReleaseStatic/ScummRV.dump")
 	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/ModPlayer", "build/rv/ReleaseStatic/ModPlayer.dump")
 	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Quake", "build/rv/ReleaseStatic/Quake.dump")
+	run:execute("riscv32-unknown-elf-objdump -D build/rv/ReleaseStatic/Tetris", "build/rv/ReleaseStatic/Tetris.dump")
 
 	return true
 end
@@ -285,7 +286,7 @@ function main()
 				"--speed 6 " ..
 				"--timing-allow-fail " ..
 				-- "--placer sa " ..
-				"--parallel-refine " ..
+				-- "--parallel-refine " ..
 				"--top " .. rtl .. " " ..
 				"--json build/" .. rtl .. ".json " ..
 				"--textcfg build/" .. rtl .. ".config " ..

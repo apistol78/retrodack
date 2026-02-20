@@ -182,10 +182,6 @@ private:
 	void mix(int16 * buf, uint len);
 
 	static void mixCallback(void *s, byte *samples, int len);
-
-	void premix(int16 * buf, uint len);
-
-	static void premixCallback(void *s, byte *samples, int len);
 };
 
 #endif

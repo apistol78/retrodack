@@ -161,7 +161,7 @@ void rt_audio_set_channel_volume(uint8_t channel, uint8_t volume)
 		hal_audio_set_channel_volume(channel, volume);
 }
 
-void rt_audio_wait(uint32_t channel_mask)
+void rt_audio_wait_all(uint32_t channel_mask)
 {
 	for (;;)
 	{
@@ -175,10 +175,26 @@ void rt_audio_wait(uint32_t channel_mask)
 	}
 }
 
+void rt_audio_wait_any(uint32_t channel_mask)
+{
+	for (;;)
+	{
+		// First check if any channel is actually busy.
+		const uint32_t busy = hal_audio_get_channels_busy();
+		if ((busy & channel_mask) != channel_mask)
+			return;
+
+		// Channels are busy; wait on interrupt.
+		rt_kernel_sig_try_wait(&s_audio_signal, 100);
+	}
+}
+
 int32_t rt_audio_headphones_connected()
 {
 	uint8_t hs = 0;
+	rt_i2c_acquire();
 	rt_i2c_write(TLV320_ADDR, 0x00, 0x00, RT_I2C_MODE_SLOW);
 	rt_i2c_read(TLV320_ADDR, 0x43, &hs, 1, RT_I2C_MODE_SLOW);
+	rt_i2c_release();
 	return ((hs & 0b00100000) != 0) ? 1 : 0;
 }

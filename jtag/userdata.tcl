@@ -91,29 +91,42 @@ puts "MIP = $val"
 
 
 
+# irscan myfpga.tap 0x9
+# drscan myfpga.tap 8 0x30
+# irscan myfpga.tap 0x8
+# set val [drscan myfpga.tap 32 0]
+# puts "TRACE0 = $val"
+
+# irscan myfpga.tap 0x9
+# drscan myfpga.tap 8 0x31
+# irscan myfpga.tap 0x8
+# set val [drscan myfpga.tap 32 0]
+# puts "TRACE1 = $val"
+
+# irscan myfpga.tap 0x9
+# drscan myfpga.tap 8 0x32
+# irscan myfpga.tap 0x8
+# set val [drscan myfpga.tap 32 0]
+# puts "TRACE2 = $val"
+
+# irscan myfpga.tap 0x9
+# drscan myfpga.tap 8 0x33
+# irscan myfpga.tap 0x8
+# set val [drscan myfpga.tap 32 0]
+# puts "TRACE3 = $val"
+
+
 irscan myfpga.tap 0x9
 drscan myfpga.tap 8 0x30
 irscan myfpga.tap 0x8
 set val [drscan myfpga.tap 32 0]
-puts "TRACE0 = $val"
+puts "BP HIT = $val"
 
 irscan myfpga.tap 0x9
 drscan myfpga.tap 8 0x31
 irscan myfpga.tap 0x8
 set val [drscan myfpga.tap 32 0]
-puts "TRACE1 = $val"
-
-irscan myfpga.tap 0x9
-drscan myfpga.tap 8 0x32
-irscan myfpga.tap 0x8
-set val [drscan myfpga.tap 32 0]
-puts "TRACE2 = $val"
-
-irscan myfpga.tap 0x9
-drscan myfpga.tap 8 0x33
-irscan myfpga.tap 0x8
-set val [drscan myfpga.tap 32 0]
-puts "TRACE3 = $val"
+puts "BP MISS = $val"
 
 
 shutdown

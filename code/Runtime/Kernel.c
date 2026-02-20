@@ -37,8 +37,9 @@ kernel_thread_t;
 static kernel_thread_t g_threads[32];
 static int32_t g_current = 0;
 static int32_t g_count = 0;
-static int32_t g_critical = 0;
 static uint32_t g_next_id = 1;
+static volatile int32_t g_critical = 0;
+// static uint32_t scheduler_stack[128];
 
 static struct
 {
@@ -301,7 +302,7 @@ static void* rt_kernel_alloc_stack()
 	if (stack)
 	{
 		memset(stack, 0, c_stackSize);
-		return stack + c_stackSize - 256;
+		return stack + c_stackSize - 1024;
 	}
 	else
 		return 0;

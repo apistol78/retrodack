@@ -123,8 +123,7 @@ SoundMixer::SoundMixer() {
 	for (i = 0; i != NUM_CHANNELS; i++)
 		_channels[i] = 0;
 
-	// _mixerReady = _syst->set_sound_proc(mixCallback, this, OSystem::SOUND_16BIT);
-	_mixerReady = _syst->set_sound_proc(premixCallback, mixCallback, this, OSystem::SOUND_16BIT);
+	_mixerReady = _syst->set_sound_proc(mixCallback, this, OSystem::SOUND_16BIT);
 }
 
 SoundMixer::~SoundMixer() {
@@ -295,28 +294,12 @@ void SoundMixer::playInputStream(PlayingSoundHandle *handle, AudioStream *input,
 	insertChannel(handle, chan);
 }
 
-void SoundMixer::premix(int16 *buf, uint len) {
-	Common::StackLock lock(_mutex);
-	if (!_paused) {
-		if (_premixProc)
-			_premixProc(_premixParam, buf, len);
-	}
-}
-
-void SoundMixer::premixCallback(void *s, byte *samples, int len) {
-	assert(s);
-	assert(samples);
-	((SoundMixer *)s)->premix((int16 *)samples, len >> 1);
-}
-
 void SoundMixer::mix(int16 *buf, uint len) {
 	Common::StackLock lock(_mutex);
 
-	memset(buf, 0, 2 * len * sizeof(int16));
-
 	if (!_paused) {
-		// if (_premixProc)
-		// 	_premixProc(_premixParam, buf, len);
+		if (_premixProc)
+			_premixProc(_premixParam, buf, len);
 
 		// now mix all channels
 		for (int i = 0; i != NUM_CHANNELS; i++)
@@ -327,10 +310,9 @@ void SoundMixer::mix(int16 *buf, uint len) {
 				} else if (!_channels[i]->isPaused())
 					_channels[i]->mix(buf, len);
 			}
+	} else {
+		memset(buf, 0, 2 * len * sizeof(int16));
 	}
-	// } else {
-	// 	memset(buf, 0, 2 * len * sizeof(int16));
-	// }
 }
 
 void SoundMixer::mixCallback(void *s, byte *samples, int len) {

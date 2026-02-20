@@ -114,3 +114,15 @@ void runtime_warm_restart()
 
 	for (;;);
 }
+
+void runtime_cold_restart()
+{
+	hal_interrupt_disable();
+	hal_sprite_set_visible(0, 0x00);
+	hal_sd_shutdown();
+	
+	// Write to last memory address; caught by the
+	// HW to perform a cold reset.
+	const uint32_t addr = 0xffffffff;
+	*(uint32_t*)addr = 0xdeadbeef;
+}

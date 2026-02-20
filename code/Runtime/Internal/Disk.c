@@ -15,22 +15,27 @@
 #include "Runtime/Kernel.h"
 #include "Runtime/Internal/Disk.h"
 
-#define CACHE_SIZE 128
+#define CACHE_SIZE 32
 
+#if CACHE_SIZE > 0
 uint32_t s_cacheSectors[CACHE_SIZE];
 uint8_t* s_cacheSectorBufs[CACHE_SIZE];
+#endif
 
 void rt_disk_init()
 {
+#if CACHE_SIZE > 0
 	for (uint32_t i = 0; i < CACHE_SIZE; ++i)
 	{
 		s_cacheSectors[i] = ~0;
 		s_cacheSectorBufs[i] = 0;
 	}
+#endif
 }
 
 void rt_disk_shutdown()
 {
+#if CACHE_SIZE > 0
 	for (uint32_t i = 0; i < CACHE_SIZE; ++i)
 	{
 		s_cacheSectors[i] = ~0;
@@ -40,6 +45,7 @@ void rt_disk_shutdown()
 			s_cacheSectorBufs[i] = 0;
 		}
 	}
+#endif
 }
 
 int32_t rt_disk_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLen)
@@ -48,6 +54,8 @@ int32_t rt_disk_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLe
 	const uint32_t c = s & (CACHE_SIZE - 1);
 
 	rt_kernel_enter_critical();
+
+#if CACHE_SIZE > 0
 
 	// Check if sector is cached.
 	if (s_cacheSectors[c] == s)
@@ -74,6 +82,16 @@ int32_t rt_disk_read_block512(uint32_t block, uint8_t* buffer, uint32_t bufferLe
 	memcpy(buffer, s_cacheSectorBufs[c], 512);
 	s_cacheSectors[c] = s;
 
+#else
+
+	if (hal_sd_read_block512(s, buffer, 512) != 512)
+	{
+		rt_kernel_leave_critical();
+		return 0;
+	}
+
+#endif
+
 	rt_kernel_leave_critical();
 	return 512;
 }
@@ -85,8 +103,10 @@ int32_t rt_disk_write_block512(uint32_t block, const uint8_t* buffer, uint32_t b
 
 	rt_kernel_enter_critical();
 
+#if CACHE_SIZE > 0	
 	if (s_cacheSectors[c] == s)
 		s_cacheSectors[c] = ~0;
+#endif
 
 	if (hal_sd_write_block512(s, buffer, 512) != 512)
 	{

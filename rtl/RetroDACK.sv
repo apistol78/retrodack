@@ -94,10 +94,11 @@ module RetroDACK(
 	// Reset
 	wire reset;
 	wire uart_soft_reset;
+	wire cold_reset = (cpu_dbus_request && cpu_dbus_address[31:28] == 4'hf);
 
 	Reset rst(
 		.i_clock(clock),
-		.i_reset(uart_soft_reset || !clock_locked),
+		.i_reset(uart_soft_reset || cold_reset || !clock_locked),
 		.o_reset(reset)
 	);
 
@@ -189,10 +190,13 @@ module RetroDACK(
 			8'h2a: jtag_userDataIn <= cpu_debug_ie;
 			8'h2b: jtag_userDataIn <= cpu_debug_ip;
 
-			8'h30: jtag_userDataIn <= cpu_debug_pc_trace[0];
-			8'h31: jtag_userDataIn <= cpu_debug_pc_trace[1];
-			8'h32: jtag_userDataIn <= cpu_debug_pc_trace[2];
-			8'h33: jtag_userDataIn <= cpu_debug_pc_trace[3];
+			// 8'h30: jtag_userDataIn <= cpu_debug_pc_trace[0];
+			// 8'h31: jtag_userDataIn <= cpu_debug_pc_trace[1];
+			// 8'h32: jtag_userDataIn <= cpu_debug_pc_trace[2];
+			// 8'h33: jtag_userDataIn <= cpu_debug_pc_trace[3];
+
+			8'h30: jtag_userDataIn <= cpu_debug_bp_hit;
+			8'h31: jtag_userDataIn <= cpu_debug_bp_miss;
 
 			default: jtag_userDataIn <= { 24'hb00b_00, jtag_userOp };
 			endcase
@@ -232,6 +236,8 @@ module RetroDACK(
 	// Debug
 	wire cpu_fault;
 	wire [31:0] cpu_debug_pc;
+	wire [31:0] cpu_debug_bp_hit;
+	wire [31:0] cpu_debug_bp_miss;
 	wire [31:0] cpu_debug_registers [32];
 	wire [31:0] cpu_debug_epc;
 	wire [31:0] cpu_debug_status;
@@ -244,7 +250,7 @@ module RetroDACK(
 		.FREQUENCY(`FREQUENCY),
 		.DCACHE_SIZE(12),
 		.DCACHE_REGISTERED(1),
-		.DCACHE_WB_QUEUE(1),
+		.DCACHE_WB_QUEUE(0),
 		.ICACHE_SIZE(12),
 		.ICACHE_REGISTERED(1)		
 	) cpu(
@@ -275,6 +281,8 @@ module RetroDACK(
 		.o_memory_busy(),
 		.o_fault(cpu_fault),
 		.o_debug_pc(cpu_debug_pc),
+		.o_debug_bp_hit(cpu_debug_bp_hit),
+		.o_debug_bp_miss(cpu_debug_bp_miss),
 		.o_debug_registers(cpu_debug_registers),
 		.o_debug_epc(cpu_debug_epc),
 		.o_debug_status(cpu_debug_status),
@@ -374,7 +382,7 @@ module RetroDACK(
 		.FREQUENCY(`FREQUENCY),
 		.BAUDRATE(115200),
 		.RX_FIFO_DEPTH(1024),
-		.TX_FIFO_DEPTH(32)
+		.TX_FIFO_DEPTH(16)
 	) uart(
 		.i_reset(reset),
 		.i_clock(clock),
@@ -825,7 +833,8 @@ module RetroDACK(
 	wire video_ready;	
 
 	VIDEO_controller #(
-		.MAX_PITCH(720)
+		.MAX_PITCH(720),
+		.WRITEBACK_SIZE(0)
 	) video_controller(
 		.i_clock(clock),
 		

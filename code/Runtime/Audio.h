@@ -1,6 +1,6 @@
 /*
  RetroDÄCK
- Copyright (c) 2025 Anders Pistol.
+ Copyright (c) 2025-2026 Anders Pistol.
 
  This Source Code Form is subject to the terms of the Mozilla Public
  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -31,6 +31,8 @@ EXTERN_C void rt_audio_play(uint8_t channel, const void* samples, uint32_t nsamp
 
 EXTERN_C void rt_audio_set_channel_volume(uint8_t channel, uint8_t volume);
 
-EXTERN_C void rt_audio_wait(uint32_t channel_mask);
+EXTERN_C void rt_audio_wait_all(uint32_t channel_mask);
+
+EXTERN_C void rt_audio_wait_any(uint32_t channel_mask);
 
 EXTERN_C int32_t rt_audio_headphones_connected();

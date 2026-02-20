@@ -249,8 +249,7 @@ public:
 	 * @param param		an arbitrary parameter which is stored and passed to proc.
 	 * @param format	the sample type format.
 	 */
-	// virtual bool set_sound_proc(SoundProc proc, void *param, SoundFormat format) = 0;
-	virtual bool set_sound_proc(SoundProc premix, SoundProc mix, void *param, SoundFormat format) = 0;
+	virtual bool set_sound_proc(SoundProc proc, void *param, SoundFormat format) = 0;
 
 	/**
 	 * Remove any audio callback previously set via set_sound_proc, thus effectively

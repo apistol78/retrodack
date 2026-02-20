@@ -10,4 +10,5 @@ sym-lib-table
 *-backups
 /callgrind*
 /*.trace
+/test
 *.bak

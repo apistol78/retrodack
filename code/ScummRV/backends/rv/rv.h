@@ -43,7 +43,7 @@ public:
 
 	virtual bool poll_event(Event *event) override final;
 
-	virtual bool set_sound_proc(SoundProc premix, SoundProc mix, void *param, SoundFormat format) override final;
+	virtual bool set_sound_proc(SoundProc proc, void *param, SoundFormat format) override final;
 
 	virtual void clear_sound_proc() override final;
 
@@ -89,8 +89,7 @@ public:
 	TimerProc m_timerCallback = nullptr;
 	int32_t m_timerInterval = 0;
 	int32_t m_timerExpire = 0;
-	SoundProc m_soundPremix = nullptr;
-	SoundProc m_soundMix = nullptr;
+	SoundProc m_soundProc = nullptr;
 	void* m_soundParam = nullptr;
 	uint8_t* m_target = nullptr;
 	bool m_mouseVisible = false;

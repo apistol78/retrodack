@@ -35,3 +35,5 @@ EXTERN_C void runtime_unmount_disk();
 EXTERN_C int32_t runtime_is_disk_mounted();
 
 EXTERN_C void runtime_warm_restart();
+
+EXTERN_C void runtime_cold_restart();

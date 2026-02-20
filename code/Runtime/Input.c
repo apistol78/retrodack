@@ -48,12 +48,12 @@
 
 static float s_filteredDeltaX = 0;
 static float s_filteredDeltaY = 0;
-static float s_absX = 0;
-static float s_absY = 0;
+static float s_absX = 64;
+static float s_absY = 64;
 static float s_deltaX = 0;
 static float s_deltaY = 0;
-static int32_t s_lastAbsX = 0;
-static int32_t s_lastAbsY = 0;
+static int32_t s_lastAbsX = 64;
+static int32_t s_lastAbsY = 64;
 
 static uint32_t s_pressed = 0;
 static int32_t s_hotX = 0;
@@ -95,11 +95,11 @@ static void input_thread()
 
 	for (;;)
 	{
-		// Ensure TB emit interrupt; seems unreliable.
-		rt_i2c_acquire();
-		rt_i2c_write(0x0a, TRACKBALL_REG_INT, 0, RT_I2C_MODE_SLOW);
-		rt_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN, RT_I2C_MODE_SLOW);
-		rt_i2c_release();
+		// // Ensure TB emit interrupt; seems unreliable.
+		// rt_i2c_acquire();
+		// rt_i2c_write(0x0a, TRACKBALL_REG_INT, 0, RT_I2C_MODE_FAST);
+		// rt_i2c_write(0x0a, TRACKBALL_REG_INT, TRACKBALL_MSK_INT_OUT_EN, RT_I2C_MODE_FAST);
+		// rt_i2c_release();
 
 		// Wait for signal.
 		rt_kernel_sig_try_wait(&s_input_signal, wait);
@@ -110,7 +110,7 @@ static void input_thread()
 		// Trackball
 		{
 			uint8_t data[5] = { 0, 0, 0, 0, 0 };
-			rt_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5, RT_I2C_MODE_SLOW);
+			rt_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5, RT_I2C_MODE_FAST);
 
 			#define TB_DATA(N) ((int32_t)data[N])
 
@@ -148,7 +148,7 @@ static void input_thread()
 				wait = 100;
 			}
 			else
-				wait = 10;
+				wait = 2;
 
 			// Clamp absolute position to the size of the current resolution.
 			const int32_t width = hal_video_get_resolution_width();
@@ -275,17 +275,23 @@ int32_t rt_input_init()
 	// Ensure everything is reset.
 	s_filteredDeltaX = 0.0f;
 	s_filteredDeltaY = 0.0f;
-	s_absX = 0.0f;
-	s_absY = 0.0f;
+	s_absX = 64.0f;
+	s_absY = 64.0f;
 	s_deltaX = 0.0f;
 	s_deltaY = 0.0f;
-	s_lastAbsX = 0;
-	s_lastAbsY = 0;
+	s_lastAbsX = 64;
+	s_lastAbsY = 64;
 	s_pressed = 0;
 	s_hotX = 0;
 	s_hotY = 0;
 	s_events_in = 0;
 	s_events_out = 0;
+
+	// Reset trackball.
+	// rt_i2c_write(0x0a, TRACKBALL_REG_CTRL, TRACKBALL_MSK_CTRL_RESET, RT_I2C_MODE_FAST);
+	// hal_timer_wait_ms(250);
+	// rt_i2c_write(0x0a, TRACKBALL_REG_CTRL, 0, RT_I2C_MODE_FAST);
+	// hal_timer_wait_ms(250);
 
 	// Locate trackball by reading it's identification.
 	for (int32_t i = 0; i < 10; ++i)
@@ -316,7 +322,7 @@ int32_t rt_input_init()
 
 		// Read data from TB; to ensure interrupt state
 		// in TB is reset.
-		for (int i = 0; i < 40; ++i)
+		for (int i = 0; i < 10; ++i)
 		{
 			uint8_t data[5] = { 0, 0, 0, 0, 0 };
 			rt_i2c_read(0x0a, TRACKBALL_REG_LEFT, data, 5, RT_I2C_MODE_FAST);
@@ -324,8 +330,12 @@ int32_t rt_input_init()
 		}
 	}
 
+	// Ensure GPIO is all inputs.
+	rt_i2c_write(0x20, 0x06, 0xff, RT_I2C_MODE_FAST);
+	rt_i2c_write(0x20, 0x07, 0xff, RT_I2C_MODE_FAST);
+
 	// Dummy read from GPIO extender.
-	for (int i = 0; i < 100; ++i)
+	for (int i = 0; i < 10; ++i)
 	{
 		uint16_t data = 0;
 		rt_i2c_read(0x20, 0x00, (uint8_t*)&data, 2, RT_I2C_MODE_FAST);
@@ -383,31 +393,14 @@ uint32_t rt_input_get_event(rt_event_t* ev)
 	return 1;
 }
 
-void rt_input_set_tb_color(int32_t clr)
+void rt_input_set_tb_color(uint32_t color)
 {
-	switch (clr)
-	{
-	case RT_TB_RED:
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_RED, 0xff, RT_I2C_MODE_FAST);
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_GRN, 0x00, RT_I2C_MODE_FAST);
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_BLU, 0x00, RT_I2C_MODE_FAST);
-		break;
-	case RT_TB_GREEN:
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_RED, 0x00, RT_I2C_MODE_FAST);
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_GRN, 0xff, RT_I2C_MODE_FAST);
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_BLU, 0x00, RT_I2C_MODE_FAST);
-		break;
-	case RT_TB_BLUE:
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_RED, 0x00, RT_I2C_MODE_FAST);
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_GRN, 0x00, RT_I2C_MODE_FAST);
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_BLU, 0xff, RT_I2C_MODE_FAST);
-		break;
-	default:
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_RED, 0x00, RT_I2C_MODE_FAST);
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_GRN, 0x00, RT_I2C_MODE_FAST);
-		rt_i2c_write_async(0x0a, TRACKBALL_REG_LED_BLU, 0x00, RT_I2C_MODE_FAST);
-		break;
-	}
+	const uint8_t r = (color >> 16) & 255;
+	const uint8_t g = (color >> 8) & 255;
+	const uint8_t b = color & 255;
+	rt_i2c_write(0x0a, TRACKBALL_REG_LED_RED, r, RT_I2C_MODE_FAST);
+	rt_i2c_write(0x0a, TRACKBALL_REG_LED_GRN, g, RT_I2C_MODE_FAST);
+	rt_i2c_write(0x0a, TRACKBALL_REG_LED_BLU, b, RT_I2C_MODE_FAST);
 }
 
 void rt_input_show_cursor()

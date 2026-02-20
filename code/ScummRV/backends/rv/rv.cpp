@@ -290,18 +290,16 @@ bool OSystem_RebelV::poll_event(Event *event)
 	return false;
 }
 
-bool OSystem_RebelV::set_sound_proc(SoundProc premix, SoundProc mix, void *param, SoundFormat format)
+bool OSystem_RebelV::set_sound_proc(SoundProc proc, void *param, SoundFormat format)
 {
 	m_soundParam = param;
-	m_soundPremix = premix;
-	m_soundMix = mix;
+	m_soundProc = proc;
 	return true;
 }
 
 void OSystem_RebelV::clear_sound_proc()
 {
-	m_soundPremix = nullptr;
-	m_soundMix = nullptr;
+	m_soundProc = nullptr;
 	m_soundParam = nullptr;
 }
 
@@ -451,26 +449,21 @@ uint32 OSystem_RebelV::property(int param, Property *value)
 
 void OSystem_RebelV::quit()
 {
-	runtime_warm_restart();
+	runtime_cold_restart();
 }
 
 void OSystem_RebelV::update_sound()
 {
 	const int32_t NumSamples = 1024;
-	static int16_t bufM[8][NumSamples];
-	static int32_t bufS[8][NumSamples];
+	static int32_t buf[8][NumSamples];
 	static int32_t toggle = 0;
 
-	if (m_soundPremix && m_soundMix)
+	if (m_soundProc)
 	{
-		memset(bufS[toggle], 0, sizeof(bufS[toggle]));
-
-		m_soundPremix(m_soundParam, (byte*)bufM[toggle], sizeof(bufM[toggle]));
-		m_soundMix(m_soundParam, (byte*)bufS[toggle], sizeof(bufS[toggle]));
+		m_soundProc(m_soundParam, (byte*)buf[toggle], sizeof(buf[toggle]));
 		
-		rt_audio_wait(0b11);
-		rt_audio_play(0, bufM[toggle], NumSamples, RT_AUDIO_MODE_APPEND | RT_AUDIO_MODE_MONO);
-		rt_audio_play(1, bufS[toggle], NumSamples, RT_AUDIO_MODE_APPEND | RT_AUDIO_MODE_STEREO);
+		rt_audio_wait_any(1 << 0);
+		rt_audio_play(0, buf[toggle], NumSamples, RT_AUDIO_MODE_APPEND | RT_AUDIO_MODE_STEREO);
 
 		toggle = (toggle + 1) & 7;
 	}

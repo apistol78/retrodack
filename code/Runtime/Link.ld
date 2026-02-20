@@ -106,10 +106,6 @@ SECTIONS
 		*(.gnu.linkonce.d.*)
 	}
 
-	. = ALIGN(16);
-	_gp = . + 0x800;
-	__global_pointer$ = .;
-
 	.sdata : 
 	{
 		*(.sdata)
@@ -117,6 +113,10 @@ SECTIONS
 		*(.srodata.*)
 		*(.gnu.linkonce.s.*)
 	}
+
+	. = ALIGN(16);
+	_gp = . + 0x800;
+	__global_pointer$ = .;
 
 		/* End of initialized data segment */
 	PROVIDE( edata = . );

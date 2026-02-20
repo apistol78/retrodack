@@ -1,6 +1,6 @@
 /*
  RetroDÄCK
- Copyright (c) 2025 Anders Pistol.
+ Copyright (c) 2025-2026 Anders Pistol.
 
  This Source Code Form is subject to the terms of the Mozilla Public
  License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -30,21 +30,27 @@ void rt_i2c_release()
 
 void rt_i2c_write(uint8_t deviceAddr, uint8_t controlAddr, uint8_t controlData, int32_t mode)
 {
-	const uint32_t tag = hal_i2c_write(deviceAddr, controlAddr, controlData, mode);
-	while (hal_i2c_retired() < tag)
+	// Wait until I2C device is idle.
+	while (!hal_i2c_idle())
 		rt_kernel_yield();
-}
 
-uint32_t rt_i2c_write_async(uint8_t deviceAddr, uint8_t controlAddr, uint8_t controlData, int32_t mode)
-{
-	return hal_i2c_write(deviceAddr, controlAddr, controlData, mode);
+	// Add write command to I2C device.
+	hal_i2c_write(deviceAddr, controlAddr, controlData, mode);
 }
 
 void rt_i2c_read(uint8_t deviceAddr, uint8_t controlAddr, uint8_t* outControlData, uint8_t nbytes, int32_t mode)
 {
-	const uint32_t tag = hal_i2c_read(deviceAddr, controlAddr, nbytes, mode);
-	while (hal_i2c_retired() < tag)
+	// Wait until I2C device is idle.
+	while (!hal_i2c_idle())
 		rt_kernel_yield();
 
+	// Add read command to I2C device.
+	hal_i2c_read(deviceAddr, controlAddr, nbytes, mode);
+
+	// Wait until I2C device have data to read back.
+	while (!hal_i2c_have_read_data())
+		rt_kernel_yield();
+
+	// Read back data from I2C device.
 	hal_i2c_read_get(outControlData, nbytes);
 }

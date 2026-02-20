@@ -170,8 +170,6 @@ void draw()
 						rt_gfx_draw_rect(&cx, x - 2, y - 2, 104, 104, 119);
 					}
 				}
-				else
-					rt_gfx_draw_rect(&cx, x, y, 100, 100, 162);
 			}
 		}
 	}
@@ -194,6 +192,7 @@ void kickstart_main()
 	// prevent linker from including unused code.
 	rt_timer_init();
 	hal_interrupt_init();
+	rt_i2c_init();
 	rt_video_init();
 	rt_kernel_init();
 

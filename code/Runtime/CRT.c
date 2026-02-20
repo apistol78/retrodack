@@ -116,7 +116,7 @@ int _lseek(int file, int ptr, int dir)
 __attribute__((section(".keep_rt_crt")))
 void _exit(int status)
 {
-	runtime_warm_restart();
+	runtime_cold_restart();
 	for (;;);
 }
 

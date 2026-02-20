@@ -1034,9 +1034,9 @@ void MidiDriver_ADLIB::generate_samples(int16 *data, int len) {
 	} while (len);
 
 	// Convert mono data to stereo
-	// for (int i = (origLen - 1); i >= 0; i--) {
-	// 	origData[2 * i] = origData[2 * i + 1] = origData[i];
-	// }
+	for (int i = (origLen - 1); i >= 0; i--) {
+		origData[2 * i] = origData[2 * i + 1] = origData[i];
+	}
 }
 
 void MidiDriver_ADLIB::reset_tick() {
