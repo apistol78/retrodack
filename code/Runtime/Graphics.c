@@ -356,6 +356,24 @@ void rt_gfx_fill_rect(rt_gfx_context_t* ctx, int32_t x, int32_t y, int32_t width
 
 void rt_gfx_draw_line(rt_gfx_context_t* ctx, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint8_t color)
 {
+	uint8_t* dp = ctx->pixels;
+
+	int32_t dx =  abs(x2 - x1), sx = x1 < x2 ? 1 : -1;
+	int32_t dy = -abs(y2 - y1), sy = y1 < y2 ? 1 : -1; 
+	int32_t err = dx + dy, e2;
+
+	for (;;)
+	{
+		if (x1 >= 0 && y1 >= 0 && x1 < ctx->width && y1 < ctx->height)
+			dp[x1 + y1 * ctx->width] = color;
+
+		if (x1 == x2 && y1 == y2)
+			break;
+
+		e2 = 2 * err;
+		if (e2 >= dy) { err += dy; x1 += sx; }
+		if (e2 <= dx) { err += dx; y1 += sy; }
+	}
 }
 
 void rt_gfx_draw_char(rt_gfx_context_t* ctx, const void* font, int32_t x, int32_t y, char ch, uint8_t color)
