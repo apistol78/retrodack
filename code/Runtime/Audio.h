@@ -15,6 +15,14 @@
 #define RT_AUDIO_MODE_MONO		0x00000000
 #define RT_AUDIO_MODE_STEREO	0x20000000
 
+typedef struct
+{
+    int16_t* samples;
+    uint32_t nsamples;
+    uint32_t mode;
+}
+rt_audio_sound_t;
+
 EXTERN_C int32_t rt_audio_init();
 
 EXTERN_C void rt_audio_set_volume(uint8_t volume);
@@ -36,3 +44,11 @@ EXTERN_C void rt_audio_wait_all(uint32_t channel_mask);
 EXTERN_C void rt_audio_wait_any(uint32_t channel_mask);
 
 EXTERN_C int32_t rt_audio_headphones_connected();
+
+EXTERN_C rt_audio_sound_t* rt_audio_create_sound(uint32_t nsamples, uint32_t mode);
+
+EXTERN_C void rt_audio_destroy_sound(rt_audio_sound_t* sound);
+
+EXTERN_C rt_audio_sound_t* rt_audio_load_sound(const char* filename);
+
+EXTERN_C void rt_audio_play_sound(uint8_t channel, const rt_audio_sound_t* snd, uint32_t mode);

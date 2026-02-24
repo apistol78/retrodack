@@ -6,10 +6,10 @@
  License, v. 2.0. If a copy of the MPL was not distributed with this
  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
-#include "Runtime/Audio.h"
-#include "Runtime/I2C.h"
-#include "Runtime/Input.h"
-#include "Runtime/Kernel.h"
+#include <stdlib.h>
+#include <string.h>
+
+#include "Runtime/Runtime.h"
 
 #include <HAL/Audio.h>
 #include <HAL/Interrupt.h>
@@ -18,8 +18,42 @@
 #define NUM_CHANNELS 2
 #define TLV320_ADDR 0x18
 
+#pragma pack(1)
+struct RiffChunk
+{
+	uint8_t id[4];
+	uint32_t size;
+};
+
+struct WaveFormat
+{
+	uint16_t compression;
+	uint16_t channels;
+	uint32_t sampleRate;
+	uint32_t averageBytesPerSecond;
+	uint16_t blockAlign;
+	uint16_t bitsPerSample;
+};
+#pragma pack()
+
 static uint32_t s_dma_tag = 0;
 static volatile kernel_sig_t s_audio_signal;
+
+static uint16_t swap8in16(uint16_t v)
+{
+	return
+		((v & 0xff00) >> 8) |
+		((v & 0x00ff) << 8);
+}
+
+static uint32_t swap8in32(uint32_t v)
+{
+	return
+		((v & 0xff000000) >> 24) |
+		((v & 0x00ff0000) >> 8) |
+		((v & 0x0000ff00) << 8) |
+		((v & 0x000000ff) >> 24);
+}
 
 static void audio_interrupt(uint32_t source)
 {
@@ -116,9 +150,11 @@ int32_t rt_audio_init()
 
 void rt_audio_set_volume(uint8_t volume)
 {
+	// rt_i2c_acquire();
 	// rt_i2c_write(TLV320_ADDR, 0x41, 0x00, RT_I2C_MODE_SLOW);
 	// rt_i2c_write(TLV320_ADDR, 0x42, 0x00, RT_I2C_MODE_SLOW);
 	// rt_i2c_write(TLV320_ADDR, 0x40, 0x00, RT_I2C_MODE_SLOW);
+	// rt_i2c_release();
 }
 
 void rt_audio_set_playback_rate(uint32_t rate)
@@ -130,8 +166,10 @@ void rt_audio_set_filter(uint8_t filter)
 {
 	if (filter >= 0 && filter < 10)
 	{
+		rt_i2c_acquire();
 		rt_i2c_write(TLV320_ADDR, 0x00, 0, RT_I2C_MODE_SLOW);
 		rt_i2c_write(TLV320_ADDR, 0x3c, filter + 1, RT_I2C_MODE_SLOW);
+		rt_i2c_release();
 	}
 }
 
@@ -151,7 +189,9 @@ void rt_audio_play(uint8_t channel, const void* samples, uint32_t nsamples, uint
 	if (nsamples > 0 && channel < NUM_CHANNELS)
 	{
 		__asm__ volatile ( "fence" );
+		rt_kernel_enter_critical();
 		hal_audio_setup_channel(channel, samples, nsamples, mode);
+		rt_kernel_leave_critical();
 	}
 }
 
@@ -197,4 +237,113 @@ int32_t rt_audio_headphones_connected()
 	rt_i2c_read(TLV320_ADDR, 0x43, &hs, 1, RT_I2C_MODE_SLOW);
 	rt_i2c_release();
 	return ((hs & 0b00100000) != 0) ? 1 : 0;
+}
+
+rt_audio_sound_t* rt_audio_create_sound(uint32_t nsamples, uint32_t mode)
+{
+	const uint32_t nchannels = (mode == RT_AUDIO_MODE_MONO) ? 1 : 2;
+
+	rt_audio_sound_t* sound = (rt_audio_sound_t*)malloc(sizeof(rt_audio_sound_t) + nsamples * nchannels * sizeof(int16_t));
+	if (!sound)
+		return 0;
+
+	sound->samples = (int16_t*)(sound + 1);
+	sound->nsamples = nsamples;
+	sound->mode = mode;
+	return sound;
+}
+
+void rt_audio_destroy_sound(rt_audio_sound_t* sound)
+{
+	free(sound);
+}
+
+rt_audio_sound_t* rt_audio_load_sound(const char* filename)
+{
+	struct RiffChunk hdr, fmt, data;
+	struct WaveFormat wf;
+	rt_audio_sound_t* snd;
+
+	const int32_t fd = file_open(filename, FILE_MODE_READ);
+	if (fd <= 0)
+		return 0;
+
+	file_read(fd, &hdr, sizeof(hdr));
+	hdr.size = swap8in32(hdr.size);
+
+	file_read(fd, &fmt, sizeof(fmt));
+	fmt.size = swap8in32(fmt.size);
+
+	file_read(fd, &wf, sizeof(wf));
+	wf.compression = swap8in16(wf.compression);
+	wf.channels = swap8in16(wf.channels);
+	wf.sampleRate = swap8in32(wf.sampleRate);
+	wf.averageBytesPerSecond = swap8in32(wf.averageBytesPerSecond);
+	wf.blockAlign = swap8in16(wf.blockAlign);
+	wf.bitsPerSample = swap8in16(wf.bitsPerSample);
+
+	if (wf.channels != 1 && wf.channels != 2)
+	{
+		file_close(fd);
+		return 0;
+	}
+
+	file_seek(fd, fmt.size - sizeof(wf), FILE_SEEK_CUR);
+
+	for (;;)
+	{
+		if (file_read(fd, &data, sizeof(data)) != sizeof(data))
+		{
+			file_close(fd);
+			return 0;		
+		}
+		if (memcmp(data.id, "data", 4U) == 0)
+			break;
+		file_seek(fd, data.size, FILE_SEEK_CUR);
+	}
+
+	const uint32_t nsamples = data.size / (wf.channels * wf.bitsPerSample / 8);
+
+	snd = rt_audio_create_sound(nsamples, (wf.channels == 1) ? RT_AUDIO_MODE_MONO : RT_AUDIO_MODE_STEREO);
+	if (!snd)
+	{
+		file_close(fd);
+		return 0;
+	}
+
+	int16_t* wp = snd->samples;
+	for (uint32_t s = 0; s < nsamples; ++s)
+	{
+		for (uint16_t i = 0; i < wf.channels; ++i)
+		{
+			switch (wf.bitsPerSample)
+			{
+			case 8:
+				{
+					uint8_t smp;
+					file_read(fd, &smp, 1);
+					*wp++ = (int16_t)(((smp / 255.0f) * 2.0f - 1.0f) * 32767.0f);
+				}
+				break;
+
+			case 16:
+				{
+					int16_t smp;
+					file_read(fd, &smp, 2);
+					*wp++ = smp;
+				}
+				break;
+			}
+		}
+	}
+
+	file_close(fd);
+	return snd;
+}
+
+void rt_audio_play_sound(uint8_t channel, const rt_audio_sound_t* snd, uint32_t mode)
+{
+	rt_kernel_enter_critical();
+	hal_audio_setup_channel(channel, snd->samples, snd->nsamples, mode | snd->mode);
+	rt_kernel_leave_critical();
 }

@@ -36,12 +36,12 @@ static void draw_thread()
 		rt_video_wait();		
 
 		{
-		const int32_t w = Cl;
-		rt_gfx_fill_rect(&ctx, 90 - w, 180 - w, w * 2, w * 2, 1);
+			const int32_t w = Cl;
+			rt_gfx_fill_rect(&ctx, 90 - w, 180 - w, w * 2, w * 2, 1);
 		}
 		{
-		const int32_t w = Cr;
-		rt_gfx_fill_rect(&ctx, 270 - w, 180 - w, w * 2, w * 2, 1);
+			const int32_t w = Cr;
+			rt_gfx_fill_rect(&ctx, 270 - w, 180 - w, w * 2, w * 2, 1);
 		}
 
 		for (int32_t i = 1; i < 128; ++i)

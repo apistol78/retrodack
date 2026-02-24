@@ -58,7 +58,6 @@
     },
     "terminal.integrated.defaultProfile.linux": "BashWithStartup",
     "workbench.colorTheme": "Monokai Dimmed",
-    
     "task.autoDetect": "off",
-    "cmake.sourceDirectory": "/home/apistol/private/retrodack/3rdp/ModPlayer"
+    "cmake.configureOnOpen": false
 }

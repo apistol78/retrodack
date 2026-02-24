@@ -31,8 +31,11 @@ int currX = A_WIDTH / 2;
 int currY = 0;
 
 // Graphics
-rt_gfx_image_t* img_background;
-rt_gfx_image_t* img_foreground;
+rt_gfx_image_t* img_background = 0;
+rt_gfx_image_t* img_foreground = 0;
+
+// Sounds
+rt_audio_sound_t* snd_down = 0;
 
 void newTetromino();
 bool validPos(int tetromino, int rotation, int posX, int posY);
@@ -53,6 +56,8 @@ int tetrisMain()
 		rt_video_set_palette(i, img_foreground->palette->colors[i].dw);
 	}
 
+	snd_down = rt_audio_load_sound("down.wav");
+
 	// for (;;)
 	{
 		score = 0;
@@ -72,18 +77,21 @@ int tetrisMain()
 
 		while (!gameOver)
 		{
-			uint32_t now = rt_timer_get_ms();
-			uint32_t elapsed = (now - lastTime);
+			const uint32_t now = rt_timer_get_ms();
+			const uint32_t elapsed = (now - lastTime);
 			const bool speedUp = processInputs();
 
 			if (elapsed >= (speedUp ? targetFrameTimeFast : targetFrameTime))
 			{
+				rt_audio_play_sound(0, snd_down, RT_AUDIO_MODE_APPEND);
+
 				if (!moveDown())
 				{
 					addToArena();
 					checkLines();
 					newTetromino();
 				}
+
 				lastTime = now;
 			}
 
