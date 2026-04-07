@@ -285,7 +285,7 @@
 					<inheritIncludePaths>true</inheritIncludePaths>
 					<link>LnkYes</link>
 					<solutionFileName>$(TRAKTOR_HOME)/resources/build/TraktorLinux.xms</solutionFileName>
-					<projectName>Traktor.Ui.X11</projectName>
+					<projectName>Traktor.Ui.Wl</projectName>
 				</item>
 				<item type="traktor.sb.ExternalDependency" version="3">
 					<inheritIncludePaths>true</inheritIncludePaths>

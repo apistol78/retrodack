@@ -38,7 +38,7 @@
 #elif defined(__APPLE__)
 #	include <Ui/Cocoa/WidgetFactoryCocoa.h>
 #elif defined(__LINUX__) || defined(__RPI__)
-#	include <Ui/X11/WidgetFactoryX11.h>
+#	include <Ui/Wl/WidgetFactoryWl.h>
 #endif
 
 //
@@ -87,7 +87,7 @@ int main(int argc, const char** argv)
 	);
 #elif defined(__LINUX__) || defined(__RPI__)
 	ui::Application::getInstance()->initialize(
-		new ui::WidgetFactoryX11(),
+		new ui::WidgetFactoryWl(),
 		nullptr
 	);
 #endif
